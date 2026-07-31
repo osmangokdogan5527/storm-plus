@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PosCartItem } from '../../types/pos';
-import { Trash2, Plus, Minus } from 'lucide-react';
+import { Trash2, Plus, Minus, AlertTriangle, X } from 'lucide-react';
+import { PosNumpadModal } from './PosNumpadModal';
 
 interface PosCartTableProps {
   items: PosCartItem[];
@@ -21,10 +22,79 @@ export const PosCartTable: React.FC<PosCartTableProps> = ({
   onRemoveItem,
   onClearCart,
 }) => {
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [numpadState, setNumpadState] = useState<{ isOpen: boolean; type: 'quantity' | 'unitPrice'; itemId: string; initialValue: number } | null>(null);
   const safeItems = Array.isArray(items) ? items : [];
 
+  const handleDeleteClick = (id: string) => {
+    setDeleteConfirmId(id);
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirmId) {
+      onRemoveItem(deleteConfirmId);
+      setDeleteConfirmId(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirmId(null);
+  };
+
   return (
-    <div className="flex-1 flex flex-col min-h-[320px] bg-slate-900 border-2 border-slate-700 rounded-2xl overflow-hidden shadow-2xl" style={{ backgroundColor: '#0f172a' }}>
+    <div className="flex-1 flex flex-col min-h-[320px] bg-slate-900 border-2 border-slate-700 rounded-2xl overflow-hidden shadow-2xl relative" style={{ backgroundColor: '#0f172a' }}>
+      {/* Numpad Modal */}
+      {numpadState && (
+        <PosNumpadModal
+          isOpen={numpadState.isOpen}
+          onClose={() => setNumpadState(null)}
+          title={numpadState.type === 'quantity' ? 'Miktar (Adet) Giriniz' : 'Birim Fiyat Giriniz'}
+          initialValue={numpadState.initialValue}
+          onConfirm={(val) => {
+            if (numpadState.type === 'quantity') {
+              onSetQuantity(numpadState.itemId, Math.max(1, val));
+            } else {
+              onUpdateUnitPrice(numpadState.itemId, Math.max(0, val));
+            }
+          }}
+          allowDecimal={numpadState.type === 'unitPrice'}
+        />
+      )}
+
+      {/* Delete Confirmation Modal Overlay */}
+      {deleteConfirmId && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border-2 border-slate-700 rounded-2xl p-5 shadow-2xl max-w-sm w-full animate-in fade-in zoom-in duration-200">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center shrink-0">
+                <AlertTriangle size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-white mb-1">Ürünü Sil?</h3>
+                <p className="text-sm font-medium text-slate-400">
+                  Bu ürünü sepetten silmek istediğinize emin misiniz?
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-3 mt-6">
+              <button
+                onClick={cancelDelete}
+                className="px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-slate-800 hover:bg-slate-700 transition-colors"
+              >
+                İptal
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-red-500 hover:bg-red-400 shadow-[0_0_15px_rgba(239,68,68,0.3)] transition-colors flex items-center gap-2"
+              >
+                <Trash2 size={16} />
+                Evet, Sil
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* BAŞLIK VE SEPETİ TEMİZLE */}
       <div className="px-4 py-3 bg-slate-900 border-b border-slate-700 flex items-center justify-between shrink-0" style={{ backgroundColor: '#0f172a' }}>
         <div className="flex items-center gap-2">
@@ -76,7 +146,7 @@ export const PosCartTable: React.FC<PosCartTableProps> = ({
                   </h5>
                 </div>
                 <button
-                  onClick={() => onRemoveItem(item.id)}
+                  onClick={() => handleDeleteClick(item.id)}
                   className="w-9 h-9 rounded-xl text-slate-300 hover:text-red-400 hover:bg-red-500/20 transition-colors flex items-center justify-center shrink-0 cursor-pointer active:scale-90 touch-manipulation"
                   title="Satırı Sil"
                 >
@@ -93,19 +163,14 @@ export const PosCartTable: React.FC<PosCartTableProps> = ({
                   </span>
                   <div className="flex items-center bg-slate-950 px-3 py-2 rounded-xl border border-slate-700 focus-within:border-teal-400 transition-colors">
                     <span className="text-sm font-black text-teal-400 font-mono mr-1" style={{ color: '#2dd4bf' }}>₺</span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={item.unitPrice}
-                      onChange={(e) =>
-                        onUpdateUnitPrice(item.id, Math.max(0, Number(e.target.value) || 0))
-                      }
-                      className="pos-number-input w-22 text-xs sm:text-sm font-black font-mono text-white"
+                    <button
+                      onClick={() => setNumpadState({ isOpen: true, type: 'unitPrice', itemId: item.id, initialValue: item.unitPrice })}
+                      className="pos-number-input w-22 text-left px-2 text-xs sm:text-sm font-black font-mono text-white bg-transparent outline-none cursor-pointer hover:bg-slate-800 rounded"
                       title="Birim Fiyat"
                       style={{ color: '#ffffff' }}
-                    />
-                    <span className="text-[10px] font-bold text-slate-400 ml-1">/{item.unit || 'Adet'}</span>
+                    >
+                      {item.unitPrice}
+                    </button>
                   </div>
                 </div>
 
@@ -122,15 +187,14 @@ export const PosCartTable: React.FC<PosCartTableProps> = ({
                     >
                       <Minus size={18} />
                     </button>
-                    <input
-                      type="number"
-                      min="1"
-                      value={item.quantity}
-                      onChange={(e) => onSetQuantity(item.id, Math.max(1, Number(e.target.value) || 1))}
-                      className="pos-number-input w-12 text-center text-sm font-black font-mono text-white"
+                    <button
+                      onClick={() => setNumpadState({ isOpen: true, type: 'quantity', itemId: item.id, initialValue: item.quantity })}
+                      className="pos-number-input w-12 text-center text-sm font-black font-mono text-white bg-transparent outline-none cursor-pointer hover:bg-slate-800 rounded h-10"
                       title="Adet"
                       style={{ color: '#ffffff' }}
-                    />
+                    >
+                      {item.quantity}
+                    </button>
                     <button
                       onClick={() => onUpdateQuantity(item.id, 1)}
                       className="w-10 h-10 flex items-center justify-center text-white hover:bg-slate-800 transition-colors font-black shrink-0 cursor-pointer active:bg-slate-700 active:scale-95 touch-manipulation"

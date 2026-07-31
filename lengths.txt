@@ -1,0 +1,237 @@
+src/App.tsx:307: if (e.key.length === 1) {
+src/App.tsx:317: if (buffer.length >= 4 && timeDiff < 50) {
+src/App.tsx:967: items: items.length > 0 ? items : [{
+src/components/AiAssistant.tsx:139: if (parsedContent.length > 100000) {
+src/components/AiAssistant.tsx:159: const randomExample = AI_EXAMPLES[Math.floor(Math.random() * AI_EXAMPLES.length)];
+src/components/AiAssistant.tsx:583: {msg.chart && msg.chart.data && msg.chart.data.length > 0 && (
+src/components/AppModals.tsx:337: {CHANGELOG?.features && CHANGELOG.features.length > 0 && (
+src/components/AppModals.tsx:353: {CHANGELOG?.fixes && CHANGELOG.fixes.length > 0 && (
+src/components/AppModals.tsx:457: <p className="text-[10px] text-slate-400 font-mono">Optimize edildi (Boyut: ~{Math.round(feedbackImage.length / 1024)} KB)</p>
+src/components/AppModals.tsx:627: if (val.length === 4) {
+src/components/AppModals.tsx:651: idx < adminPinInput.length
+src/components/AuthScreen.tsx:321: if (val.length === 6) {
+src/components/AuthScreen.tsx:356: if (currentPin.length < 6) {
+src/components/AuthScreen.tsx:360: if (val.length === 6) {
+src/components/AuthScreen.tsx:399: if (currentPin.length < 6) {
+src/components/AuthScreen.tsx:403: if (val.length === 6) {
+src/components/AuthScreen.tsx:431: if (currentPin.length > 0) {
+src/components/AuthScreen.tsx:480: if (val.length >= 4) {
+src/components/AuthScreen.tsx:498: } else if (val.length === 6) {
+src/components/AuthScreen.tsx:728: errorLogs.length === 0 ? (
+src/components/AuthScreen.tsx:792: feedbackList.length === 0 ? (
+src/components/AyarlarView.tsx:321: if (newAdminPinInput.length !== 4) {
+src/components/AyarlarView.tsx:363: if (initialPinInput.length !== 4) {
+src/components/BarcodeScannerModal.tsx:61: if (devices && devices.length > 0) {
+src/components/BarcodeScannerModal.tsx:207: if (cameras.length <= 1) return;
+src/components/BarcodeScannerModal.tsx:209: const nextIndex = (currentIndex + 1) % cameras.length;
+src/components/BarcodeScannerModal.tsx:350: {cameras.length > 0 && (
+src/components/BarcodeScannerModal.tsx:367: {cameras.length > 1 && (
+src/components/CalisanlarView.tsx:93: const words = query.split(' ').filter(w => w.length > 2);
+src/components/CalisanlarView.tsx:94: if (words.length > 0) {
+src/components/CalisanlarView.tsx:258: const initialEmp = empId || (employees.length > 0 ? employees[0].id : "");
+src/components/CalisanlarView.tsx:559: {filteredEmployees.length === 0 ? (
+src/components/CalisanlarView.tsx:715: {filteredTransactions.length === 0 ? (
+src/components/CarilerView.tsx:156: }, [aiPrefilledData, safeCariler.length, onClearAiPrefilledData]);
+src/components/CarilerView.tsx:595: {filteredCariler.length === 0 ? (
+src/components/DashboardView.tsx:121: if (Array.isArray(parsed) && parsed.length > 0) {
+src/components/DashboardView.tsx:170: if (targetIndex >= 0 && targetIndex < newOrder.length) {
+src/components/DashboardView.tsx:557: const isLast = index === widgetsOrder.length - 1;
+src/components/DashboardView.tsx:691: {pendingRecurringItems.length > 0 && (
+src/components/DashboardView.tsx:700: {pendingRecurringItems.length} VADESİ GELDİ
+src/components/DashboardView.tsx:750: const isLast = index === widgetsOrder.length - 1;
+src/components/ErrorBoundary.tsx:66: if (existingLogs.length > 100) existingLogs.pop();
+src/components/IslemlerView.tsx:540: {filteredTransactions.length === 0 ? (
+src/components/IslemlerView.tsx:836: if (val.length === 4) {
+src/components/MasraflarView.tsx:189: totalCount: expenses.length
+src/components/MasraflarView.tsx:473: {filteredExpenses.length === 0 ? (
+src/components/OnlineMarketlerView.tsx:97: if (!Array.isArray(loaded) || loaded.length === 0) return DEFAULT_POS_PLATFORMS;
+src/components/OnlineMarketlerView.tsx:105: const safePlatforms = Array.isArray(platforms) && platforms.length > 0 ? platforms : DEFAULT_POS_PLATFORMS;
+src/components/OnlineMarketlerView.tsx:242: orderCount: platOrders.length,
+src/components/OnlineMarketlerView.tsx:326: if (!bAcc && safeBankAccounts.length > 0) {
+src/components/OnlineMarketlerView.tsx:454: if (safeBankAccounts.length === 0) {
+src/components/OnlineMarketlerView.tsx:498: <span className="text-blue-600 font-extrabold">{orders.length}</span> sipariş kaydı
+src/components/OnlineMarketlerView.tsx:691: if (safeBankAccounts.length > 0) {
+src/components/OnlineMarketlerView.tsx:738: Tüm Online Siparişler ({safeOrders.length})
+src/components/OnlineMarketlerView.tsx:753: Hakediş Tahsilat Geçmişi ({safePayouts.length})
+src/components/OnlineMarketlerView.tsx:789: {filteredOrders.length === 0 ? (
+src/components/OnlineMarketlerView.tsx:791: {safeOrders.length === 0
+src/components/OnlineMarketlerView.tsx:856: {filteredPayouts.length === 0 ? (
+src/components/OnlineMarketlerView.tsx:1172: {safeBankAccounts.length === 0 ? (
+src/components/RaporlarView.tsx:576: {cariEkstreStats.periodTransactions.length === 0 ? (
+src/components/StoklarView.tsx:137: .filter(g => g.totalQuantity !== 0 || g.transactions.length > 0)
+src/components/StoklarView.tsx:286: let totalItems = stoklar.length;
+src/components/StoklarView.tsx:592: {categories.length === 0 ? (
+src/components/StoklarView.tsx:643: {brands.length === 0 ? (
+src/components/StoklarView.tsx:797: {filteredStoklar.length === 0 ? (
+src/components/TemplateDesignerView.tsx:280: if (Array.isArray(parsed) && parsed.length > 0) {
+src/components/TemplateDesignerView.tsx:323: name: `Özel Termal Fiş ${templates.length + 1}`,
+src/components/TemplateDesignerView.tsx:379: if (templates.length <= 1) return;
+src/components/VirtualTableBody.tsx:51: const totalCount = items.length;
+src/components/VirtualTableBody.tsx:58: }, [items.length, scrollTop, containerHeight, rowHeight, overscan]);
+src/components/VirtualTableBody.tsx:61: const bottomPadding = Math.max(0, (items.length - 1 - endIndex) * rowHeight);
+src/components/calisanlar/CalisanlarModals.tsx:254: {employees.length === 0 ? (
+src/components/calisanlar/CalisanlarModals.tsx:627: {employeeSpecificTransactions.length === 0 ? (
+src/components/cariler/CariModal.tsx:63: code: `CAR-${String(safeCariler.length + 1).padStart(4, "0")}`,
+src/components/cariler/CariModal.tsx:78: }, [isOpen, editingCari, safeCariler.length, aiPrefilledData]);
+src/components/cariler/ExcelImportModal.tsx:48: if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+src/components/cariler/ExcelImportModal.tsx:54: if (e.target.files && e.target.files.length > 0) {
+src/components/cariler/ExcelImportModal.tsx:60: if (!parseResult || !parseResult.data.length) return;
+src/components/cariler/ExcelImportModal.tsx:216: {parseResult.data.length > 50 && (
+src/components/cariler/ExcelImportModal.tsx:218: ... ve {parseResult.data.length - 50} kayıt daha
+src/components/cariler/LedgerDrawer.tsx:125: if (filteredAccountsForQuick.length > 0) {
+src/components/cariler/LedgerDrawer.tsx:404: if (cariLedger.length === 0) return currentCari?.openingBalance || 0;
+src/components/cariler/LedgerDrawer.tsx:405: return cariLedger[cariLedger.length - 1].balance;
+src/components/cariler/LedgerDrawer.tsx:410: if (cariLedger.length === 0) return [];
+src/components/cariler/LedgerDrawer.tsx:620: {filteredCariLedger.length === 0 ? (
+src/components/cariler/LedgerDrawer.tsx:640: {row.items && row.items.length > 0 ? (
+src/components/cariler/LedgerDrawer.tsx:1041: {quickTxAccount !== "" && filteredAccountsForQuick.length > 0 && (
+src/components/dashboard/RecentMovementsWidget.tsx:47: {filteredRecentMovements.length === 0 ? (
+src/components/dashboard/StatsGridWidget.tsx:175: {stoklar.length} Ürün
+src/components/dashboard/StockAlertsWidget.tsx:45: {criticalStocks.length === 0 ? (
+src/components/islemler/IslemModal.tsx:341: const words = query.split(' ').filter(w => w.length > 2);
+src/components/islemler/IslemModal.tsx:342: if (words.length > 0) {
+src/components/islemler/IslemModal.tsx:362: const words = query.split(' ').filter(w => w.length > 2);
+src/components/islemler/IslemModal.tsx:363: if (words.length > 0) {
+src/components/islemler/IslemModal.tsx:405: if (editingTransaction.items && editingTransaction.items.length > 0) {
+src/components/islemler/IslemModal.tsx:537: if (invoiceItems.length === 1) return;
+src/components/islemler/IslemModal.tsx:562: if (validItems.length === 0) {
+src/components/islemler/IslemModal.tsx:745: {(account === 'cash' || account === 'bank' || account === 'pos') && bankAccounts.length > 0 && (
+src/components/islemler/IslemModal.tsx:916: disabled={invoiceItems.length === 1}
+src/components/islemler/IslemModal.tsx:1022: {(account === 'cash' || account === 'bank' || account === 'pos') && bankAccounts.length > 0 && (
+src/components/islemler/PdfPrintModal.tsx:88: if (matchingTemplates.length > 0) {
+src/components/islemler/PdfPrintModal.tsx:96: if (printTemplates.length > 0) return printTemplates[0];
+src/components/islemler/PdfPrintModal.tsx:403: {printTemplates.length > 0 && (
+src/components/islemler/PdfPrintModal.tsx:796: {transaction.items && transaction.items.length > 0 ? (
+src/components/islemler/PdfPrintModal.tsx:834: {kdvBreakdown.length > 0 && (
+src/components/islemler/print-templates/ClassicTemplate.tsx:76: {transaction.items && transaction.items.length > 0 ? (
+src/components/islemler/print-templates/CorporateTemplate.tsx:98: {transaction.items && transaction.items.length > 0 ? (
+src/components/islemler/print-templates/CorporateTemplate.tsx:204: {transaction.items && transaction.items.length > 0 ? (
+src/components/islemler/print-templates/CorporateTemplate.tsx:229: transaction.items && transaction.items.length > 0
+src/components/islemler/print-templates/DefaultTemplate.tsx:80: {transaction.items && transaction.items.length > 0 ? (
+src/components/islemler/print-templates/ElegantTemplate.tsx:72: {transaction.items && transaction.items.length > 0 ? (
+src/components/islemler/print-templates/ModernTemplate.tsx:85: {transaction.items && transaction.items.length > 0 ? (
+src/components/kasa/CashFlowAnalysis.tsx:20: {flowStats.pieData.length === 0 ? (
+src/components/kasa/CashFlowAnalysis.tsx:42: <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+src/components/kasa/CashFlowAnalysis.tsx:69: <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></span>
+src/components/kasa/CashFlowAnalysis.tsx:80: {flowStats.pieData.length > 5 && (
+src/components/kasa/CashFlowAnalysis.tsx:82: + {flowStats.pieData.length - 5} kategori daha var
+src/components/kasa/InteractiveCashLedger.tsx:88: {filteredMovements.length === 0 ? (
+src/components/pos/PosCartTable.tsx:36: {safeItems.length > 0 && (
+src/components/pos/PosCartTable.tsx:50: {safeItems.length === 0 ? (
+src/components/pos/PosDirectPlatformSaleModal.tsx:41: if (safeCartItems.length > 0) {
+src/components/pos/PosDirectPlatformSaleModal.tsx:66: useCartItems: useCartItems && safeCartItems.length > 0,
+src/components/pos/PosDirectPlatformSaleModal.tsx:104: {safeCartItems.length > 0 && (
+src/components/pos/PosDirectPlatformSaleModal.tsx:107: <ShoppingBag size={15} /> Sepet Algılandı ({safeCartItems.length} Kalem Ürün)
+src/components/pos/PosParkedSalesModal.tsx:32: Askıya Alınan (Park Edilen) Satışlar ({safeParkedSales.length})
+src/components/pos/PosParkedSalesModal.tsx:45: {safeParkedSales.length === 0 ? (
+src/components/pos/PosParkedSalesModal.tsx:66: {sale.items.length} Kalem Ürün ({sale.items.reduce((acc, i) => acc + i.quantity, 0)} Adet)
+src/components/pos/PosProductCatalog.tsx:282: Tüm Ürünler ({safeStocks.length})
+src/components/pos/PosProductCatalog.tsx:315: {filteredStocks.length === 0 ? (
+src/components/pos/PosProductCatalog.tsx:342: {catStocks.length} Ürün
+src/components/pos/PosProductCatalog.tsx:431: <h4 className="text-xs font-black text-slate-200">Tanımlı Bölümler ({allCategories.length})</h4>
+src/components/pos/PosProductCatalog.tsx:432: {(allCategories.length > 0 || customDepartments.length > 0) && (
+src/components/pos/PosProductCatalog.tsx:443: {allCategories.length === 0 ? (
+src/components/pos/PosReceiptModal.tsx:87: if (Array.isArray(parsed) && parsed.length > 0) {
+src/components/pos/PosReceiptModal.tsx:202: {templates.length > 1 && (
+src/components/pos/PosSplitPaymentModal.tsx:43: if (posAccounts.length > 0) {
+src/components/pos/PosSplitPaymentModal.tsx:252: {posAccounts.length === 0 ? (
+src/components/pos/PosTableAdisyonModal.tsx:178: {items.length === 0 && (
+src/components/pos/PosTableManagementModal.tsx:74: const totalCount = tables.length;
+src/components/pos/PosTableManagementModal.tsx:273: <span className="font-black text-white text-sm">{occupiedTables.length} Masa</span>
+src/components/pos/PosTableManagementModal.tsx:382: ({cat === 'Tümü' ? tables.length : tables.filter((t) => t.category === cat).length})
+src/components/pos/PosTableManagementModal.tsx:570: {filteredTables.length === 0 && (
+src/components/pos/PosView.tsx:104: if (table.items && table.items.length > 0) {
+src/components/pos/PosView.tsx:127: const isNowOccupied = cartItems.length > 0;
+src/components/pos/PosView.tsx:292: if (cartItems.length > 0) setIsSplitModalOpen(true);
+src/components/pos/PosView.tsx:422: if (cartItems.length === 0) return;
+src/components/pos/PosView.tsx:435: if (cartItems.length === 0 || isProcessing) return;
+src/components/pos/PosView.tsx:450: if (cartItems.length === 0 || isProcessing) return;
+src/components/pos/PosView.tsx:459: posAccountId: posAccounts.length > 0 ? posAccounts[0].id : '',
+src/components/pos/PosView.tsx:469: if (cartItems.length === 0) {
+src/components/pos/PosView.tsx:613: if (data.useCartItems && cartItems.length > 0) {
+src/components/pos/PosView.tsx:790: disabled={cartItems.length === 0 || isProcessing}
+src/components/pos/PosView.tsx:804: disabled={cartItems.length === 0 || isProcessing}
+src/components/pos/PosView.tsx:817: onClick={() => { if (cartItems.length > 0) setIsSplitModalOpen(true); }}
+src/components/pos/PosView.tsx:818: disabled={cartItems.length === 0 || isProcessing}
+src/components/pos/PosView.tsx:840: <span style={{ color: '#020617', fontWeight: 900 }}>Askıdaki Satışlar ({parkedSales.length})</span>
+src/components/pos/PosView.tsx:879: Masadaki Ürün: <span className="font-bold text-white">{cartItems.length} Kalem</span> |
+src/components/pos/PosView.tsx:1137: disabled={cartItems.length === 0 || isProcessing}
+src/components/pos/PosView.tsx:1146: disabled={cartItems.length === 0 || isProcessing}
+src/components/pos/PosView.tsx:1155: disabled={cartItems.length === 0 || isProcessing}
+src/components/pos/PosView.tsx:1164: disabled={cartItems.length === 0 || isProcessing}
+src/components/raporlar/CariTab.tsx:104: {cariStats.itemsList.length === 0 ? (
+src/components/raporlar/EkstreTab.tsx:195: {cariEkstreStats.periodTransactions.length === 0 ? (
+src/components/raporlar/GelirGiderTab.tsx:36: {incomeExpenseStats.categoryData.length === 0 ? (
+src/components/raporlar/GelirGiderTab.tsx:54: <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+src/components/raporlar/GelirGiderTab.tsx:68: <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+src/components/raporlar/GelirGiderTab.tsx:97: {filteredExpenses.length === 0 ? (
+src/components/raporlar/StokTab.tsx:117: {stockStats.itemsList.length === 0 ? (
+src/components/raporlar/useRaporlarStats.ts:118: if (islem.items && islem.items.length > 0) {
+src/components/raporlar/useRaporlarStats.ts:269: const finalBalance = periodTransactions.length > 0
+src/components/raporlar/useRaporlarStats.ts:270: ? periodTransactions[periodTransactions.length - 1].runningBalance
+src/components/raporlar/useRaporlarStats.ts:302: if (islem.items && islem.items.length > 0) {
+src/components/raporlar/useRaporlarStats.ts:350: let totalItems = safeStoklar.length;
+src/components/raporlar/useRaporlarStats.ts:389: let totalCari = safeCariler.length;
+src/components/settings/ShortcutsSettings.tsx:32: else if (k.length === 1) k = k.toUpperCase();
+src/components/stoklar/PrintBarcodeModal.tsx:39: if (barcodeTemplates.length > 0) {
+src/components/stoklar/PrintBarcodeModal.tsx:82: {printTemplates.length === 0 ? (
+src/components/stoklar/PrintBarcodeModal.tsx:335: disabled={printTemplates.length === 0}
+src/components/stoklar/PrintBarcodeModal.tsx:447: disabled={printTemplates.length === 0}
+src/components/stoklar/StockModal.tsx:65: code: aiPrefilledData.code || `STK-${String(stoklar.length + 1).padStart(4, '0')}`,
+src/components/stoklar/StockModal.tsx:80: code: `STK-${String(stoklar.length + 1).padStart(4, '0')}`,
+src/components/stoklar/StockModal.tsx:95: }, [isOpen, editingStock, stoklar.length, aiPrefilledData]);
+src/components/stoklar/StoklarExtraModals.tsx:311: if (val.length === 4) {
+src/components/stoklar/StoklarExtraModals.tsx:422: {salesDetails.length}
+src/components/stoklar/StoklarExtraModals.tsx:435: {salesDetails.length === 0 ? (
+src/components/stoklar/StoklarExtraModals.tsx:463: {cariGroup.transactions.length} Farklı İşlem
+src/components/tekrarlayan/TekrarlayanManager.tsx:162: pendingItems.length > 0
+src/components/tekrarlayan/TekrarlayanManager.tsx:171: {pendingItems.length > 0 && (
+src/components/tekrarlayan/TekrarlayanManager.tsx:173: {pendingItems.length} VADESİ GELDİ
+src/components/tekrarlayan/TekrarlayanManager.tsx:178: {pendingItems.length} <span className="text-sm font-normal text-slate-500 dark:text-zinc-400">Gider</span>
+src/components/tekrarlayan/TekrarlayanManager.tsx:181: {pendingItems.length > 0 ? (
+src/components/tekrarlayan/TekrarlayanManager.tsx:237: <option value="pending">⚠️ Onay Bekleyenler ({pendingItems.length})</option>
+src/components/tekrarlayan/TekrarlayanManager.tsx:271: {filteredList.length === 0 ? (
+src/components/templatedesigner/TemplateSettingsPanel.tsx:75: disabled={templates.length <= 1}
+src/firebase.ts:367: if (islem.items && Array.isArray(islem.items) && islem.items.length > 0) {
+src/firebase.ts:464: if (islem.items && Array.isArray(islem.items) && islem.items.length > 0) {
+src/firebase.ts:818: if (!Array.isArray(items) || items.length === 0) continue;
+src/hooks/useAppAuth.ts:35: if (pin.length !== 6) {
+src/hooks/useAppAuth.ts:82: if (prev.length < 6) {
+src/hooks/useAppAuth.ts:84: if (next.length === 6) {
+src/hooks/useAppData.ts:113: if (missingDefaults.length > 0 && !isSeeding) {
+src/hooks/useAppSettings.ts:86: if (Array.isArray(parsed) && parsed.length > 0) {
+src/hooks/useAppSettings.ts:111: if (targetIndex >= 0 && targetIndex < newOrder.length) {
+src/hooks/useAppShortcuts.ts:16: if (Array.isArray(parsed) && parsed.length > 0) {
+src/utils/aiExcelParser.ts:33: if (!rawData || rawData.length === 0) {
+src/utils/aiExcelParser.ts:98: for (let i = 0; i < Math.min(rawData.length, 10); i++) {
+src/utils/aiExcelParser.ts:131: for (let i = dataStartIndex; i < rawData.length; i++) {
+src/utils/aiExcelParser.ts:133: if (!row || row.length === 0) continue;
+src/utils/aiExcelParser.ts:202: totalCards: parsedData.length,
+src/utils/backupCrypto.ts:12: for (let i = 0; i < str.length; i++) {
+src/utils/backupCrypto.ts:32: j = (j + s[i] + key.charCodeAt(i % key.length)) % 256;
+src/utils/backupCrypto.ts:40: for (let y = 0; y < str.length; y++) {
+src/utils/excelParser.ts:85: return headerTerms.some((term) => norm === term || (norm.length <= 25 && norm.includes('isimunvan')));
+src/utils/excelParser.ts:128: if (trimmed.length < 2) return false;
+src/utils/excelParser.ts:173: if (!rows || rows.length === 0) return [];
+src/utils/excelParser.ts:180: if (samples.length >= 25) break;
+src/utils/excelParser.ts:198: const isDateColumnByData = samples.length > 0 && (dateCount / samples.length) >= 0.5;
+src/utils/excelParser.ts:220: } else if (kw.length <= 3 && norm === kw) {
+src/utils/excelParser.ts:235: if (highestScore < 80 && samples.length > 0) {
+src/utils/excelParser.ts:238: if (!assignedTargets.has('phone') && (phoneCount / samples.length) >= 0.5) {
+src/utils/excelParser.ts:245: if (!assignedTargets.has('email') && (emailCount / samples.length) >= 0.5) {
+src/utils/excelParser.ts:252: if (!assignedTargets.has('taxNo') && (taxCount / samples.length) >= 0.5) {
+src/utils/excelParser.ts:259: if (!assignedTargets.has('currency') && (currCount / samples.length) >= 0.5) {
+src/utils/excelParser.ts:266: if (!assignedTargets.has('name') && (nameCount / samples.length) >= 0.6) {
+src/utils/excelParser.ts:273: if (!assignedTargets.has('openingBalance') && (amountCount / samples.length) >= 0.6) {
+src/utils/excelParser.ts:502: totalCount: items.length,
+src/utils/excelParser.ts:503: validCount: activeItems.length,
+src/utils/excelParser.ts:504: invalidCount: items.length - activeItems.length,
+src/utils/excelParser.ts:533: if (!raw2D || raw2D.length === 0) {
+src/utils/excelParser.ts:546: const maxScanRows = Math.min(raw2D.length, 15);
+src/utils/excelParser.ts:589: if (rows.length === 0) {
+src/utils/excelParser.ts:598: totalRowCount: rows.length
+src/utils/formatters.ts:37: if (parts.length > 0) {
+src/utils/formatters.ts:38: return decodeURIComponent(parts[parts.length - 1]);
+src/utils/telegramLogger.ts:19: if (existingLogs.length > 100) existingLogs.pop();
+src/utils/virtualFileSystem.ts:103: if (this.files.length === 0) {
+src/utils/zipUtils.ts:50: size: (zipEntry as any)._data?.uncompressedSize || content.length || 0,

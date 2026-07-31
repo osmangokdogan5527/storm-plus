@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PosPaymentSplit } from '../../types/pos';
 import { BankAccount, Cari } from '../../types';
+import { PosNumpadModal } from './PosNumpadModal';
 import { DollarSign, CreditCard, User, AlertCircle, CheckCircle2, X } from 'lucide-react';
 import { reportErrorToTelegram } from '../../utils/telegramLogger';
 
@@ -26,6 +27,7 @@ export const PosSplitPaymentModal: React.FC<PosSplitPaymentModalProps> = ({
   const safeBankAccounts = Array.isArray(bankAccounts) ? bankAccounts : [];
   const [cashAmount, setCashAmount] = useState<number>(0);
   const [cashReceived, setCashReceived] = useState<number>(0);
+  const [numpadState, setNumpadState] = useState<{ isOpen: boolean; type: 'cash' | 'cashReceived' | 'pos' | 'open'; initialValue: number } | null>(null);
   const [posAmount, setPosAmount] = useState<number>(0);
   const [posAccountId, setPosAccountId] = useState<string>('');
   const [openAccountAmount, setOpenAccountAmount] = useState<number>(0);
@@ -177,29 +179,21 @@ export const PosSplitPaymentModal: React.FC<PosSplitPaymentModalProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <span className="text-[11px] text-slate-200 font-bold block mb-1">Nakit Tutar (₺)</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={cashAmount || ''}
-                    onChange={(e) => {
-                      const val = Math.max(0, Number(e.target.value) || 0);
-                      setCashAmount(val);
-                      if (cashReceived < val) setCashReceived(val);
-                    }}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-600 rounded-lg text-white font-mono text-sm font-bold focus:outline-none focus:border-teal-400"
-                  />
+                  <button
+                    onClick={() => setNumpadState({ isOpen: true, type: 'cash', initialValue: cashAmount })}
+                    className="w-full text-left px-3 py-2 bg-slate-950 border border-slate-600 rounded-lg text-white font-mono text-sm font-bold focus:outline-none focus:border-teal-400 min-h-[38px]"
+                  >
+                    {cashAmount || '0.00'}
+                  </button>
                 </div>
                 <div>
                   <span className="text-[11px] text-slate-200 font-bold block mb-1">Alınan Nakit (Para Üstü İçin)</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={cashReceived || ''}
-                    onChange={(e) => setCashReceived(Math.max(0, Number(e.target.value) || 0))}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-600 rounded-lg text-white font-mono text-sm font-bold focus:outline-none focus:border-teal-400"
-                  />
+                  <button
+                    onClick={() => setNumpadState({ isOpen: true, type: 'cashReceived', initialValue: cashReceived })}
+                    className="w-full text-left px-3 py-2 bg-slate-950 border border-slate-600 rounded-lg text-white font-mono text-sm font-bold focus:outline-none focus:border-teal-400 min-h-[38px]"
+                  >
+                    {cashReceived || '0.00'}
+                  </button>
                 </div>
               </div>
 
@@ -233,14 +227,12 @@ export const PosSplitPaymentModal: React.FC<PosSplitPaymentModalProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <span className="text-[11px] text-slate-200 font-bold block mb-1">POS Tutarı (₺)</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={posAmount || ''}
-                    onChange={(e) => setPosAmount(Math.max(0, Number(e.target.value) || 0))}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-600 rounded-lg text-white font-mono text-sm font-bold focus:outline-none focus:border-blue-400"
-                  />
+                  <button
+                    onClick={() => setNumpadState({ isOpen: true, type: 'pos', initialValue: posAmount })}
+                    className="w-full text-left px-3 py-2 bg-slate-950 border border-slate-600 rounded-lg text-white font-mono text-sm font-bold focus:outline-none focus:border-blue-400 min-h-[38px]"
+                  >
+                    {posAmount || '0.00'}
+                  </button>
                 </div>
                 <div>
                   <span className="text-[11px] text-slate-200 font-bold block mb-1">POS / Banka Hesabı</span>
@@ -290,16 +282,13 @@ export const PosSplitPaymentModal: React.FC<PosSplitPaymentModalProps> = ({
                     </strong>
                   </span>
                 </div>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
+                <button
                   disabled={!selectedCari}
-                  value={openAccountAmount || ''}
-                  onChange={(e) => setOpenAccountAmount(Math.max(0, Number(e.target.value) || 0))}
-                  placeholder={!selectedCari ? 'Açık hesap için önce müşteri seçin' : '0.00'}
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-600 rounded-lg text-white font-mono text-sm font-bold focus:outline-none focus:border-amber-400 disabled:opacity-50"
-                />
+                  onClick={() => setNumpadState({ isOpen: true, type: 'open', initialValue: openAccountAmount })}
+                  className="w-full text-left px-3 py-2 bg-slate-950 border border-slate-600 rounded-lg text-white font-mono text-sm font-bold focus:outline-none focus:border-amber-400 disabled:opacity-50 min-h-[38px]"
+                >
+                  {!selectedCari ? 'Açık hesap için önce müşteri seçin' : (openAccountAmount || '0.00')}
+                </button>
               </div>
             </div>
           </div>

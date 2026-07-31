@@ -172,7 +172,7 @@ export const StatsGridWidget = React.memo<StatsGridWidgetProps>(({
                           <span>
                             Tür:{" "}
                             <strong className="text-white/80 font-semibold">
-                              {stoklar.length} Ürün
+                              {(stoklar || []).length} Ürün
                             </strong>
                           </span>
                           <span>

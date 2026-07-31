@@ -63,7 +63,7 @@ export const PosParkedSalesModal: React.FC<PosParkedSalesModalProps> = ({
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 truncate">
-                    {sale.items.length} Kalem Ürün ({sale.items.reduce((acc, i) => acc + i.quantity, 0)} Adet)
+                    {(sale.items || []).length} Kalem Ürün ({(sale.items || []).reduce((acc, i) => acc + i.quantity, 0)} Adet)
                   </p>
                   <span className="text-sm font-extrabold text-teal-400 font-mono block">
                     ₺{sale.totalAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}

@@ -304,7 +304,7 @@ export default function App() {
       }
 
       // If it's a single printable character (length is 1), record it
-      if (e.key.length === 1) {
+      if (e.key && e.key.length === 1) {
         // If the typing speed is slow (> 50ms), reset the buffer to only keep the current character.
         // Humans cannot type with < 50ms consistently. Hardware scanners type at < 15ms.
         if (timeDiff > 50) {

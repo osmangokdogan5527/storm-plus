@@ -63,7 +63,7 @@ export const PosTableManagementModal: React.FC<PosTableManagementModalProps> = (
   const categories = ['Tümü', ...Array.from(new Set(tables.map((t) => t.category)))];
 
   // Filtered tables
-  const filteredTables = tables.filter((t) => {
+  const filteredTables = (tables || []).filter((t) => {
     const matchesCat = selectedCategory === 'Tümü' || t.category === selectedCategory;
     const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           t.category.toLowerCase().includes(searchTerm.toLowerCase());
@@ -71,10 +71,10 @@ export const PosTableManagementModal: React.FC<PosTableManagementModalProps> = (
   });
 
   // Analytics
-  const totalCount = tables.length;
-  const occupiedTables = tables.filter((t) => t.status === 'occupied' || t.status === 'bill_printed');
-  const emptyCount = tables.filter((t) => t.status === 'empty').length;
-  const billPrintedCount = tables.filter((t) => t.status === 'bill_printed').length;
+  const totalCount = (tables || []).length;
+  const occupiedTables = (tables || []).filter((t) => t.status === 'occupied' || t.status === 'bill_printed');
+  const emptyCount = (tables || []).filter((t) => t.status === 'empty').length;
+  const billPrintedCount = (tables || []).filter((t) => t.status === 'bill_printed').length;
   
   const totalOpenRevenue = occupiedTables.reduce((sum, t) => {
     const tableSum = (t.items || []).reduce((acc, i) => acc + (i.totalLine || 0), 0);
@@ -110,7 +110,7 @@ export const PosTableManagementModal: React.FC<PosTableManagementModalProps> = (
 
   const confirmDeleteTable = () => {
     if (!tableToDelete) return;
-    const updated = tables.filter((t) => t.id !== tableToDelete.id);
+    const updated = (tables || []).filter((t) => t.id !== tableToDelete.id);
     onUpdateTables(updated);
     setTableToDelete(null);
   };
@@ -379,7 +379,7 @@ export const PosTableManagementModal: React.FC<PosTableManagementModalProps> = (
               >
                 {cat === 'Tümü' ? 'Tüm Masalar' : cat}
                 <span className="ml-1.5 opacity-60 text-[10px]">
-                  ({cat === 'Tümü' ? tables.length : tables.filter((t) => t.category === cat).length})
+                  ({cat === 'Tümü' ? (tables || []).length : (tables || []).filter((t) => t.category === cat).length})
                 </span>
               </button>
             ))}

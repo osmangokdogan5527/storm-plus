@@ -5,6 +5,7 @@ import { PosProductCatalog } from './PosProductCatalog';
 import { PosCartTable } from './PosCartTable';
 import { PosSplitPaymentModal } from './PosSplitPaymentModal';
 import { PosReceiptModal } from './PosReceiptModal';
+import { PosNumpadModal } from './PosNumpadModal';
 import { PosParkedSalesModal } from './PosParkedSalesModal';
 import { PosPlatformSettingsModal } from './PosPlatformSettingsModal';
 import { PosDirectPlatformSaleModal } from './PosDirectPlatformSaleModal';
@@ -55,6 +56,7 @@ export const PosView: React.FC<PosViewProps> = ({
   const [globalTaxRate, setGlobalTaxRate] = useState<number>(0);
   const [discountMode, setDiscountMode] = useState<'percent' | 'amount' | 'target'>('percent');
   const [discountVal, setDiscountVal] = useState<number | string>('');
+  const [isDiscountNumpadOpen, setIsDiscountNumpadOpen] = useState(false);
 
   // PARA BİRİMİ SEÇİMİ (TRY, USD, EUR)
   const [selectedCurrency, setSelectedCurrency] = useState<'TRY' | 'USD' | 'EUR'>('TRY');
@@ -837,7 +839,7 @@ export const PosView: React.FC<PosViewProps> = ({
             <span className="px-2 py-0.5 rounded-lg text-xs font-mono font-black" style={{ color: '#020617', backgroundColor: 'rgba(2,6,23,0.25)' }}>
               F8
             </span>
-            <span style={{ color: '#020617', fontWeight: 900 }}>Askıdaki Satışlar ({parkedSales.length})</span>
+            <span style={{ color: '#020617', fontWeight: 900 }}>Askıdaki Satışlar ({(parkedSales || []).length})</span>
           </button>
 
           {/* RESTORAN MASA PLANINI AÇ BUTONU */}
@@ -850,7 +852,7 @@ export const PosView: React.FC<PosViewProps> = ({
           >
             <Utensils size={16} className="text-white" />
             <span style={{ color: '#ffffff', fontWeight: 900 }}>
-              Masa Planı ({tables.filter((t) => t.status === 'occupied' || t.status === 'bill_printed').length} Dolu)
+              Masa Planı ({(tables || []).filter((t) => t.status === 'occupied' || t.status === 'bill_printed').length} Dolu)
             </span>
           </button>
         </div>
@@ -1005,60 +1007,67 @@ export const PosView: React.FC<PosViewProps> = ({
                 </div>
 
                 {/* İSKONTO GİRİŞ INPUT'U */}
+                <PosNumpadModal
+                  isOpen={isDiscountNumpadOpen}
+                  onClose={() => setIsDiscountNumpadOpen(false)}
+                  title={discountMode === 'percent' ? 'İskonto % Oranı' : discountMode === 'amount' ? 'İskonto Tutarı (₺)' : 'Alınacak Net Tutar (₺)'}
+                  initialValue={discountVal}
+                  onConfirm={(val) => setDiscountVal(val)}
+                  allowDecimal={true}
+                />
                 <div className="relative flex items-center">
-                  <input
-                    type="number"
-                    step="any"
-                    min="0"
-                    value={discountVal}
-                    onChange={(e) => setDiscountVal(e.target.value === '' ? '' : Math.max(0, Number(e.target.value)))}
-                    placeholder={
-                      discountMode === 'percent'
-                        ? 'İskonto % Oranı Giriniz...'
-                        : discountMode === 'amount'
-                        ? 'İskonto Tutarı ₺ Giriniz...'
-                        : 'Alınacak Net Tutar ₺ Giriniz...'
-                    }
-                    className="w-full pl-3.5 pr-9 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 font-bold focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400"
+                  <button
+                    onClick={() => setIsDiscountNumpadOpen(true)}
+                    className="w-full text-left pl-3.5 pr-9 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-white font-bold hover:border-amber-400 transition-colors flex items-center h-[42px]"
                     style={{ backgroundColor: '#0f172a', color: '#ffffff' }}
-                  />
+                  >
+                    {discountVal === '' || discountVal === 0 ? (
+                      <span className="text-slate-500">
+                        {discountMode === 'percent'
+                          ? 'İskonto % Oranı Giriniz...'
+                          : discountMode === 'amount'
+                          ? 'İskonto Tutarı ₺ Giriniz...'
+                          : 'Alınacak Net Tutar ₺ Giriniz...'}
+                      </span>
+                    ) : (
+                      <span>{discountVal}</span>
+                    )}
+                  </button>
                   <span className="absolute right-3 text-xs font-black font-mono text-amber-400" style={{ color: '#fbbf24' }}>
                     {discountMode === 'percent' ? '%' : '₺'}
                   </span>
                 </div>
               </div>
 
-              {/* 3. ÖDENECEK PARA BİRİMİ SEÇİMİ (SAĞA YANAŞTIRILMIŞ) */}
-              <div className="md:col-span-4 space-y-1.5 flex flex-col items-end text-right">
-                <div className="flex items-center justify-end gap-2 w-full">
-                  <span className="text-xs font-black text-teal-300 uppercase tracking-wider flex items-center gap-1" style={{ color: '#5eead4' }}>
-                    <DollarSign size={14} />
-                    Para Birimi:
-                  </span>
-                  <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-700">
-                    {[
-                      { code: 'TRY', label: '₺ TRY' },
-                      { code: 'USD', label: '$ USD' },
-                      { code: 'EUR', label: '€ EUR' },
-                    ].map((c) => (
-                      <button
-                        key={c.code}
-                        type="button"
-                        onClick={() => {
-                          setSelectedCurrency(c.code as any);
-                          setCustomRate('');
-                        }}
-                        className={`px-2.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer active:scale-95 touch-manipulation ${
-                          selectedCurrency === c.code
-                            ? 'bg-teal-400 text-slate-950 shadow'
-                            : 'text-slate-400 hover:text-white'
-                        }`}
-                        style={selectedCurrency === c.code ? { backgroundColor: '#2dd4bf', color: '#020617', fontWeight: 900 } : {}}
-                      >
-                        {c.label}
-                      </button>
-                    ))}
-                  </div>
+              {/* 3. ÖDENECEK PARA BİRİMİ SEÇİMİ */}
+              <div className="md:col-span-4 space-y-1.5">
+                <span className="text-xs font-black text-teal-300 uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#5eead4' }}>
+                  Para Birimi:
+                </span>
+                <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-700">
+                  {[
+                    { code: 'TRY', label: 'TRY', icon: '₺' },
+                    { code: 'USD', label: 'USD', icon: '$' },
+                    { code: 'EUR', label: 'EUR', icon: '€' },
+                  ].map((c) => (
+                    <button
+                      key={c.code}
+                      type="button"
+                      onClick={() => {
+                        setSelectedCurrency(c.code as any);
+                        setCustomRate('');
+                      }}
+                      className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-black transition-all cursor-pointer text-center active:scale-95 touch-manipulation flex items-center justify-center gap-1.5 ${
+                        selectedCurrency === c.code
+                          ? 'bg-teal-400 text-slate-950 shadow scale-105'
+                          : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                      }`}
+                      style={selectedCurrency === c.code ? { backgroundColor: '#2dd4bf', color: '#020617', fontWeight: 900 } : {}}
+                    >
+                      <span className="opacity-70">{c.icon}</span>
+                      <span>{c.label}</span>
+                    </button>
+                  ))}
                 </div>
 
                 {selectedCurrency !== 'TRY' ? (

@@ -283,10 +283,10 @@ function StoklarView({
 
   // General Inventory Stats
   const invStats = useMemo(() => {
-    let totalItems = stoklar.length;
-    let criticalItemsCount = stoklar.filter(s => s.quantity <= s.minQuantity).length;
-    let totalStockValue = stoklar.reduce((sum, s) => sum + (s.quantity * s.purchasePrice), 0);
-    let totalQuantity = stoklar.reduce((sum, s) => sum + s.quantity, 0);
+    let totalItems = (stoklar || []).length;
+    let criticalItemsCount = (stoklar || []).filter(s => s.quantity <= s.minQuantity).length;
+    let totalStockValue = (stoklar || []).reduce((sum, s) => sum + (s.quantity * s.purchasePrice), 0);
+    let totalQuantity = (stoklar || []).reduce((sum, s) => sum + s.quantity, 0);
 
     return {
       totalItems,

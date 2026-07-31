@@ -85,7 +85,7 @@ export default function TekrarlayanManager({
 
   // Filtered items
   const filteredList = useMemo(() => {
-    return recurringTransactions.filter((item) => {
+    return (recurringTransactions || []).filter((item) => {
       // Search
       const matchesSearch = 
         !searchTerm.trim() ||
@@ -149,7 +149,7 @@ export default function TekrarlayanManager({
               Aktif Abonelik & Şablon
             </p>
             <h4 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-              {recurringTransactions.filter(i => i.status === 'active').length} <span className="text-sm font-normal text-slate-400">Adet</span>
+              {(recurringTransactions || []).filter(i => i.status === 'active').length} <span className="text-sm font-normal text-slate-400">Adet</span>
             </h4>
           </div>
           <div className="p-3 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl">
@@ -159,7 +159,7 @@ export default function TekrarlayanManager({
 
         {/* Pending Approvals Widget */}
         <div className={`border p-5 rounded-2xl shadow-sm flex items-center justify-between transition-all ${
-          pendingItems.length > 0 
+          (pendingItems || []).length > 0 
             ? 'bg-gradient-to-r from-[var(--accent-50)] to-[var(--accent-100)] dark:from-[var(--accent-950)]/40 dark:to-[var(--accent-900)]/30 border-[var(--accent-300)] dark:border-[var(--accent-800)]' 
             : 'bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800'
         }`}>
@@ -168,17 +168,17 @@ export default function TekrarlayanManager({
               <p className="text-xs font-bold text-[var(--accent-700)] dark:text-[var(--accent-400)] uppercase tracking-wider">
                 Onay Bekleyen İşlemler
               </p>
-              {pendingItems.length > 0 && (
+              {(pendingItems || []).length > 0 && (
                 <span className="px-2 py-0.5 text-[10px] font-black bg-[var(--accent-600)] text-white rounded-full animate-pulse">
-                  {pendingItems.length} VADESİ GELDİ
+                  {(pendingItems || []).length} VADESİ GELDİ
                 </span>
               )}
             </div>
             <h4 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-              {pendingItems.length} <span className="text-sm font-normal text-slate-500 dark:text-zinc-400">Gider</span>
+              {(pendingItems || []).length} <span className="text-sm font-normal text-slate-500 dark:text-zinc-400">Gider</span>
             </h4>
           </div>
-          {pendingItems.length > 0 ? (
+          {(pendingItems || []).length > 0 ? (
             <button
               onClick={() => {
                 setStatusFilter('pending');
@@ -234,7 +234,7 @@ export default function TekrarlayanManager({
               className="px-3 py-2 text-xs font-medium bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-[var(--accent-500)] dark:text-white outline-none"
             >
               <option value="all">Tüm Durumlar</option>
-              <option value="pending">⚠️ Onay Bekleyenler ({pendingItems.length})</option>
+              <option value="pending">⚠️ Onay Bekleyenler ({(pendingItems || []).length})</option>
               <option value="active">🟢 Aktif Şablonlar</option>
               <option value="paused">🟡 Duraklatılanlar</option>
             </select>

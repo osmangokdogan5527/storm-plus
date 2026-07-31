@@ -62,7 +62,7 @@ export function StockModal({
       } else if (aiPrefilledData) {
         setFormData({
           name: aiPrefilledData.urunAdi || '',
-          code: aiPrefilledData.code || `STK-${String(stoklar.length + 1).padStart(4, '0')}`,
+          code: aiPrefilledData.code || `STK-${String((stoklar || []).length + 1).padStart(4, '0')}`,
           barcode: aiPrefilledData.barcode || '',
           imageUrl: '',
           unit: aiPrefilledData.unit || 'Adet',
@@ -77,7 +77,7 @@ export function StockModal({
       } else {
         setFormData({
           name: '',
-          code: `STK-${String(stoklar.length + 1).padStart(4, '0')}`,
+          code: `STK-${String((stoklar || []).length + 1).padStart(4, '0')}`,
           barcode: '',
           imageUrl: '',
           unit: 'Adet',
@@ -92,7 +92,7 @@ export function StockModal({
       }
       setFormError('');
     }
-  }, [isOpen, editingStock, stoklar.length, aiPrefilledData]);
+  }, [isOpen, editingStock, (stoklar || []).length, aiPrefilledData]);
 
   // Handle form submission
   const categories = Array.from(new Set(stoklar.map(s => s.category).filter(Boolean))) as string[];
