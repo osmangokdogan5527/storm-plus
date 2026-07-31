@@ -1,0 +1,8 @@
+{
+  "name": "Storm Plus",
+  "description": "Kafe, Restoran ve Dokunmatik POS Adisyon Yönetim Sistemi",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
