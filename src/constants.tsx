@@ -430,20 +430,14 @@ export const StormLogo = ({
   );
 };
 
-export const APP_VERSION = '1.3.0';
+export const APP_VERSION = '1.3.1';
 
 export const CHANGELOG = {
-  version: '1.3.0',
+  version: '1.3.1',
   features: [
-    "Hızlı Satış Bölüm & Kategori Yönetimi: POS ekranında özel bölüm ekleme, silme ve ürünleri kategorilere esnek atama altyapısı.",
-      "Tam Ekran Modu: Ayarlar içerisinden uygulamayı tek tıkla tam ekran kullanabilme özelliği eklendi.",
-      "Tam Ekran Modu: Ayarlar içerisinden uygulamayı tek tıkla tam ekran kullanabilme özelliği eklendi.",
-    "Sol Menü Hiyerarşisi Güncellemesi: 'Hızlı Satış' sekmesi sol navigasyon panelinde Gösterge Paneli'nin hemen altına taşındı.",
-    "Hızlı Satış Ergonomik Alt Panel: Kasa göstergesi, KDV/iskonto ve ödeme alanı sol panele çekilerek geniş sepet alanı sağlandı."
+    "Veri İzolasyonu: Uygulama bulut verileri, diğer yazılımlarla çakışmayı önlemek için 'storm_plus_users' kök dizinine taşındı."
   ],
-  fixes: [
-    "Dokunmatik İskonto Butonları: Yüzde, tutar ve net tutar iskonto seçim butonları dokunmatik kasa kullanımına uygun olarak büyütüldü."
-  ]
+  fixes: []
 };
 
 export const PREDEFINED_USERS = [
@@ -693,6 +687,13 @@ export const PIN_ACCOUNTS = [
 ];
 
 export const changelogData = [
+  {
+    version: "1.3.1",
+    date: "31.07.2026",
+    changes: [
+      "Veri İzolasyonu: Uygulama bulut verileri, diğer yazılımlarla çakışmayı önlemek için 'storm_plus_users' kök dizinine taşındı."
+    ]
+  },
   {
     version: "1.3.0",
     date: "31.07.2026",

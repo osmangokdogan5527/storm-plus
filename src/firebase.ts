@@ -122,9 +122,9 @@ function getPath(collectionName: string): string {
   }
   const ws = getActiveWorkspace();
   if (ws && ws !== 'default') {
-    return `users/${currentUserId}_${ws}/${collectionName}`;
+    return `storm_plus_users/${currentUserId}_${ws}/${collectionName}`;
   }
-  return `users/${currentUserId}/${collectionName}`;
+  return `storm_plus_users/${currentUserId}/${collectionName}`;
 }
 
 // Helper to recursively remove undefined properties from objects to prevent Firestore write errors
