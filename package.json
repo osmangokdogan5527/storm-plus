@@ -23,7 +23,7 @@
     "npmRebuild": true,
     "buildDependenciesFromSource": true,
     "win": {
-      "icon": "public/icon.ico",
+      "icon": "public/icon.png",
       "artifactName": "Storm.Plus.Setup.${version}.${ext}",
       "target": [
         {
