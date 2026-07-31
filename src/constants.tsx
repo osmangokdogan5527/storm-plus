@@ -441,7 +441,7 @@ export const CHANGELOG = {
 };
 
 export const PREDEFINED_USERS = [
-  { id: 'admin', name: 'Kullanıcı 1', pin: '111111' },
+  { id: 'admin', name: 'OSES KARTALTEPE', pin: '111111' },
   { id: 'user_2', name: 'Kullanıcı 2', pin: '222222' },
 ];
 

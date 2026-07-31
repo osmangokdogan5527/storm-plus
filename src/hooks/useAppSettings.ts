@@ -5,16 +5,16 @@ export function useAppSettings() {
 
   const [activeTheme, setActiveTheme] = useState<string>(() => {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      return 'sky';
+      return 'red';
     }
     // Migration check to ensure previous users get the new default 'sky' with 'fluid-mesh'
     const isInitializedV4 = localStorage.getItem('storm_default_setup_v4');
     if (!isInitializedV4) {
       localStorage.setItem('storm_default_setup_v4', 'true');
-      localStorage.setItem('kolay_hesap_accent_theme', 'sky');
+      localStorage.setItem('kolay_hesap_accent_theme', 'red');
       localStorage.setItem('storm_muhasebe_design_style', 'pro-solid');
       localStorage.setItem('storm_muhasebe_logo_theme', 'theme');
-      return 'sky';
+      return 'red';
     }
 
     const saved = localStorage.getItem('kolay_hesap_accent_theme');
