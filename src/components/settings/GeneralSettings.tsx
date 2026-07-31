@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Palette, Eye, EyeOff, ChevronUp, ChevronDown, Download, Sparkles, Check, Printer, Save, Menu } from 'lucide-react';
+import { Palette, Eye, EyeOff, Maximize, ChevronUp, ChevronDown, Download, Sparkles, Check, Printer, Save, Menu } from 'lucide-react';
 import { COLOR_PRESETS, TAB_DEFS } from '../../constants';
 
 export interface GeneralSettingsProps {
@@ -83,6 +83,26 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({
   sidebarPatternColor,
   setSidebarPatternColor
 }) => {
+  const [isFullscreen, setIsFullscreen] = React.useState(document.fullscreenElement !== null);
+
+  React.useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(document.fullscreenElement !== null);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable fullscreen: ${err.message} (${err.name})`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
   // Ensure the logo theme is stabilized to dynamically track the active interface accent color
   React.useEffect(() => {
     if (activeLogoTheme !== 'theme') {
@@ -248,10 +268,33 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({
                       );
                     })}
                   </div>
+                
+                {/* Section C: Tam Ekran Modu */}
+                <div className="pt-4 border-t border-white/10">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+                      <Maximize size={16} />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">Tam Ekran Modu</h3>
+                      <p className="text-[11px] text-white/50 mt-0.5">Uygulamayı tam ekran (F11) olarak kullanın</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={toggleFullscreen}
+                    className={`w-full flex items-center justify-center py-2.5 px-4 rounded-xl border transition cursor-pointer font-bold text-xs ${
+                      isFullscreen
+                        ? 'border-indigo-500 bg-indigo-500/15 text-white shadow-[0_2px_10px_rgba(99,102,241,0.2)]'
+                        : 'border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white'
+                    }`}
+                  >
+                    {isFullscreen ? 'Tam Ekrandan Çık' : 'Tam Ekrana Geç'}
+                  </button>
                 </div>
               </div>
             </div>
-
+            </div>
             {/* Card 3: Firma ve Görünüm Ayarları */}
             <div className="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-sm hidden md:flex flex-col justify-between md:col-span-2">
               <div>

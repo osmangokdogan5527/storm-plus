@@ -436,6 +436,8 @@ export const CHANGELOG = {
   version: '1.3.0',
   features: [
     "Hızlı Satış Bölüm & Kategori Yönetimi: POS ekranında özel bölüm ekleme, silme ve ürünleri kategorilere esnek atama altyapısı.",
+      "Tam Ekran Modu: Ayarlar içerisinden uygulamayı tek tıkla tam ekran kullanabilme özelliği eklendi.",
+      "Tam Ekran Modu: Ayarlar içerisinden uygulamayı tek tıkla tam ekran kullanabilme özelliği eklendi.",
     "Sol Menü Hiyerarşisi Güncellemesi: 'Hızlı Satış' sekmesi sol navigasyon panelinde Gösterge Paneli'nin hemen altına taşındı.",
     "Hızlı Satış Ergonomik Alt Panel: Kasa göstergesi, KDV/iskonto ve ödeme alanı sol panele çekilerek geniş sepet alanı sağlandı."
   ],
@@ -695,7 +697,8 @@ export const changelogData = [
     version: "1.3.0",
     date: "31.07.2026",
     changes: [
-      "Hızlı Satış Bölüm & Kategori Yönetimi: POS ekranında özel bölüm ekleme, silme ve ürünleri kategorilere esnek atama altyapısı."
+      "Hızlı Satış Bölüm & Kategori Yönetimi: POS ekranında özel bölüm ekleme, silme ve ürünleri kategorilere esnek atama altyapısı.",
+      "Tam Ekran Modu: Ayarlar içerisinden uygulamayı tek tıkla tam ekran kullanabilme özelliği eklendi."
     ]
   },
   {
