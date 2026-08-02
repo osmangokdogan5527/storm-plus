@@ -414,17 +414,9 @@ export function processExcelToCariItems(
     }
 
     // Currency Detection (TRY, USD, EUR)
-    let currency: 'TRY' | 'USD' | 'EUR' = 'TRY';
+    let currency: 'TRY' = 'TRY';
     const curVal = currencyCol ? String(row[currencyCol] || '').toUpperCase() : '';
     const combinedSearchStr = `${curVal} ${rawBalStr} ${rawNotes}`.toUpperCase();
-
-    if (combinedSearchStr.includes('USD') || combinedSearchStr.includes('DOLAR') || combinedSearchStr.includes('$')) {
-      currency = 'USD';
-    } else if (combinedSearchStr.includes('EUR') || combinedSearchStr.includes('EURO') || combinedSearchStr.includes('€')) {
-      currency = 'EUR';
-    } else {
-      currency = 'TRY';
-    }
 
     let balanceType: 'receivable' | 'payable' | 'neutral' = 'neutral';
     if (openingBalance > 0) balanceType = 'receivable';

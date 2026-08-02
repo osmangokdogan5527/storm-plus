@@ -254,10 +254,10 @@ Eğer girdi bir finansal işlem (satış, alış, tahsilat, ödeme, masraf, pers
 KDV belirtilmemişse her zaman 0 yap. Otomatik KDV ekleme. Personel ödemelerinde "cariAdi" veya "urunAdi" alanına personelin adını yaz. Masraflarda (ör: su faturası, elektrik) faturanın cinsini "urunAdi" kısmına yaz. Eğer tarih belirtilmemişse veya 'bugün' denilmişse bugünün tarihini ver. Eğer belirsiz bir şey varsa mantıksal tahmin yürüt.
 
 Eğer girdi bir MÜŞTERİ EKLEME/TANIMLAMA isteği ise (ör: "Mehmet Demir adında müşteri ekle, tel: 0555...", "Yeni müşteri tanımla: Can A.Ş.", vb.), SADECE şu JSON formatını döndür:
-{ "tip": "islem", "islem": "add_customer", "cariAdi": "Müşteri Adı/Ünvanı", "phone": "Telefon", "email": "E-posta", "address": "Adres", "bakiye": bakiye_varsa_sayi_değilse_0, "currency": "TRY|USD|EUR" }
+{ "tip": "islem", "islem": "add_customer", "cariAdi": "Müşteri Adı/Ünvanı", "phone": "Telefon", "email": "E-posta", "address": "Adres", "bakiye": bakiye_varsa_sayi_değilse_0, "currency": "TRY" }
 
 Eğer girdi bir TEDARİKÇİ EKLEME/TANIMLAMA isteği ise (ör: "XYZ Toptan adında tedarikçi ekle", "Yeni tedarikçi tanımla: ABC Gıda, borç bakiye: -3000 TL", vb.), SADECE şu JSON formatını döndür:
-{ "tip": "islem", "islem": "add_supplier", "cariAdi": "Tedarikçi Adı/Ünvanı", "phone": "Telefon", "email": "E-posta", "address": "Adres", "bakiye": bakiye_varsa_sayi_değilse_0, "currency": "TRY|USD|EUR" }
+{ "tip": "islem", "islem": "add_supplier", "cariAdi": "Tedarikçi Adı/Ünvanı", "phone": "Telefon", "email": "E-posta", "address": "Adres", "bakiye": bakiye_varsa_sayi_değilse_0, "currency": "TRY" }
 
 Eğer girdi bir ÜRÜN / STOK KARTI EKLEME/TANIMLAMA isteği ise (ör: "Kablosuz Mouse ekle, alış 150 TL, satış 250 TL, stok 100 adet, KDV 20%", "Yeni ürün tanımla: Klavye", vb.), SADECE şu JSON formatını döndür:
 { "tip": "islem", "islem": "add_product", "urunAdi": "Ürün Adı", "code": "Stok Kodu (ör: STK-001 gibi, belirtilmemişse boş bırak)", "barcode": "Barkod (varsa)", "unit": "Adet|KG|Litre|Metre|Kutu|Hizmet (belirtilmemişse Adet)", "purchasePrice": number, "salesPrice": number, "kdv": number (belirtilmemişse KESİNLİKLE 0, otomatik KDV ekleme), "miktar": miktar_sayi_değilse_0, "minQuantity": number (kritik limit, belirtilmemişse 5) }

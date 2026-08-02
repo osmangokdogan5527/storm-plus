@@ -5,7 +5,7 @@ export interface ParsedCari {
   phone: string;
   openingBalance: number;
   type: "customer" | "supplier" | "both";
-  currency: "TRY" | "USD" | "EUR";
+  currency: "TRY";
 }
 
 export interface ExcelParseResult {
@@ -171,17 +171,9 @@ Görevlerin şunlardır:
 
           const finalBalance = rawBalance * multiplier;
           
-          let currency: "TRY" | "USD" | "EUR" = "TRY";
+          let currency: "TRY" = "TRY";
           const rowStr = row.join(' ').toUpperCase();
-          if (mapping.currencyColumnIndex !== null && mapping.currencyColumnIndex !== -1 && row[mapping.currencyColumnIndex]) {
-             const currStr = row[mapping.currencyColumnIndex].toString().toUpperCase();
-             if (currStr.includes('USD') || currStr === '$') currency = 'USD';
-             else if (currStr.includes('EUR') || currStr === '€') currency = 'EUR';
-             else currency = 'TRY';
-          } else {
-             if (rowStr.includes('USD') || rowStr.includes('$')) currency = 'USD';
-             else if (rowStr.includes('EUR') || rowStr.includes('€') || rowStr.includes('EURO')) currency = 'EUR';
-          }
+          currency = "TRY";
 
           if (currency === "TRY") {
             totalOpeningBalance += finalBalance;

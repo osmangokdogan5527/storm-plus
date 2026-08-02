@@ -39,7 +39,7 @@ export interface CariImportItem {
   taxOffice: string;
   openingBalance: number; // Signed balance (positive = alacaklıyız/müşteri borçlu, negative = borçluyuz)
   balanceType: 'receivable' | 'payable' | 'neutral'; // alacak / borç / sıfır
-  currency: 'TRY' | 'USD' | 'EUR';
+  currency: 'TRY';
   notes?: string;
   isValid: boolean;
   validationError?: string;

@@ -26,7 +26,7 @@ export interface Cari {
   openingBalance: number;
   createdAt: string;
   isActive?: boolean;
-  currency?: "TRY" | "USD" | "EUR";
+  currency?: "TRY";
   taxOffice?: string;
   taxNo?: string;
   imageUrl?: string; // Profil/Logo resmi
@@ -73,7 +73,7 @@ export interface Transaction {
   description: string;
   items?: InvoiceItem[]; // only populated for sale / purchase
   createdAt: string;
-  currency?: "TRY" | "USD" | "EUR";
+  currency?: "TRY";
   exchangeRate?: number; // Manual exchange rate for multi-currency transactions
   convertedAmount?: number; // Amount after applying exchange rate to modify Cari's native balance
 }
@@ -118,7 +118,7 @@ export interface Expense {
   account: "cash" | "bank" | "pos"; // Kasa / Banka / POS
   bankAccountId?: string;
   description?: string;
-  currency: "TRY" | "USD" | "EUR";
+  currency: "TRY";
   createdAt: string;
 }
 
@@ -130,7 +130,7 @@ export interface Employee {
   email?: string;
   hireDate: string;
   baseSalary: number;
-  currency: "TRY" | "USD" | "EUR";
+  currency: "TRY";
   isActive: boolean;
   createdAt: string;
 }
@@ -141,7 +141,7 @@ export interface EmployeeTransaction {
   employeeName: string;
   type: "accrual" | "payment" | "advance"; // Hak ediş, Ödeme, Avans
   amount: number;
-  currency: "TRY" | "USD" | "EUR";
+  currency: "TRY";
   date: string;
   account: "cash" | "bank" | "pos" | "cek_portfoy" | "cek_firma" | ""; // Ödeme kaynağı (hak ediş için boş kalabilir)
   bankAccountId?: string;
@@ -153,7 +153,7 @@ export interface BankAccount {
   id: string;
   name: string;
   type: "kasa" | "banka" | "pos";
-  currency: "TRY" | "USD" | "EUR";
+  currency: "TRY";
   initialBalance: number;
   createdAt: string;
 }
@@ -185,7 +185,7 @@ export interface RecurringTransaction {
   type: "expense" | "income"; // Gider / Gelir
   category: Expense['category'];
   amount: number;
-  currency: "TRY" | "USD" | "EUR";
+  currency: "TRY";
   account: "cash" | "bank" | "pos";
   bankAccountId?: string;
   cariId?: string;

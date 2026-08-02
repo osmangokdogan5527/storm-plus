@@ -59,12 +59,9 @@ export const PosView: React.FC<PosViewProps> = ({
   const [isDiscountNumpadOpen, setIsDiscountNumpadOpen] = useState(false);
 
   // PARA BİRİMİ SEÇİMİ (TRY, USD, EUR)
-  const [selectedCurrency, setSelectedCurrency] = useState<'TRY' | 'USD' | 'EUR'>('TRY');
-  const [exchangeRates] = useState<{ USD: number; EUR: number }>({
-    USD: 38.50,
-    EUR: 41.20,
-  });
-  const [customRate, setCustomRate] = useState<string>('');
+  const [selectedCurrency, setSelectedCurrency] = useState<'TRY'>('TRY');
+  
+  
 
   // RESTORAN MASA YÖNETİMİ STATE'LERİ
   const [tables, setTables] = useState<PosTable[]>(() => {
@@ -194,22 +191,11 @@ export const PosView: React.FC<PosViewProps> = ({
   );
 
   // KUR VE DÖVİZLİ TUTAR HESAPLAMASI
-  const currentRate =
-    selectedCurrency === 'TRY'
-      ? 1
-      : customRate !== ''
-      ? Math.max(0.0001, Number(customRate))
-      : exchangeRates[selectedCurrency] || 1;
+  // KUR VE DÖVİZLİ TUTAR HESAPLAMASI
+  const currentRate = 1;
+  const convertedTotal = summary.grandTotal;
+  const currencySymbol = "₺";
 
-  const convertedTotal = summary.grandTotal / currentRate;
-  const currencySymbol =
-    selectedCurrency === 'TRY'
-      ? '₺'
-      : selectedCurrency === 'USD'
-      ? '$'
-      : '€';
-
-  // SEPETE ÜRÜN EKLE VEYA MİKTAR ARTTIR
   const handleAddToCart = useCallback((stock: Stock) => {
     try {
       setCartItems((prev) => {
@@ -709,49 +695,6 @@ export const PosView: React.FC<PosViewProps> = ({
 
   return (
     <div className="pos-terminal-wrapper flex flex-col min-h-[calc(100vh-4rem)] h-auto overflow-y-auto gap-3.5 animate-fade-in p-1.5 bg-slate-900 rounded-2xl pb-10" style={{ backgroundColor: '#0f172a' }}>
-      {/* ONLINE SİPARİŞ PLATFORMLARI ŞERİDİ */}
-      <div className="p-2.5 sm:p-3 bg-slate-900 border-2 border-slate-700/80 rounded-2xl shadow-xl flex items-center justify-between gap-2 overflow-x-auto custom-scrollbar">
-        <div className="flex items-center gap-2 shrink-0 pr-2 border-r border-slate-800">
-          <span className="text-xl">🛵</span>
-          <div className="hidden sm:block">
-            <span className="text-xs font-black text-white block leading-tight">ONLINE SİPARİŞ</span>
-            <span className="text-[10px] text-teal-400 font-bold font-mono">Platform Satışları</span>
-          </div>
-        </div>
-
-        {/* PLATFORM BUTONLARI */}
-        <div className="flex items-center gap-2 overflow-x-auto py-0.5 custom-scrollbar">
-          {platforms
-            .filter((p) => p.active)
-            .map((plat) => (
-              <button
-                key={plat.id}
-                type="button"
-                onClick={() => setSelectedPlatformForSale(plat)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer shadow-md active:scale-95 touch-manipulation hover:scale-[1.03] border ${plat.bgColor} ${plat.borderColor} ${plat.textColor}`}
-                title={`${plat.name} Sipariş Gir (%${plat.commissionRate} Komisyon)`}
-              >
-                <span className="text-base">{plat.icon}</span>
-                <span className="whitespace-nowrap font-black">{plat.name}</span>
-                <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-black ${plat.badgeColor}`}>
-                  %{plat.commissionRate}
-                </span>
-              </button>
-            ))}
-        </div>
-
-        {/* AYARLAR BUTONU */}
-        <button
-          type="button"
-          onClick={() => setIsPlatformSettingsOpen(true)}
-          className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-black flex items-center gap-1.5 shrink-0 transition-all cursor-pointer active:scale-95 touch-manipulation"
-          title="Platform Oranlarını ve Komisyonları Düzenle"
-        >
-          <Settings size={16} className="text-teal-400" />
-          <span className="hidden md:inline">Oran Ayarları</span>
-        </button>
-      </div>
-
       {/* ÜST TERMİNAL BİLGİ & KISAYOL BAR */}
       <div className="p-3.5 bg-slate-900 border-2 border-slate-700 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 shrink-0" style={{ backgroundColor: '#0f172a' }}>
         <div className="flex items-center gap-3">
@@ -966,7 +909,7 @@ export const PosView: React.FC<PosViewProps> = ({
               </div>
 
               {/* 2. İSKONTO SEÇİMİ (% YÜZDE, ₺ İSKONTO, 🎯 NET ALINACAK TUTAR) */}
-              <div className="md:col-span-5 space-y-1.5">
+              <div className="md:col-span-9 space-y-1.5">
                 <div className="flex flex-wrap items-center justify-between gap-1">
                   <span className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1" style={{ color: '#fcd34d' }}>
                     <Sparkles size={15} />
@@ -1039,62 +982,8 @@ export const PosView: React.FC<PosViewProps> = ({
                 </div>
               </div>
 
-              {/* 3. ÖDENECEK PARA BİRİMİ SEÇİMİ */}
-              <div className="md:col-span-4 space-y-1.5">
-                <span className="text-xs font-black text-teal-300 uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#5eead4' }}>
-                  Para Birimi:
-                </span>
-                <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-700">
-                  {[
-                    { code: 'TRY', label: 'TRY', icon: '₺' },
-                    { code: 'USD', label: 'USD', icon: '$' },
-                    { code: 'EUR', label: 'EUR', icon: '€' },
-                  ].map((c) => (
-                    <button
-                      key={c.code}
-                      type="button"
-                      onClick={() => {
-                        setSelectedCurrency(c.code as any);
-                        setCustomRate('');
-                      }}
-                      className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-black transition-all cursor-pointer text-center active:scale-95 touch-manipulation flex items-center justify-center gap-1.5 ${
-                        selectedCurrency === c.code
-                          ? 'bg-teal-400 text-slate-950 shadow scale-105'
-                          : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                      }`}
-                      style={selectedCurrency === c.code ? { backgroundColor: '#2dd4bf', color: '#020617', fontWeight: 900 } : {}}
-                    >
-                      <span className="opacity-70">{c.icon}</span>
-                      <span>{c.label}</span>
-                    </button>
-                  ))}
-                </div>
-
-                {selectedCurrency !== 'TRY' ? (
-                  <div className="flex items-center justify-end gap-1.5 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 self-end">
-                    <span className="text-xs font-bold text-slate-300">
-                      1 {selectedCurrency} Kur:
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        value={customRate !== '' ? customRate : exchangeRates[selectedCurrency as keyof typeof exchangeRates]}
-                        onChange={(e) => setCustomRate(e.target.value)}
-                        className="w-18 py-0.5 bg-slate-950 border border-slate-700 rounded-md text-right text-xs font-mono font-black text-teal-300"
-                        style={{ backgroundColor: '#020617', color: '#2dd4bf' }}
-                      />
-                      <span className="text-xs font-mono text-slate-400">₺</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-[11px] text-slate-500 font-mono text-right pt-0.5">Türk Lirası (Standart)</div>
-                )}
-              </div>
             </div>
-
-            {/* HESAPLAMA ÖZETİ & EKRAN GÖSTERGESİ (2 KOLONLU DÜZEN) */}
+              {/* HESAPLAMA ÖZETİ & EKRAN GÖSTERGESİ (2 KOLONLU DÜZEN) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center border-y border-slate-800 py-3.5">
               {/* KALEM DETAYLARI */}
               <div className="space-y-1.5 text-xs font-mono">
@@ -1140,43 +1029,87 @@ export const PosView: React.FC<PosViewProps> = ({
               </div>
             </div>
 
-            {/* HIZLI AKSİYON ÖDEME BUTONLARI (DOKUNMATİK EKRAN İÇİN BÜYÜK & BELİRGİN) */}
-            <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
-              <button
-                disabled={cartItems.length === 0 || isProcessing}
-                onClick={handleQuickCashSale}
-                className="py-4 sm:py-5 px-3 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-slate-950 font-black rounded-2xl text-sm sm:text-base shadow-xl shadow-emerald-500/30 transition-all flex flex-col items-center justify-center gap-2 cursor-pointer active:scale-95 touch-manipulation border-2 border-emerald-300"
-              >
-                <DollarSign size={22} className="shrink-0" />
-                <span className="text-center font-black">NAKİT [F2]</span>
-              </button>
+            {/* HIZLI AKSİYON ÖDEME & ONLINE SİPARİŞ BÖLÜMÜ (AŞAĞIDA BİRLİKTE) */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 pt-1">
+              {/* HIZLI AKSİYON ÖDEME BUTONLARI */}
+              <div className="lg:col-span-7 xl:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <button
+                  disabled={cartItems.length === 0 || isProcessing}
+                  onClick={handleQuickCashSale}
+                  className="py-3.5 sm:py-4 px-2.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-slate-950 font-black rounded-2xl text-xs sm:text-sm shadow-xl shadow-emerald-500/30 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer active:scale-95 touch-manipulation border-2 border-emerald-300"
+                >
+                  <DollarSign size={20} className="shrink-0" />
+                  <span className="text-center font-black">NAKİT [F2]</span>
+                </button>
 
-              <button
-                disabled={cartItems.length === 0 || isProcessing}
-                onClick={handleQuickPosSale}
-                className="py-4 sm:py-5 px-3 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 text-slate-950 font-black rounded-2xl text-sm sm:text-base shadow-xl shadow-blue-500/30 transition-all flex flex-col items-center justify-center gap-2 cursor-pointer active:scale-95 touch-manipulation border-2 border-blue-300"
-              >
-                <CreditCard size={22} className="shrink-0" />
-                <span className="text-center font-black">POS [F3]</span>
-              </button>
+                <button
+                  disabled={cartItems.length === 0 || isProcessing}
+                  onClick={handleQuickPosSale}
+                  className="py-3.5 sm:py-4 px-2.5 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 text-slate-950 font-black rounded-2xl text-xs sm:text-sm shadow-xl shadow-blue-500/30 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer active:scale-95 touch-manipulation border-2 border-blue-300"
+                >
+                  <CreditCard size={20} className="shrink-0" />
+                  <span className="text-center font-black">POS [F3]</span>
+                </button>
 
-              <button
-                disabled={cartItems.length === 0 || isProcessing}
-                onClick={() => setIsSplitModalOpen(true)}
-                className="py-4 sm:py-5 px-3 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-black rounded-2xl text-sm sm:text-base shadow-xl shadow-purple-600/30 transition-all flex flex-col items-center justify-center gap-2 cursor-pointer active:scale-95 touch-manipulation border-2 border-purple-400"
-              >
-                <Zap size={20} className="shrink-0" />
-                <span className="text-center font-black">PARÇALI [F4]</span>
-              </button>
+                <button
+                  disabled={cartItems.length === 0 || isProcessing}
+                  onClick={() => setIsSplitModalOpen(true)}
+                  className="py-3.5 sm:py-4 px-2.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-black rounded-2xl text-xs sm:text-sm shadow-xl shadow-purple-600/30 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer active:scale-95 touch-manipulation border-2 border-purple-400"
+                >
+                  <Zap size={18} className="shrink-0" />
+                  <span className="text-center font-black">PARÇALI [F4]</span>
+                </button>
 
-              <button
-                disabled={cartItems.length === 0 || isProcessing}
-                onClick={handleParkSale}
-                className="py-4 sm:py-5 px-3 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-black rounded-2xl text-sm sm:text-base shadow-xl shadow-amber-500/20 transition-all flex flex-col items-center justify-center gap-2 cursor-pointer active:scale-95 touch-manipulation border-2 border-amber-300"
-              >
-                <Clock size={20} className="shrink-0" />
-                <span className="text-center font-black">ASKI [F8]</span>
-              </button>
+                <button
+                  disabled={cartItems.length === 0 || isProcessing}
+                  onClick={handleParkSale}
+                  className="py-3.5 sm:py-4 px-2.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-black rounded-2xl text-xs sm:text-sm shadow-xl shadow-amber-500/20 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer active:scale-95 touch-manipulation border-2 border-amber-300"
+                >
+                  <Clock size={18} className="shrink-0" />
+                  <span className="text-center font-black">ASKI [F8]</span>
+                </button>
+              </div>
+
+              {/* ONLINE SİPARİŞ PLATFORMLARI (AŞAĞIDA ÖDEMENİN YANINDA) */}
+              <div className="lg:col-span-5 xl:col-span-4 p-2.5 bg-slate-950/80 border-2 border-slate-700/80 rounded-2xl shadow-xl flex flex-col justify-between gap-2" style={{ backgroundColor: '#020617' }}>
+                <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-base">🛵</span>
+                    <span className="text-xs font-black text-white block leading-tight">ONLINE SİPARİŞ</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsPlatformSettingsOpen(true)}
+                    className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[10px] font-black flex items-center gap-1 shrink-0 transition-all cursor-pointer active:scale-95"
+                    title="Platform Oranlarını ve Komisyonları Düzenle"
+                  >
+                    <Settings size={12} className="text-teal-400" />
+                    <span>Oranlar</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-1.5">
+                  {platforms
+                    .filter((p) => p.active)
+                    .map((plat) => (
+                      <button
+                        key={plat.id}
+                        type="button"
+                        onClick={() => setSelectedPlatformForSale(plat)}
+                        className={`px-2 py-1.5 rounded-xl text-[11px] font-black flex items-center justify-between gap-1 transition-all cursor-pointer shadow-md active:scale-95 touch-manipulation hover:scale-[1.02] border ${plat.bgColor} ${plat.borderColor} ${plat.textColor}`}
+                        title={`${plat.name} Sipariş Gir (%${plat.commissionRate} Komisyon)`}
+                      >
+                        <div className="flex items-center gap-1 min-w-0 truncate">
+                          <span className="text-xs shrink-0">{plat.icon}</span>
+                          <span className="truncate font-black">{plat.name}</span>
+                        </div>
+                        <span className={`px-1 py-0.2 rounded text-[9px] font-mono font-black shrink-0 ${plat.badgeColor}`}>
+                          %{plat.commissionRate}
+                        </span>
+                      </button>
+                    ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>

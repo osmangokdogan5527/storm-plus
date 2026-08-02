@@ -12,7 +12,7 @@ interface CariTabProps {
   setCariSearch: (val: string) => void;
   cariTypeFilter: 'all' | 'customer' | 'supplier';
   setCariTypeFilter: (val: 'all' | 'customer' | 'supplier') => void;
-  selectedCurrency: 'TRY' | 'USD' | 'EUR';
+  selectedCurrency: 'TRY';
   formatMoney: (val: number) => string;
 }
 

@@ -65,7 +65,7 @@ export default function CalisanlarView({
     email: "",
     hireDate: new Date().toISOString().split("T")[0],
     baseSalary: 0,
-    currency: "TRY" as "TRY" | "USD" | "EUR",
+    currency: "TRY" as "TRY",
     isActive: true,
   });
   // Form Transaction state
@@ -73,7 +73,7 @@ export default function CalisanlarView({
     employeeId: "",
     type: "accrual" as "accrual" | "payment" | "advance",
     amount: 0,
-    currency: "TRY" as "TRY" | "USD" | "EUR",
+    currency: "TRY" as "TRY",
     date: new Date().toISOString().split("T")[0],
     account: "" as "cash" | "bank" | "pos" | "",
     description: "",
@@ -124,15 +124,15 @@ export default function CalisanlarView({
   const employeeBalances = useMemo(() => {
     const balances = {} as Record<
       string,
-      Record<"TRY" | "USD" | "EUR", number>
+      Record<"TRY", number>
     >;
     // Initialize
     employees.forEach((emp) => {
-      balances[emp.id] = { TRY: 0, USD: 0, EUR: 0 };
+      balances[emp.id] = { TRY: 0 };
     });
     transactions.forEach((tx) => {
       if (!balances[tx.employeeId]) {
-        balances[tx.employeeId] = { TRY: 0, USD: 0, EUR: 0 };
+        balances[tx.employeeId] = { TRY: 0 };
       }
       const amt = tx.amount || 0;
       const curr = tx.currency || "TRY";

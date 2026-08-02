@@ -430,7 +430,7 @@ export const StormLogo = ({
   );
 };
 
-export const APP_VERSION = '1.3.1';
+export const APP_VERSION = '1.3.2';
 
 export const CHANGELOG = {
   version: '1.3.1',
@@ -688,6 +688,14 @@ export const PIN_ACCOUNTS = [
 
 export const changelogData = [
   {
+    version: "1.3.2",
+    date: "01.08.2026",
+    changes: [
+      "Hata Düzeltmeleri: Para birimi panelindeki hizalama ve görünüm sorunları giderildi.",
+      "Geliştirmeler: Yeni özellikler için altyapı hazırlıkları yapıldı."
+    ]
+  },
+  {
     version: "1.3.1",
     date: "31.07.2026",
     changes: [
@@ -755,7 +763,7 @@ export const changelogData = [
     version: "1.2.2",
     date: "31.07.2026",
     changes: [
-      "Çoklu Para Birimi (Döviz) Takibi: TL, USD ve EUR cinsinden cari bakiye takibi ve canlı TCMB/Döviz kuru senkronizasyonu."
+      "Çoklu Para Birimi (Döviz) Takibi: TL cinsinden cari bakiye takibi."
     ]
   },
   {

@@ -10,15 +10,15 @@ export const getExportFunctions = (deps: any) => {
       if (activeTab === 'ozet') {
         // 1. P&L Sheet
         const plData = [
-          { 'Finansal Rapor Başlığı': 'Satış Gelirleri', 'Tutar': summaryStats.sales, 'Döviz': selectedCurrency },
-          { 'Finansal Rapor Başlığı': 'Satılan Malın Maliyeti (SMM)', 'Tutar': summaryStats.costOfSales, 'Döviz': selectedCurrency },
-          { 'Finansal Rapor Başlığı': 'Brüt Kar', 'Tutar': summaryStats.grossProfit, 'Döviz': selectedCurrency },
-          { 'Finansal Rapor Başlığı': 'Faaliyet Giderleri (Masraflar)', 'Tutar': summaryStats.totalExpenses, 'Döviz': selectedCurrency },
-          { 'Finansal Rapor Başlığı': 'Personel Maaş Hak Edişleri', 'Tutar': summaryStats.employeeSalaries, 'Döviz': selectedCurrency },
-          { 'Finansal Rapor Başlığı': 'Net Kar / Zarar', 'Tutar': summaryStats.netProfit, 'Döviz': selectedCurrency },
-          { 'Finansal Rapor Başlığı': 'Yapılan Alışlar', 'Tutar': summaryStats.purchases, 'Döviz': selectedCurrency },
-          { 'Finansal Rapor Başlığı': 'Yapılan Tahsilatlar', 'Tutar': summaryStats.collections, 'Döviz': selectedCurrency },
-          { 'Finansal Rapor Başlığı': 'Yapılan Ödemeler', 'Tutar': summaryStats.payments, 'Döviz': selectedCurrency }
+          { 'Finansal Rapor Başlığı': 'Satış Gelirleri', 'Tutar': summaryStats.sales, 'Döviz': 'TRY' },
+          { 'Finansal Rapor Başlığı': 'Satılan Malın Maliyeti (SMM)', 'Tutar': summaryStats.costOfSales, 'Döviz': 'TRY' },
+          { 'Finansal Rapor Başlığı': 'Brüt Kar', 'Tutar': summaryStats.grossProfit, 'Döviz': 'TRY' },
+          { 'Finansal Rapor Başlığı': 'Faaliyet Giderleri (Masraflar)', 'Tutar': summaryStats.totalExpenses, 'Döviz': 'TRY' },
+          { 'Finansal Rapor Başlığı': 'Personel Maaş Hak Edişleri', 'Tutar': summaryStats.employeeSalaries, 'Döviz': 'TRY' },
+          { 'Finansal Rapor Başlığı': 'Net Kar / Zarar', 'Tutar': summaryStats.netProfit, 'Döviz': 'TRY' },
+          { 'Finansal Rapor Başlığı': 'Yapılan Alışlar', 'Tutar': summaryStats.purchases, 'Döviz': 'TRY' },
+          { 'Finansal Rapor Başlığı': 'Yapılan Tahsilatlar', 'Tutar': summaryStats.collections, 'Döviz': 'TRY' },
+          { 'Finansal Rapor Başlığı': 'Yapılan Ödemeler', 'Tutar': summaryStats.payments, 'Döviz': 'TRY' }
         ];
         const ws = XLSX.utils.json_to_sheet(plData);
         XLSX.utils.book_append_sheet(workbook, ws, 'Kar-Zarar Tablosu');

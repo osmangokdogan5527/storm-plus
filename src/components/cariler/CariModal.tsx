@@ -32,7 +32,7 @@ export function CariModal({
     address: "",
     openingBalance: 0,
     isActive: true,
-    currency: "TRY" as "TRY" | "USD" | "EUR",
+    currency: "TRY" as "TRY",
     taxOffice: "",
     taxNo: "",
     imageUrl: "",
@@ -337,12 +337,6 @@ export function CariModal({
                   >
                     <option value="TRY" className="bg-[#0c0c0c]">
                       TRY (₺) - Türk Lirası
-                    </option>
-                    <option value="USD" className="bg-[#0c0c0c]">
-                      USD ($) - Dolar
-                    </option>
-                    <option value="EUR" className="bg-[#0c0c0c]">
-                      EUR (€) - Euro
                     </option>
                   </select>
                 </div>

@@ -178,7 +178,7 @@ export function PdfPrintModal({ transaction, cariler, stoklar, onClose }: PdfPri
         const currentCariForPrint = cariler.find(c => c.id === transaction.cariId);
         
         const getCurrencySymbol = (cur: string) => {
-          if (cur === 'USD') return '$';
+           
           if (cur === 'EUR') return '€';
           return '₺';
         };
@@ -242,7 +242,7 @@ export function PdfPrintModal({ transaction, cariler, stoklar, onClose }: PdfPri
 
           let currencyUnit = 'TL';
           let subUnit = 'Kr.';
-          if (currencyCode === 'USD') {
+          if (false) {
             currencyUnit = 'DOLAR';
             subUnit = 'SNT.';
           } else if (currencyCode === 'EUR') {

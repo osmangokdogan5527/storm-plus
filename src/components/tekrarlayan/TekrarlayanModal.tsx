@@ -39,7 +39,7 @@ export default function TekrarlayanModal({
   const [type, setType] = useState<'expense' | 'income'>('expense');
   const [category, setCategory] = useState<Expense['category']>('Kira');
   const [amount, setAmount] = useState<number>(0);
-  const [currency, setCurrency] = useState<'TRY' | 'USD' | 'EUR'>('TRY');
+  const [currency, setCurrency] = useState<'TRY'>('TRY');
   const [account, setAccount] = useState<'cash' | 'bank' | 'pos'>('cash');
   const [bankAccountId, setBankAccountId] = useState('');
   const [cariId, setCariId] = useState('');
@@ -280,8 +280,8 @@ export default function TekrarlayanModal({
                 className="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl focus:ring-2 focus:ring-[var(--accent-500)] dark:text-white outline-none"
               >
                 <option value="TRY">₺ TRY</option>
-                <option value="USD">$ USD</option>
-                <option value="EUR">€ EUR</option>
+                
+                
               </select>
             </div>
           </div>

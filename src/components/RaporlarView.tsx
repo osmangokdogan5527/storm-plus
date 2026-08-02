@@ -67,7 +67,7 @@ export default function RaporlarView({
   employeeTransactions = []
 }: RaporlarViewProps) {
   const [activeTab, setActiveTab] = useState<ReportTab>('ozet');
-  const [selectedCurrency, setSelectedCurrency] = useState<'TRY' | 'USD' | 'EUR'>('TRY');
+  const [selectedCurrency, setSelectedCurrency] = useState<'TRY'>('TRY');
   const [datePreset, setDatePreset] = useState<DatePreset>('thisMonth');
   
   // Custom date range state
@@ -264,12 +264,12 @@ export default function RaporlarView({
             </label>
             <select
               value={selectedCurrency}
-              onChange={(e) => setSelectedCurrency(e.target.value as 'TRY' | 'USD' | 'EUR')}
+              onChange={(e) => setSelectedCurrency(e.target.value as 'TRY')}
               className="w-full bg-[#121316] border border-white/10 text-white rounded-xl px-3.5 py-2 text-xs focus:ring-1 focus:ring-teal-400 outline-none"
             >
               <option value="TRY">TRY (Türk Lirası)</option>
-              <option value="USD">USD (Amerikan Doları)</option>
-              <option value="EUR">EUR (Euro)</option>
+              
+              
             </select>
           </div>
         </div>

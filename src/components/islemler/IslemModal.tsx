@@ -144,7 +144,7 @@ const theme = useMemo(() => {
   const [receiptAmount, setReceiptAmount] = useState<number>(0);
 
   // Multi-Currency & Custom Exchange Rate states
-  const [transactionCurrency, setTransactionCurrency] = useState<'TRY' | 'USD' | 'EUR'>('TRY');
+  const [transactionCurrency, setTransactionCurrency] = useState<'TRY'>('TRY');
   const [exchangeRate, setExchangeRate] = useState<number>(1);
   const [customConvertedAmount, setCustomConvertedAmount] = useState<number>(0);
   const [isMultiCurrency, setIsMultiCurrency] = useState<boolean>(false);
@@ -302,12 +302,7 @@ const activeCariCurrency = useMemo(() => {
     if (exchangeRate <= 0) return amt;
     
     // Turkish accounting patterns:
-    if ((transactionCurrency === 'USD' || transactionCurrency === 'EUR') && activeCariCurrency === 'TRY') {
-      return Number((amt * exchangeRate).toFixed(2));
-    }
-    if (transactionCurrency === 'TRY' && (activeCariCurrency === 'USD' || activeCariCurrency === 'EUR')) {
-      return Number((amt / exchangeRate).toFixed(2));
-    }
+    
     return Number((amt * exchangeRate).toFixed(2));
   }, [receiptAmount, invoiceTotals.grandTotal, transactionCurrency, activeCariCurrency, exchangeRate, modalType, invoiceTotals]);
 
@@ -879,7 +874,7 @@ const handleItemFieldChange = (index: number, field: keyof InvoiceItem, value: a
                                 className="w-full pl-2 pr-7 py-2 bg-white border border-slate-200 rounded-md text-xs text-slate-900 font-bold font-mono focus:outline-hidden focus:border-teal-500 transition"
                               />
                               <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 font-mono">
-                                {isMultiCurrency ? transactionCurrency : activeCariCurrency}
+                                {activeCariCurrency}
                               </span>
                             </div>
                           </div>
@@ -1054,7 +1049,7 @@ const handleItemFieldChange = (index: number, field: keyof InvoiceItem, value: a
                         }`}
                       />
                       <span className="absolute right-4 top-1/2 -translate-y-1/2 font-bold text-slate-400 font-mono">
-                        {isMultiCurrency ? transactionCurrency : activeCariCurrency}
+                        {activeCariCurrency}
                       </span>
                     </div>
                   </div>
@@ -1093,8 +1088,8 @@ const handleItemFieldChange = (index: number, field: keyof InvoiceItem, value: a
                           className="w-full px-3 py-2 bg-white border border-slate-200 text-slate-900 rounded text-xs focus:outline-hidden focus:border-teal-500 font-medium cursor-pointer"
                         >
                           <option value="TRY">TRY</option>
-                          <option value="USD">USD</option>
-                          <option value="EUR">EUR</option>
+                          
+                          
                         </select>
                       </div>
                       <div>

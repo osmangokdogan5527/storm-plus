@@ -301,7 +301,7 @@ export function LedgerDrawer({
     address: "",
     openingBalance: 0,
     isActive: true,
-    currency: "TRY" as "TRY" | "USD" | "EUR",
+    currency: "TRY" as "TRY",
     taxOffice: "",
     taxNo: "",
     imageUrl: "",

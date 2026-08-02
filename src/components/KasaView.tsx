@@ -39,7 +39,7 @@ interface KasaViewProps {
   accountTransactions?: AccountTransaction[];
 }
 export default function KasaView({ islemler, expenses, employeeTransactions = [], bankAccounts = [], accountTransactions = [] }: KasaViewProps) {
-  const [selectedCurrency, setSelectedCurrency] = useState<'TRY' | 'USD' | 'EUR'>('TRY');
+  const [selectedCurrency, setSelectedCurrency] = useState<'TRY'>('TRY');
   const [accountFilter, setAccountFilter] = useState<'all' | 'cash' | 'bank' | 'pos'>('all');
   const [selectedAccountId, setSelectedAccountId] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -59,7 +59,7 @@ export default function KasaView({ islemler, expenses, employeeTransactions = []
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
   const [accName, setAccName] = useState('');
   const [accType, setAccType] = useState<'kasa' | 'banka' | 'pos'>('banka');
-  const [accCurrency, setAccCurrency] = useState<'TRY' | 'USD' | 'EUR'>('TRY');
+  const [accCurrency, setAccCurrency] = useState<'TRY'>('TRY');
   const [accInitBal, setAccInitBal] = useState<string | number>('0');
   const isDefaultAccount = (id: string) => id === 'merkez_kasa' || id === 'merkez_banka' || id === 'merkez_pos';
   const handleSaveAccount = async (e: React.FormEvent) => {
@@ -236,7 +236,7 @@ export default function KasaView({ islemler, expenses, employeeTransactions = []
       EUR: { cash: 0, bank: 0, pos: 0 }
     };
     bankAccounts.forEach(acc => {
-      const cur = acc.currency as 'TRY' | 'USD' | 'EUR';
+      const cur = acc.currency as 'TRY';
       if (!res[cur]) return;
       const typeKey = acc.type === 'kasa' ? 'cash' : acc.type === 'banka' ? 'bank' : 'pos';
       const bal = accountBalances[acc.id] || 0;
@@ -425,22 +425,6 @@ export default function KasaView({ islemler, expenses, employeeTransactions = []
           <p className="text-white/40 text-xs mt-1">İşletmenizin nakit mevcudunu, banka hesaplarını ve para akış detaylarını buradan yönetebilirsiniz.</p>
         </div>
         <div className="flex flex-col md:flex-row flex-wrap gap-3">
-          <div className="flex bg-white/5 p-1 rounded-lg border border-white/5 gap-1">
-            {(['TRY', 'USD', 'EUR'] as const).map((cur) => (
-              <button
-                key={cur}
-                id={`tab-kasa-cur-${cur}`}
-                onClick={() => setSelectedCurrency(cur)}
-                className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider rounded-md transition cursor-pointer ${
-                  selectedCurrency === cur 
-                    ? 'bg-teal-500 text-black shadow-[0_0_8px_rgba(45,212,191,0.2)]'
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                {cur === 'TRY' ? '₺ TL' : cur === 'USD' ? '$ USD' : '€ EUR'}
-              </button>
-            ))}
-          </div>
         </div>
       </div>
       <div className="bg-[#111111] border border-white/5 p-6 rounded-xl shadow-lg space-y-6">

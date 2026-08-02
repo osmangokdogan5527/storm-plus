@@ -40,7 +40,7 @@ export default function OnayBekleyenModal({
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<Expense['category']>('Kira');
   const [amount, setAmount] = useState<number>(0);
-  const [currency, setCurrency] = useState<'TRY' | 'USD' | 'EUR'>('TRY');
+  const [currency, setCurrency] = useState<'TRY'>('TRY');
   const [date, setDate] = useState(getTodayISO());
   const [account, setAccount] = useState<'cash' | 'bank' | 'pos'>('cash');
   const [bankAccountId, setBankAccountId] = useState('');

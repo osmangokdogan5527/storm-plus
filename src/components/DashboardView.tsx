@@ -104,9 +104,7 @@ export default function DashboardView({
   const safeExpenses = Array.isArray(expenses) ? expenses : [];
   const safeEmployeeTransactions = Array.isArray(employeeTransactions) ? employeeTransactions : [];
   const safeRecurringTransactions = Array.isArray(recurringTransactions) ? recurringTransactions : [];
-  const [dashboardCurrency, setDashboardCurrency] = useState<
-    "TRY" | "USD" | "EUR"
-  >("TRY");
+  const dashboardCurrency = "TRY";
 
   const pendingRecurringItems = useMemo(() => {
     return getPendingRecurringItems(safeRecurringTransactions, getTodayISO());
@@ -141,28 +139,6 @@ export default function DashboardView({
 
   const [showManager, setShowManager] = useState<boolean>(false);
 
-  // Live Currency Rates State
-  const [rates, setRates] = useState<TCMBRatesResult | null>(null);
-  const [ratesLoading, setRatesLoading] = useState<boolean>(true);
-  const [ratesError, setRatesError] = useState<boolean>(false);
-
-  const fetchRates = async (force: boolean = false) => {
-    setRatesLoading(true);
-    setRatesError(false);
-    try {
-      const data = await fetchTCMBRates(force);
-      setRates(data);
-    } catch (err: any) {
-      console.warn("Kurlar alınamadı (Çevrimdışı olabilir):", err);
-      setRatesError(true);
-    } finally {
-      setRatesLoading(false);
-    }
-  };
-
-  React.useEffect(() => {
-    fetchRates(false);
-  }, []);
 
   const moveWidget = (index: number, direction: "up" | "down") => {
     const newOrder = [...widgetsOrder];
@@ -603,59 +579,6 @@ export default function DashboardView({
         </div>
 
         <div className="flex flex-col md:flex-row flex-wrap items-stretch md:items-center gap-3 w-full xl:w-auto relative z-10">
-          {/* Mini Currency Ticker */}
-          <div className="flex items-center justify-between md:justify-start gap-2.5 text-[10px] font-mono uppercase tracking-widest bg-white/5 px-3 py-2 rounded-xl border border-white/10 w-full md:w-auto overflow-x-auto scrollbar-none">
-            {ratesLoading ? (
-              <span className="text-white/40 flex items-center gap-1 shrink-0">
-                <RotateCcw size={10} className="animate-spin" /> Kurlar Yükleniyor...
-              </span>
-            ) : ratesError || !rates ? (
-              <span className="text-rose-400 shrink-0">Kur Hatası</span>
-            ) : (
-              <>
-                <div className="flex flex-col items-end gap-0.5 shrink-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-teal-400 font-bold">$</span>
-                    <div className="flex flex-col text-[10px] tabular-nums font-mono">
-                      <div className="flex justify-between gap-3 text-white/40 uppercase text-[8px] leading-tight mb-0.5"><span>Alış</span><span>Satış</span></div>
-                      <div className="flex justify-between gap-2.5 text-white/80 leading-none whitespace-nowrap">
-                        <span>{rates.USD ? rates.USD.buying.toFixed(4) : "-"}₺</span>
-                        <span>{rates.USD ? rates.USD.selling.toFixed(4) : "-"}₺</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="w-px h-6 bg-white/20 mx-1.5 sm:mx-2 shrink-0"></div>
-                <div className="flex flex-col items-end gap-0.5 shrink-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-teal-400 font-bold">€</span>
-                    <div className="flex flex-col text-[10px] tabular-nums font-mono">
-                      <div className="flex justify-between gap-3 text-white/40 uppercase text-[8px] leading-tight mb-0.5"><span>Alış</span><span>Satış</span></div>
-                      <div className="flex justify-between gap-2.5 text-white/80 leading-none whitespace-nowrap">
-                        <span>{rates.EUR ? rates.EUR.buying.toFixed(4) : "-"}₺</span>
-                        <span>{rates.EUR ? rates.EUR.selling.toFixed(4) : "-"}₺</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="w-px h-6 bg-white/20 mx-1 sm:mx-1.5 shrink-0"></div>
-                <div className="flex flex-col justify-center items-end shrink-0 text-[8px] text-white/30 tracking-widest uppercase">
-                  <span>Kaynak</span>
-                  <span className="text-white/50">{rates.source === 'Serbest Piyasa' ? 'Döviz.com' : rates.source}</span>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => fetchRates(true)}
-                    disabled={ratesLoading}
-                    title="Kurları Güncelle"
-                    className="p-1 text-white/40 hover:text-teal-400 transition cursor-pointer"
-                  >
-                    <RotateCcw size={12} className={ratesLoading ? "animate-spin" : ""} />
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
 
           <div className="grid grid-cols-2 md:flex md:items-center gap-2.5 w-full md:w-auto shrink-0">
             <button
@@ -832,38 +755,6 @@ export default function DashboardView({
         </div>
       )}
 
-      {/* Currency Selection Tab Bar */}
-      <div className="flex flex-col md:flex-row flex-wrap justify-between items-start sm:items-center gap-3 dashboard-widget-header p-3 rounded-xl">
-        <span className="text-[11px] font-extrabold uppercase tracking-widest font-sans ml-2 flex items-center gap-2 text-white" style={{ color: "#ffffff" }}>
-          <span className="w-2 h-2 rounded-full bg-[var(--accent-500)] animate-pulse shadow-[0_0_8px_var(--accent-500)]"></span>
-          FİNANSAL GÖSTERGE PARA BİRİMİ SEÇİMİ
-        </span>
-        <div
-          className="currency-dark-capsule flex p-1.5 rounded-xl border border-white/10 gap-1 w-full sm:w-auto"
-          style={{ backgroundColor: "#181a22", borderColor: "rgba(255, 255, 255, 0.12)" }}
-        >
-          {(["TRY", "USD", "EUR"] as const).map((cur) => {
-            const isActive = dashboardCurrency === cur;
-            return (
-              <button
-                key={cur}
-                id={`tab-dashboard-cur-${cur}`}
-                onClick={() => setDashboardCurrency(cur)}
-                className={`flex-1 sm:flex-none px-5 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition cursor-pointer ${
-                  isActive ? "bg-[var(--accent-500,#0ea5e9)] shadow-md font-extrabold" : "hover:bg-white/10"
-                }`}
-                style={
-                  isActive
-                    ? { backgroundColor: "var(--accent-500, #0ea5e9)", color: "#ffffff" }
-                    : { backgroundColor: "transparent", color: "#ffffff" }
-                }
-              >
-                {cur === "TRY" ? "₺ TL" : cur === "USD" ? "$ USD" : "€ EUR"}
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       {/* Customizable Master Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

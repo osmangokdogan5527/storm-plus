@@ -83,7 +83,7 @@ export default function MasraflarView({
   const [activeSubTab, setActiveSubTab] = useState<'expenses' | 'recurring'>('expenses');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
-  const [selectedCurrency, setSelectedCurrency] = useState<'TRY' | 'USD' | 'EUR'>('TRY');
+  const selectedCurrency = "TRY";
   const [categoryPeriod, setCategoryPeriod] = useState<'all' | 'month' | 'year'>('all');
 
   const pendingRecurringCount = useMemo(() => {
@@ -99,7 +99,7 @@ export default function MasraflarView({
     title: '',
     category: 'Elektrik' as Expense['category'],
     amount: 0,
-    currency: 'TRY' as 'TRY' | 'USD' | 'EUR',
+    currency: 'TRY' as 'TRY',
     date: new Date().toISOString().split('T')[0],
     account: 'cash' as 'cash' | 'bank' | 'pos',
     description: ''
@@ -158,7 +158,7 @@ export default function MasraflarView({
 
   // Totals calculations
   const totalStats = useMemo(() => {
-    const totalsByCurrency = { TRY: 0, USD: 0, EUR: 0 };
+    const totalsByCurrency = { TRY: 0 };
     const categoryTotals = {} as Record<Expense['category'], number>;
 
     const now = new Date();
@@ -377,29 +377,9 @@ export default function MasraflarView({
           </div>
         </div>
 
-        <div className="bg-[#ffffff] p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100">
-            <TrendingDown size={20} />
-          </div>
-          <div>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Toplam Masraf (USD)</span>
-            <h4 className="text-xl font-bold text-slate-900 mt-1">
-              {formatCurrency(totalStats.totalsByCurrency.USD || 0, 'USD')}
-            </h4>
-          </div>
-        </div>
+        
 
-        <div className="bg-[#ffffff] p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
-            <TrendingDown size={20} />
-          </div>
-          <div>
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Toplam Masraf (EUR)</span>
-            <h4 className="text-xl font-bold text-slate-900 mt-1">
-              {formatCurrency(totalStats.totalsByCurrency.EUR || 0, 'EUR')}
-            </h4>
-          </div>
-        </div>
+        
 
         <div className="bg-[#ffffff] p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
           <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0 border border-teal-100">
@@ -545,22 +525,7 @@ export default function MasraflarView({
             <div className="flex justify-between items-center pb-4 border-b border-slate-100">
               <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Kategori Analizi</h3>
               
-              {/* Currency switcher */}
-              <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200/50">
-                {(['TRY', 'USD', 'EUR'] as const).map(curr => (
-                  <button
-                    key={curr}
-                    onClick={() => setSelectedCurrency(curr)}
-                    className={`px-2 py-1 text-[10px] font-extrabold rounded-md transition cursor-pointer ${
-                      selectedCurrency === curr 
-                        ? 'bg-white text-slate-900 shadow-xs' 
-                        : 'text-slate-400 hover:text-slate-600'
-                    }`}
-                  >
-                    {curr === 'TRY' ? '₺' : curr === 'USD' ? '$' : '€'}
-                  </button>
-                ))}
-              </div>
+              
             </div>
 
             {/* Time Period Filter Options */}
@@ -770,12 +735,12 @@ export default function MasraflarView({
                   </label>
                   <select
                     value={formData.currency}
-                    onChange={(e) => setFormData({ ...formData, currency: e.target.value as 'TRY' | 'USD' | 'EUR' })}
+                    onChange={(e) => setFormData({ ...formData, currency: e.target.value as 'TRY' })}
                     className="w-full border border-slate-200 focus:border-[var(--accent-500)] focus:ring-[var(--accent-500)] rounded-lg p-2.5 text-xs text-slate-900 bg-slate-50 cursor-pointer outline-none"
                   >
                     <option value="TRY">₺ TRY</option>
-                    <option value="USD">$ USD</option>
-                    <option value="EUR">€ EUR</option>
+                    
+                    
                   </select>
                 </div>
 

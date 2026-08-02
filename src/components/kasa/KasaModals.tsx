@@ -48,8 +48,8 @@ export function KasaModals({ isAccountModalOpen, isTxModalOpen, editingAccount, 
                           className="w-full bg-[#0a0a0a] border border-white/10 rounded-lg px-3.5 py-2.5 text-sm text-white focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-all outline-none"
                         >
                           <option value="TRY">TRY (₺)</option>
-                          <option value="USD">USD ($)</option>
-                          <option value="EUR">EUR (€)</option>
+                          
+                          
                         </select>
                       </div>
                     </div>

@@ -129,14 +129,14 @@ export function CalisanlarModals({ isEmployeeModalOpen, isTxModalOpen, isDetailM
                           onChange={(e) =>
                             setEmpFormData({
                               ...empFormData,
-                              currency: e.target.value as "TRY" | "USD" | "EUR",
+                              currency: e.target.value as "TRY",
                             })
                           }
                           className="w-full border border-slate-200 focus:border-teal-500 focus:ring-teal-500 rounded-lg p-2.5 text-xs text-slate-900 bg-slate-50 cursor-pointer"
                         >
                           <option value="TRY">₺ TRY</option>
-                          <option value="USD">$ USD</option>
-                          <option value="EUR">€ EUR</option>
+                          
+                          
                         </select>
                       </div>
       
@@ -387,14 +387,14 @@ export function CalisanlarModals({ isEmployeeModalOpen, isTxModalOpen, isDetailM
                             onChange={(e) =>
                               setTxFormData({
                                 ...txFormData,
-                                currency: e.target.value as "TRY" | "USD" | "EUR",
+                                currency: e.target.value as "TRY",
                               })
                             }
                             className="w-full border border-slate-200 focus:border-teal-500 focus:ring-teal-500 rounded-lg p-2.5 text-xs text-slate-900 bg-slate-50 cursor-pointer"
                           >
                             <option value="TRY">₺ TRY</option>
-                            <option value="USD">$ USD</option>
-                            <option value="EUR">€ EUR</option>
+                            
+                            
                           </select>
                         </div>
       
