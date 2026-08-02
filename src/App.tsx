@@ -380,6 +380,7 @@ export default function App() {
 
   useEffect(() => {
     let size = '16px';
+    if (appFontSize === 'xsmall') size = '12px';
     if (appFontSize === 'small') size = '14px';
     if (appFontSize === 'large') size = '18px';
     document.documentElement.style.setProperty('--app-font-size', size);

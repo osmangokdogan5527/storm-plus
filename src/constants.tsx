@@ -430,12 +430,14 @@ export const StormLogo = ({
   );
 };
 
-export const APP_VERSION = '1.3.2';
+export const APP_VERSION = '1.3.3';
 
 export const CHANGELOG = {
-  version: '1.3.1',
+  version: '1.3.3',
   features: [
-    "Veri İzolasyonu: Uygulama bulut verileri, diğer yazılımlarla çakışmayı önlemek için 'storm_plus_users' kök dizinine taşındı."
+    "Arayüz Tema Güncellemesi: Vurgu renklerine canlı #97d700 yeşil tonu tanımlandı.",
+    "Ultra Küçük Font Desteği: Genel Ayarlar menüsüne 12px 'Ultra Küçük' yazı boyutu seçeneği eklendi.",
+    "Fiş Tasarımcısı Sadeleştirmesi: Fiş şablonu düzenleme paneli sadeleştirildi ve hızlı hazır preset butonları eklendi."
   ],
   fixes: []
 };
@@ -610,20 +612,20 @@ export const COLOR_PRESETS = [
   },
   {
     id: 'yellow',
-    name: 'Sarı',
-    preview: '#eab308',
+    name: 'Yeşil',
+    preview: '#97d700',
     colors: {
-      '--accent-50': '#fefce8',
-      '--accent-100': '#fef9c3',
-      '--accent-200': '#fef08a',
-      '--accent-300': '#fde047',
-      '--accent-400': '#facc15',
-      '--accent-500': '#eab308',
-      '--accent-600': '#ca8a04',
-      '--accent-700': '#a16207',
-      '--accent-800': '#854d0e',
-      '--accent-900': '#713f12',
-      '--accent-950': '#422006',
+      '--accent-50': '#f7fce8',
+      '--accent-100': '#edf9c6',
+      '--accent-200': '#dcf393',
+      '--accent-300': '#c3e956',
+      '--accent-400': '#aee022',
+      '--accent-500': '#97d700',
+      '--accent-600': '#77ab00',
+      '--accent-700': '#5a8200',
+      '--accent-800': '#476604',
+      '--accent-900': '#3b5408',
+      '--accent-950': '#1f3000',
     }
   }
 ];
@@ -687,6 +689,15 @@ export const PIN_ACCOUNTS = [
 ];
 
 export const changelogData = [
+  {
+    version: "1.3.3",
+    date: "02.08.2026",
+    changes: [
+      "Arayüz Tema Güncellemesi: Vurgu renklerine canlı fıstık yeşili (#97d700) tanımlandı ve renk listesi optimize edildi.",
+      "Ultra Küçük Font Desteği: Genel Ayarlar > Uygulama Yazı Boyutu seçeneğine 12px (Ultra Küçük) modu eklendi.",
+      "Fiş & Termal Şablon Tasarımcısı: Fiş düzenleme paneli sadeleştirildi, tek tıkla uygulanabilen hızlı Market/Restoran/Sade hazır presetleri ve koyu baskı optimizasyonları eklendi."
+    ]
+  },
   {
     version: "1.3.2",
     date: "01.08.2026",

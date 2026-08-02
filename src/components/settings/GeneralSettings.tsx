@@ -9,8 +9,8 @@ export interface GeneralSettingsProps {
   setDesignStyle: (style: string) => void;
   activeLogoTheme: string;
   setActiveLogoTheme: (theme: string) => void;
-  appFontSize: 'small' | 'medium' | 'large';
-  setAppFontSize: (size: 'small' | 'medium' | 'large') => void;
+  appFontSize: 'xsmall' | 'small' | 'medium' | 'large';
+  setAppFontSize: (size: 'xsmall' | 'small' | 'medium' | 'large') => void;
   sidebarBg: string;
   setSidebarBg: (bg: string) => void;
   sidebarPattern: string;
@@ -242,8 +242,9 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {[
+                      { id: 'xsmall', name: 'Ultra Küçük', desc: '12px' },
                       { id: 'small', name: 'Küçük', desc: '14px' },
                       { id: 'medium', name: 'Normal', desc: '16px' },
                       { id: 'large', name: 'Büyük', desc: '18px' },
@@ -253,7 +254,7 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({
                         <button
                           key={preset.id}
                           onClick={() => {
-                            setAppFontSize(preset.id as 'small' | 'medium' | 'large');
+                            setAppFontSize(preset.id as 'xsmall' | 'small' | 'medium' | 'large');
                             localStorage.setItem('storm_muhasebe_font_size', preset.id);
                           }}
                           className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border transition cursor-pointer ${

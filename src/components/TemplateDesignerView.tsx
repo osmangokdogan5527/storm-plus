@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { TemplateSettingsPanel } from './templatedesigner/TemplateSettingsPanel';
 import { TemplatePreviews } from './templatedesigner/TemplatePreviews';
+import { printThermalReceipt } from '../utils/thermalPrintStyles';
 
 export interface PrintTemplateConfig {
   id: string;
@@ -251,7 +252,7 @@ const DEFAULT_THERMAL_TEMPLATES: PrintTemplateConfig[] = [
     refundPolicyNote: '',
     showBarcode: false,
     showQrCode: true,
-    qrCodeUrl: 'https://storm.app/menu',
+    qrCodeUrl: '',
     showWifiSocial: true
   }
 ];
@@ -263,7 +264,7 @@ export default function TemplateDesignerView() {
   const [saveSuccessToast, setSaveSuccessToast] = useState(false);
 
   // Store Settings state
-  const [companyName, setCompanyName] = useState('STORM MUHASEBE & PERAKENDE');
+  const [companyName, setCompanyName] = useState('PERAKENDE SATIŞ BİLGİ FİŞİ');
   const [companyAddress, setCompanyAddress] = useState('Atatürk Cad. No:142 Çankaya / ANKARA');
   const [companyPhone, setCompanyPhone] = useState('0850 300 00 00');
   const [logoType, setLogoType] = useState<'text' | 'image'>('text');
@@ -418,50 +419,15 @@ export default function TemplateDesignerView() {
   const handleTestPrint = () => {
     if (!previewContainerRef.current) return;
 
-    const printContent = previewContainerRef.current.innerHTML;
     const is58 = activeTemplate.paperSize === 'termal_58' || activeTemplate.rollWidth === '58mm';
-    const paperWidthMm = is58 ? '58mm' : '80mm';
 
-    const printWindow = window.open('', '_blank', 'width=450,height=700');
-    if (!printWindow) {
-      window.print();
-      return;
-    }
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Termal Fiş Test Çıktısı - ${activeTemplate.name}</title>
-          <style>
-            @page {
-              size: ${paperWidthMm} auto;
-              margin: 0;
-            }
-            body {
-              font-family: 'Courier New', Courier, monospace;
-              width: ${paperWidthMm};
-              margin: 0 auto;
-              padding: 8px;
-              color: #000;
-              background: #fff;
-              -webkit-print-color-adjust: exact;
-            }
-            * { box-sizing: border-box; }
-          </style>
-        </head>
-        <body>
-          ${printContent}
-          <script>
-            window.onload = function() {
-              window.print();
-              window.close();
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+    printThermalReceipt({
+      title: `Termal Fiş Test Çıktısı - ${activeTemplate.name}`,
+      htmlContent: previewContainerRef.current.innerHTML,
+      paperWidthMm: is58 ? '58mm' : '80mm',
+      fontFamily: activeTemplate.fontFamily,
+      fontSize: activeTemplate.fontSize,
+    });
   };
 
   const activeTemplate = templates.find(t => t.id === activeTemplateId) || templates[0];

@@ -48,8 +48,8 @@ export interface AyarlarViewProps {
   setDesignStyle: (style: string) => void;
   activeLogoTheme: string;
   setActiveLogoTheme: (theme: string) => void;
-  appFontSize: 'small' | 'medium' | 'large';
-  setAppFontSize: (size: 'small' | 'medium' | 'large') => void;
+  appFontSize: 'xsmall' | 'small' | 'medium' | 'large';
+  setAppFontSize: (size: 'xsmall' | 'small' | 'medium' | 'large') => void;
   sidebarBg: string;
   setSidebarBg: (bg: string) => void;
   sidebarPattern: string;

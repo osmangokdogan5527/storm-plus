@@ -33,8 +33,8 @@ export function useAppSettings() {
     return localStorage.getItem('storm_muhasebe_logo_theme') || 'theme';
   });
 
-  const [appFontSize, setAppFontSize] = useState<'small' | 'medium' | 'large'>(() => {
-    return (localStorage.getItem('storm_muhasebe_font_size') as 'small' | 'medium' | 'large') || 'medium';
+  const [appFontSize, setAppFontSize] = useState<'xsmall' | 'small' | 'medium' | 'large'>(() => {
+    return (localStorage.getItem('storm_muhasebe_font_size') as 'xsmall' | 'small' | 'medium' | 'large') || 'medium';
   });
 
   const [sidebarBg, setSidebarBg] = useState<string>(() => {

@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { PosSaleSummary } from '../../types/pos';
 import { Printer, X, Check, ShieldCheck, FileText, ChevronDown } from 'lucide-react';
 import { reportErrorToTelegram } from '../../utils/telegramLogger';
+import { printThermalReceipt } from '../../utils/thermalPrintStyles';
 import Barcode from 'react-barcode';
 import { QrCodeImage } from '../templatedesigner/QrCodeImage';
 import { PrintTemplateConfig } from '../TemplateDesignerView';
@@ -69,7 +70,7 @@ export const PosReceiptModal: React.FC<PosReceiptModalProps> = ({
   
   // Store details from Fiş Tasarımı / LocalStorage
   const [storeInfo, setStoreInfo] = useState({
-    companyName: propCompanyName || 'STORM MUHASEBE & PERAKENDE',
+    companyName: propCompanyName || 'PERAKENDE SATIŞ FİŞİ',
     companyAddress: 'Atatürk Cad. No:142 Çankaya / ANKARA',
     companyPhone: '0850 300 00 00',
     logoType: 'text' as 'text' | 'image',
@@ -138,50 +139,13 @@ export const PosReceiptModal: React.FC<PosReceiptModalProps> = ({
       const content = printRef.current;
       if (!content) return;
 
-      const printWidth = is58mm ? '54mm' : '78mm';
-
-      const printWindow = window.open('', '_blank', 'width=420,height=650');
-      if (!printWindow) {
-        window.print();
-        return;
-      }
-
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Fiş - ${saleSummary.receiptNo}</title>
-            <style>
-              body {
-                font-family: ${activeTemplate.fontFamily === 'sans' ? 'sans-serif' : "'Courier New', Courier, monospace"};
-                width: ${printWidth};
-                margin: 0 auto;
-                padding: 4px;
-                font-size: ${activeTemplate.fontSize === 'xs' ? '10px' : activeTemplate.fontSize === 'base' ? '13px' : '11px'};
-                color: #000;
-                background: #fff;
-              }
-              .text-center { text-align: center; }
-              .text-right { text-align: right; }
-              .font-bold { font-weight: bold; }
-              .flex { display: flex; justify-content: space-between; }
-              table { width: 100%; border-collapse: collapse; margin: 4px 0; }
-              th, td { text-align: left; padding: 2px 0; font-size: inherit; }
-              img { max-width: 100%; height: auto; }
-            </style>
-          </head>
-          <body>
-            ${content.innerHTML}
-            <script>
-              window.onload = function() {
-                window.print();
-                window.close();
-              };
-            </script>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
+      printThermalReceipt({
+        title: `Fiş - ${saleSummary.receiptNo}`,
+        htmlContent: content.innerHTML,
+        paperWidthMm: is58mm ? '58mm' : '80mm',
+        fontFamily: activeTemplate.fontFamily,
+        fontSize: activeTemplate.fontSize,
+      });
     } catch (err: any) {
       reportErrorToTelegram(err, 'PosReceiptModal:handlePrint');
       window.print();
@@ -226,10 +190,10 @@ export const PosReceiptModal: React.FC<PosReceiptModalProps> = ({
         <div className="p-4 bg-slate-950/70 overflow-y-auto flex-1 custom-scrollbar flex flex-col items-center justify-start">
           <div
             ref={printRef}
-            className={`bg-white text-slate-900 shadow-2xl font-mono text-xs space-y-2 leading-tight border border-slate-300 p-4 rounded-sm transition-all ${
-              activeTemplate.density === 'bold_dark' ? 'font-bold' : ''
+            className={`bg-white text-black shadow-2xl font-mono text-xs space-y-2 leading-tight border-2 border-black p-3.5 rounded-sm transition-all ${
+              activeTemplate.density === 'bold_dark' ? 'font-bold' : 'font-semibold'
             }`}
-            style={{ width: `${paperWidthPx}px` }}
+            style={{ width: `${paperWidthPx}px`, color: '#000000' }}
           >
             {/* 1. FİRMA LOGO VEYA BAŞLIĞI */}
             <div className={`text-${activeTemplate.logoAlignment || 'center'} space-y-1 pb-1`}>
@@ -240,108 +204,108 @@ export const PosReceiptModal: React.FC<PosReceiptModalProps> = ({
               ) : null}
 
               {activeTemplate.showCompanyName && (
-                <h3 className={`font-black text-black tracking-tight ${
-                  activeTemplate.companyNameSize === 'xlarge' ? 'text-base' : activeTemplate.companyNameSize === 'large' ? 'text-sm' : 'text-xs'
-                }`}>
+                <h3 className={`company-title font-black text-black tracking-tight uppercase leading-tight ${
+                  activeTemplate.companyNameSize === 'xlarge' ? 'text-lg sm:text-xl' : activeTemplate.companyNameSize === 'large' ? 'text-base sm:text-lg' : 'text-sm font-black'
+                }`} style={{ color: '#000000' }}>
                   {storeInfo.companyName}
                 </h3>
               )}
 
               {activeTemplate.showCompanyAddress && (
-                <p className="text-[9px] text-slate-600 leading-tight">
+                <p className="text-[10px] font-bold text-black leading-tight">
                   {storeInfo.companyAddress}
                   {storeInfo.companyPhone ? ` • Tel: ${storeInfo.companyPhone}` : ''}
                 </p>
               )}
 
               {activeTemplate.showBranchCashier && (
-                <p className="text-[9px] text-slate-500">
+                <p className="text-[10px] font-bold text-black">
                   Şube: MERKEZ | POS-01
                 </p>
               )}
 
               {activeTemplate.documentTitle && (
-                <p className="font-bold text-[11px] text-black uppercase tracking-wider pt-1">
+                <div className="document-title font-black text-xs sm:text-sm text-black uppercase tracking-wider py-1 my-1 border-y-2 border-black text-center" style={{ color: '#000000' }}>
                   *** {activeTemplate.documentTitle} ***
-                </p>
+                </div>
               )}
 
               {activeTemplate.welcomeNote && (
-                <p className="text-[9px] text-slate-600 italic">
+                <p className="text-[10px] font-bold text-black italic text-center">
                   {activeTemplate.welcomeNote}
                 </p>
               )}
             </div>
 
-            <div className="text-[9px] text-slate-400 text-center overflow-hidden">{divider}</div>
+            <div className="text-[10px] font-black text-black text-center overflow-hidden">{divider}</div>
 
             {/* 2. METADATA (TARIH, FIS NO, MUSTERI, KASIYER) */}
-            <div className="text-[10px] space-y-0.5">
+            <div className="text-[11px] font-bold text-black space-y-0.5">
               {activeTemplate.showReceiptNo !== false && (
                 <div className="flex justify-between">
                   <span>FİŞ NO:</span>
-                  <span className="font-bold">{saleSummary.receiptNo}</span>
+                  <span className="font-black text-black">{saleSummary.receiptNo}</span>
                 </div>
               )}
               {activeTemplate.showDateTime !== false && (
-                <div className="flex justify-between text-slate-600">
+                <div className="flex justify-between text-black">
                   <span>TARİH & SAAT:</span>
-                  <span>{saleSummary.date} {saleSummary.time}</span>
+                  <span className="font-bold">{saleSummary.date} {saleSummary.time}</span>
                 </div>
               )}
               {activeTemplate.showPersonnelName !== false && (
-                <div className="flex justify-between text-slate-600">
+                <div className="flex justify-between text-black">
                   <span>KASİYER:</span>
-                  <span>AHMET YILMAZ</span>
+                  <span className="font-bold">AHMET YILMAZ</span>
                 </div>
               )}
               {activeTemplate.showCustomerName !== false && saleSummary.cariName && (
-                <div className="flex justify-between pt-0.5">
+                <div className="flex justify-between pt-0.5 border-t border-black">
                   <span>MÜŞTERİ:</span>
-                  <span className="font-bold text-black truncate max-w-[150px]">{saleSummary.cariName}</span>
+                  <span className="font-black text-black truncate max-w-[150px]">{saleSummary.cariName}</span>
                 </div>
               )}
             </div>
 
-            <div className="text-[9px] text-slate-400 text-center overflow-hidden">{divider}</div>
+            <div className="text-[10px] font-black text-black text-center overflow-hidden">{divider}</div>
 
             {/* 3. URÜN KALEMLERİ TABLOSU */}
             <div className="space-y-1">
               {activeTemplate.itemFormat === 'single_line' ? (
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="border-b border-slate-300 text-[9px] uppercase font-bold">
-                      <th className="py-0.5">AÇIKLAMA</th>
-                      <th className="text-center">AD</th>
-                      <th className="text-right">TUTAR</th>
+                    <tr className="border-b-2 border-black text-[10px] uppercase font-black text-black">
+                      <th className="py-1">AÇIKLAMA</th>
+                      <th className="text-center py-1">AD</th>
+                      <th className="text-right py-1">TUTAR</th>
                     </tr>
                   </thead>
                   <tbody>
                     {saleSummary.items.map((item, idx) => (
-                      <tr key={idx} className="border-b border-slate-100 text-[10px]">
-                        <td className="py-1 pr-1 truncate max-w-[110px] font-bold">
+                      <tr key={idx} className="border-b border-black text-[11px] font-bold text-black">
+                        <td className="py-1 pr-1 truncate max-w-[110px] font-bold text-black">
                           {idx + 1}. {item.stockName}
                         </td>
-                        <td className="text-center font-bold">{item.quantity}</td>
-                        <td className="text-right font-bold">₺{item.totalLine.toFixed(2)}</td>
+                        <td className="text-center font-bold text-black">{item.quantity}</td>
+                        <td className="text-right font-bold text-black">₺{item.totalLine.toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               ) : (
                 /* DOUBLE LINE FORMAT (STANDART TERMAL) */
-                <div className="space-y-1.5 text-[10px]">
-                  <div className="flex justify-between font-bold text-[9px] border-b border-slate-300 pb-0.5">
+                <div className="space-y-1.5 text-[11px] font-bold text-black">
+                  <div className="flex justify-between font-black text-[10px] border-b-2 border-black pb-0.5 text-black uppercase">
                     <span>AÇIKLAMA / ÜRÜN</span>
                     <span>TUTAR (TL)</span>
                   </div>
                   {saleSummary.items.map((item, idx) => (
-                    <div key={idx} className="space-y-0.5 border-b border-slate-100 pb-1">
+                    <div key={idx} className="space-y-0.5 border-b border-black pb-1">
                       <div className="font-bold text-black flex justify-between">
                         <span className="truncate pr-1">{idx + 1}. {item.stockName}</span>
-                        <span>₺{item.totalLine.toFixed(2)}</span>
+                        <span className="font-black text-black">₺{item.totalLine.toFixed(2)}</span>
                       </div>
-                      <div className="text-[9px] text-slate-500 pl-2 flex justify-between">
+                      <div className="text-[10px] font-bold text-black pl-2 flex justify-between">
                         <span>
                           {item.quantity} ADET x ₺{item.unitPrice.toFixed(2)}
                           {activeTemplate.showItemVat !== false ? ` (%${item.taxRate} KDV)` : ''}
@@ -353,75 +317,75 @@ export const PosReceiptModal: React.FC<PosReceiptModalProps> = ({
               )}
             </div>
 
-            <div className="text-[9px] text-slate-400 text-center overflow-hidden">{divider}</div>
+            <div className="text-[10px] font-black text-black text-center overflow-hidden">{divider}</div>
 
             {/* 4. DİP TOPLAMLAR */}
-            <div className="space-y-0.5 text-[10px]">
+            <div className="space-y-1 text-[11px] font-bold text-black">
               {activeTemplate.showSubtotal !== false && (
-                <div className="flex justify-between text-slate-600">
+                <div className="flex justify-between text-black">
                   <span>ARA TOPLAM:</span>
-                  <span>₺{saleSummary.subtotal.toFixed(2)}</span>
+                  <span className="font-bold">₺{saleSummary.subtotal.toFixed(2)}</span>
                 </div>
               )}
 
               {activeTemplate.showTotalDiscount !== false && saleSummary.totalDiscount > 0 && (
-                <div className="flex justify-between text-slate-600">
+                <div className="flex justify-between text-black">
                   <span>TOPLAM İSKONTO:</span>
-                  <span>-₺{saleSummary.totalDiscount.toFixed(2)}</span>
+                  <span className="font-bold">-₺{saleSummary.totalDiscount.toFixed(2)}</span>
                 </div>
               )}
 
               {activeTemplate.showTotalVat !== false && (
-                <div className="flex justify-between text-slate-600">
+                <div className="flex justify-between text-black">
                   <span>KDV TOPLAMI (%10):</span>
-                  <span>₺{saleSummary.totalTax.toFixed(2)}</span>
+                  <span className="font-bold">₺{saleSummary.totalTax.toFixed(2)}</span>
                 </div>
               )}
 
               {activeTemplate.showGrandTotal !== false && (
-                <div className="flex justify-between items-center font-bold text-sm pt-1 border-t border-slate-800 text-black">
+                <div className="grand-total flex justify-between items-center font-black text-base sm:text-lg pt-1 pb-1 px-2 my-1 border-2 border-black text-black bg-white" style={{ color: '#000000' }}>
                   <span>GENEL TOPLAM</span>
-                  <span className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-300">
+                  <span className="font-mono text-black font-black text-base sm:text-lg">
                     ₺{saleSummary.grandTotal.toFixed(2)}
                   </span>
                 </div>
               )}
             </div>
 
-            <div className="text-[9px] text-slate-400 text-center overflow-hidden">{divider}</div>
+            <div className="text-[10px] font-black text-black text-center overflow-hidden">{divider}</div>
 
             {/* 5. ÖDEME YÖNTEMLERİ */}
             {activeTemplate.showPaymentMethodBreakdown !== false && (
-              <div className="text-[9.5px] space-y-0.5">
-                <div className="font-bold text-[9px] text-slate-500 uppercase">ÖDEME ŞEKLİ:</div>
+              <div className="text-[10px] font-bold text-black space-y-0.5">
+                <div className="font-black text-[10px] text-black uppercase">ÖDEME ŞEKLİ:</div>
                 {saleSummary.paymentSplit.cashAmount > 0 && (
                   <div className="flex justify-between">
                     <span>NAKİT:</span>
-                    <span className="font-bold">₺{saleSummary.paymentSplit.cashAmount.toFixed(2)}</span>
+                    <span className="font-black">₺{saleSummary.paymentSplit.cashAmount.toFixed(2)}</span>
                   </div>
                 )}
                 {saleSummary.paymentSplit.changeGiven > 0 && activeTemplate.showCashPaidAndChange !== false && (
-                  <div className="flex justify-between text-slate-600">
+                  <div className="flex justify-between text-black">
                     <span>VERİLEN NAKİT / PARA ÜSTÜ:</span>
-                    <span>₺{saleSummary.paymentSplit.changeGiven.toFixed(2)}</span>
+                    <span className="font-bold">₺{saleSummary.paymentSplit.changeGiven.toFixed(2)}</span>
                   </div>
                 )}
                 {saleSummary.paymentSplit.posAmount > 0 && (
                   <div className="flex justify-between">
                     <span>KREDİ KARTI / POS:</span>
-                    <span className="font-bold">₺{saleSummary.paymentSplit.posAmount.toFixed(2)}</span>
+                    <span className="font-black">₺{saleSummary.paymentSplit.posAmount.toFixed(2)}</span>
                   </div>
                 )}
                 {saleSummary.paymentSplit.platformName && (
-                  <div className="flex justify-between text-amber-800">
+                  <div className="flex justify-between text-black">
                     <span>{saleSummary.paymentSplit.platformName.toUpperCase()}:</span>
-                    <span className="font-bold">₺{saleSummary.grandTotal.toFixed(2)}</span>
+                    <span className="font-black">₺{saleSummary.grandTotal.toFixed(2)}</span>
                   </div>
                 )}
                 {saleSummary.paymentSplit.openAccountAmount > 0 && (
-                  <div className="flex justify-between text-rose-800">
+                  <div className="flex justify-between text-black">
                     <span>AÇIK HESAP (VERESİYE):</span>
-                    <span className="font-bold">₺{saleSummary.paymentSplit.openAccountAmount.toFixed(2)}</span>
+                    <span className="font-black">₺{saleSummary.paymentSplit.openAccountAmount.toFixed(2)}</span>
                   </div>
                 )}
               </div>
@@ -429,15 +393,15 @@ export const PosReceiptModal: React.FC<PosReceiptModalProps> = ({
 
             {/* 6. ALT BİLGİ, BARKOD & QR KOD */}
             {(activeTemplate.showFooter || activeTemplate.showBarcode || activeTemplate.showQrCode) && (
-              <div className="text-center pt-2 space-y-1.5">
+              <div className="text-center pt-2 space-y-1.5 text-black">
                 {activeTemplate.showFooter && activeTemplate.customTextContent && (
-                  <p className="text-[9px] font-bold uppercase text-slate-800">
+                  <p className="text-[10px] font-black uppercase text-black">
                     {activeTemplate.customTextContent}
                   </p>
                 )}
 
                 {activeTemplate.refundPolicyNote && (
-                  <p className="text-[8.5px] text-slate-500 italic">
+                  <p className="text-[9.5px] font-bold text-black italic">
                     {activeTemplate.refundPolicyNote}
                   </p>
                 )}
@@ -459,7 +423,7 @@ export const PosReceiptModal: React.FC<PosReceiptModalProps> = ({
                 {activeTemplate.showQrCode && (
                   <div className="flex flex-col items-center justify-center pt-1">
                     <QrCodeImage 
-                      value={activeTemplate.qrCodeUrl || 'https://storm.app/fis'} 
+                      value={activeTemplate.qrCodeUrl || ''} 
                       size={60} 
                     />
                   </div>
@@ -469,7 +433,7 @@ export const PosReceiptModal: React.FC<PosReceiptModalProps> = ({
 
             {/* FEED LINES / PAPER CUTTING SPACING */}
             {activeTemplate.feedLines && activeTemplate.feedLines > 0 && (
-              <div className="pt-2 text-[8px] text-slate-300 text-center tracking-widest">
+              <div className="pt-2 text-[9px] font-bold text-black text-center tracking-widest">
                 - - - | KAĞIT KESİM ÇİZGİSİ | - - -
               </div>
             )}

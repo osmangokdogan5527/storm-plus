@@ -658,6 +658,10 @@ export function PdfPrintModal({ transaction, cariler, stoklar, onClose }: PdfPri
                                     <style>
                                       @page { size: ${pageCssSize}; margin: 0; }
                                       body { margin: 0; padding: 0; background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                                      ${printPageSize.startsWith('termal') ? `
+                                        *, *:before, *:after { color: #000000 !important; font-weight: 700 !important; text-shadow: none !important; }
+                                        h1, h2, h3, h4, .font-black { font-weight: 900 !important; color: #000000 !important; }
+                                      ` : ''}
                                     </style>
                                   </head>
                                   <body>

@@ -15,7 +15,7 @@ interface TemplatePreviewsProps {
 
 export function TemplatePreviews({
   activeTemplate,
-  companyName = 'STORM MUHASEBE & RETAIL',
+  companyName = 'FİRMA BİLGİ FİŞİ',
   companyAddress = 'Atatürk Cad. No:142 Çankaya / ANKARA',
   companyPhone = '0850 300 00 00',
   logoType = 'text',
@@ -137,7 +137,7 @@ export function TemplatePreviews({
                 />
               ) : (
                 <div className="border-2 border-black font-black tracking-tighter px-2 py-0.5 text-sm uppercase inline-block">
-                  {companyName || 'STORM POS'}
+                  {companyName || 'BİLGİ FİŞİ'}
                 </div>
               )}
             </div>
@@ -148,7 +148,7 @@ export function TemplatePreviews({
             <div className={`font-extrabold uppercase leading-tight ${
               activeTemplate.companyNameSize === 'xlarge' ? 'text-base' : activeTemplate.companyNameSize === 'large' ? 'text-sm' : 'text-xs'
             }`}>
-              {companyName || 'STORM MUHASEBE & POS'}
+              {companyName || 'BİLGİ FİŞİ'}
             </div>
           )}
 
@@ -183,47 +183,47 @@ export function TemplatePreviews({
         </div>
 
         {/* DIVIDER */}
-        <div className="overflow-hidden whitespace-nowrap text-zinc-400 my-1.5 text-[9px]">
+        <div className="overflow-hidden whitespace-nowrap text-black font-black my-1.5 text-[9.5px]">
           {divider}
         </div>
 
         {/* DOCUMENT TITLE */}
-        <div className="text-center font-extrabold text-sm tracking-wider uppercase my-1">
+        <div className="text-center font-black text-sm tracking-wider uppercase my-1 text-black py-1 border-y-2 border-black">
           *** {activeTemplate.documentTitle || 'POS SATIŞ FİŞİ'} ***
         </div>
 
         {/* DIVIDER */}
-        <div className="overflow-hidden whitespace-nowrap text-zinc-400 my-1.5 text-[9px]">
+        <div className="overflow-hidden whitespace-nowrap text-black font-black my-1.5 text-[9.5px]">
           {divider}
         </div>
 
         {/* --- METADATA SECTION --- */}
-        <div className="text-[10px] space-y-0.5">
+        <div className="text-[10.5px] font-bold text-black space-y-0.5">
           {activeTemplate.showReceiptNo !== false && (
             <div className="flex justify-between">
-              <span className="text-zinc-600">FİŞ NO:</span>
-              <span className="font-bold">POS-20260731-9947</span>
+              <span className="text-black">FİŞ NO:</span>
+              <span className="font-black">POS-20260731-9947</span>
             </div>
           )}
 
           {activeTemplate.showDateTime !== false && (
             <div className="flex justify-between">
-              <span className="text-zinc-600">TARİH & SAAT:</span>
-              <span>31.07.2026 23:30</span>
+              <span className="text-black">TARİH & SAAT:</span>
+              <span className="font-bold">31.07.2026 23:30</span>
             </div>
           )}
 
           {activeTemplate.showPersonnelName !== false && (
             <div className="flex justify-between">
-              <span className="text-zinc-600">KASİYER:</span>
-              <span className="font-semibold">AHMET YILMAZ</span>
+              <span className="text-black">KASİYER:</span>
+              <span className="font-bold">AHMET YILMAZ</span>
             </div>
           )}
 
           {activeTemplate.showCustomerName !== false && (
-            <div className="flex justify-between border-t border-dotted border-zinc-300 pt-0.5 mt-0.5">
-              <span className="text-zinc-600">MÜŞTERİ:</span>
-              <span className="font-bold text-black uppercase">PERAKENDE MÜŞTERİ</span>
+            <div className="flex justify-between border-t border-black pt-0.5 mt-0.5">
+              <span className="text-black">MÜŞTERİ:</span>
+              <span className="font-black text-black uppercase">PERAKENDE MÜŞTERİ</span>
             </div>
           )}
 
@@ -434,7 +434,7 @@ export function TemplatePreviews({
           {/* QR Code */}
           {activeTemplate.showQrCode && (
             <div className="flex flex-col items-center justify-center pt-1">
-              <QrCodeImage value={activeTemplate.qrCodeUrl || 'https://storm.app/fis/POS-20260731-9947'} size={64} />
+              <QrCodeImage value={activeTemplate.qrCodeUrl || ''} size={64} />
               <div className="text-[7.5px] text-zinc-500 font-mono mt-0.5">E-Fiş Doğrulama Kodu</div>
             </div>
           )}
@@ -442,7 +442,7 @@ export function TemplatePreviews({
           {/* Wifi & Social Info */}
           {activeTemplate.showWifiSocial && (
             <div className="text-[8.5px] font-semibold text-zinc-800 border-t border-dotted border-zinc-300 pt-1">
-              Wi-Fi: STORM_GUEST | Sifre: storm2026
+              Wi-Fi: MISAFIR | Sifre: 12345678
             </div>
           )}
 
