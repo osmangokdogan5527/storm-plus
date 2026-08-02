@@ -3,6 +3,7 @@ import { AnalysisChartWidget } from './dashboard/AnalysisChartWidget';
 import { StockAlertsWidget } from './dashboard/StockAlertsWidget';
 import { FlowSummaryWidget } from './dashboard/FlowSummaryWidget';
 import { RecentMovementsWidget } from './dashboard/RecentMovementsWidget';
+import { CloudStatusWidget } from './dashboard/CloudStatusWidget';
 import React, { useMemo, useState, useRef } from "react";
 import { fetchTCMBRates, TCMBRatesResult } from '../utils/tcmbService';
 import {
@@ -34,6 +35,8 @@ interface DashboardViewProps {
   employeeTransactions?: EmployeeTransaction[];
   recurringTransactions?: RecurringTransaction[];
   onNavigate: (view: any) => void;
+  isOnline?: boolean;
+  lastSyncTime?: Date;
 }
 
 interface WidgetDef {
@@ -50,6 +53,12 @@ const ALL_WIDGETS: WidgetDef[] = [
     description:
       "Kasa, Banka mevcudu, Net alacak/borç durumu, Net kar/zarar ve Stok toplam değer özet kartları.",
     span: "lg:col-span-3",
+  },
+  {
+    id: "cloud_status",
+    label: "Bulut Senkronizasyon Durumu",
+    description: "Verilerin bulut ile en son ne zaman senkronize edildiğini ve bağlantı durumunu gösterir.",
+    span: "lg:col-span-1",
   },
   {
     id: "analysis_chart",
@@ -83,6 +92,7 @@ const ALL_WIDGETS: WidgetDef[] = [
 
 const DEFAULT_WIDGET_ORDER = [
   "stats_grid",
+  "cloud_status",
   "analysis_chart",
   "stock_alerts",
   "flow_summary",
@@ -97,6 +107,8 @@ export default function DashboardView({
   employeeTransactions = [],
   recurringTransactions = [],
   onNavigate,
+  isOnline = false,
+  lastSyncTime,
 }: DashboardViewProps) {
   const safeCariler = Array.isArray(cariler) ? cariler : [];
   const safeStoklar = Array.isArray(stoklar) ? stoklar : [];
@@ -797,6 +809,13 @@ export default function DashboardView({
                 return (
                   <div key="recent_movements" className={`${spanClass} h-full flex flex-col gap-2.5 group transition-all duration-300`}>
                     <RecentMovementsWidget filteredRecentMovements={filteredRecentMovements} onNavigate={onNavigate} dashboardCurrency={dashboardCurrency} formatCurrency={formatCurrency} renderWidgetControls={() => renderWidgetControls("recent_movements", index)} />
+                  </div>
+                );
+
+              case "cloud_status":
+                return (
+                  <div key="cloud_status" className={`${spanClass} h-full flex flex-col gap-2.5 group transition-all duration-300`}>
+                    <CloudStatusWidget isOnline={isOnline} lastSyncTime={lastSyncTime} renderWidgetControls={() => renderWidgetControls("cloud_status", index)} />
                   </div>
                 );
 

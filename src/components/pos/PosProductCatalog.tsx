@@ -449,10 +449,13 @@ export const PosProductCatalog: React.FC<PosProductCatalogProps> = ({
                       return (
                         <span
                           key={cat}
-                          className="px-2.5 py-1 bg-slate-800 border border-slate-700 text-teal-300 font-bold text-xs rounded-lg flex items-center gap-1.5 group"
+                          className="px-3 py-1.5 bg-teal-500/20 border border-teal-500/30 text-teal-100 font-bold text-xs rounded-xl flex items-center gap-2 group shadow-sm"
                         >
-                          <span>📁 {cat}</span>
-                          <span className="text-[10px] text-slate-400 font-mono">({categoryCounts[cat] || 0})</span>
+                          <span className="flex items-center gap-1.5">
+                            <span>📁</span> 
+                            <span className="truncate max-w-[150px]">{cat}</span>
+                          </span>
+                          <span className="text-[10px] text-teal-200/70 font-mono bg-teal-900/50 px-1.5 py-0.5 rounded-md">({categoryCounts[cat] || 0})</span>
                           <button
                             type="button"
                             onClick={(e) => {
@@ -460,10 +463,10 @@ export const PosProductCatalog: React.FC<PosProductCatalogProps> = ({
                               e.stopPropagation();
                               handleDeleteDepartment(cat);
                             }}
-                            className="text-slate-400 hover:text-red-400 transition-colors ml-1 cursor-pointer font-black p-0.5 rounded"
+                            className="text-teal-400/50 hover:text-red-400 hover:bg-red-400/10 transition-colors ml-1 cursor-pointer p-1 rounded-md"
                             title="Bu Bölümü Sil"
                           >
-                            <X size={12} />
+                            <X size={14} />
                           </button>
                         </span>
                       );

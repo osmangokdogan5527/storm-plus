@@ -31,7 +31,6 @@ const DEFAULT_THERMAL_TEMPLATE: PrintTemplateConfig = {
   companyNameSize: 'normal',
   showCompanyAddress: true,
   showBranchCashier: true,
-  showTaxInfo: true,
   welcomeNote: 'Bizi Tercih Ettiğiniz İçin Teşekkür Ederiz',
   showReceiptNo: true,
   showDateTime: true,

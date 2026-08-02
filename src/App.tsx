@@ -78,10 +78,12 @@ export default function App() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
 
   useEffect(() => {
     const handleOnline = async () => {
       setIsOnline(true);
+      setLastSyncTime(new Date());
       try {
         await enableNetwork(db);
         console.log("Firestore network enabled.");
@@ -831,13 +833,17 @@ export default function App() {
       }
 
       // 1. Ana Satış Faturası / İşlemi (Her platform için kendi cari kartı adıyla)
+      const netAmountForTransaction = isPlatformSale && saleData.paymentSplit?.platformNetAmount
+        ? saleData.paymentSplit.platformNetAmount
+        : saleData.grandTotal;
+
       const mainTransaction: Omit<Transaction, 'id'> = {
         invoiceNo: saleData.receiptNo,
         type: 'sale',
         cariId: finalCariId,
         cariName: finalCariName,
         date: saleData.date,
-        amount: saleData.grandTotal,
+        amount: netAmountForTransaction,
         account: saleData.paymentSplit.cashAmount > 0
           ? 'cash'
           : saleData.paymentSplit.posAmount > 0
@@ -962,7 +968,7 @@ export default function App() {
         cariId: platformCariId,
         cariName: platformCariName,
         date: saleData.date,
-        amount: saleData.grossTotal,
+        amount: saleData.netAmount,
         account: '', // Henüz kasaya nakit girmedi, pazaryerinde hakediş alacağında bekliyor
         description: `Online Sipariş (${saleData.platformName}${saleData.customerName ? ` - Müşteri: ${saleData.customerName}` : ''}) - Net Alacak: ₺${saleData.netAmount.toFixed(2)} (Komisyon: %${saleData.commissionRate})`,
         items: items.length > 0 ? items : [{
@@ -970,9 +976,9 @@ export default function App() {
           stockName: `${saleData.platformName} Online Sipariş`,
           quantity: 1,
           unit: 'Adet',
-          price: saleData.grossTotal,
+          price: saleData.netAmount,
           taxRate: 0,
-          total: saleData.grossTotal,
+          total: saleData.netAmount,
         }],
         createdAt: new Date().toISOString(),
         currency: 'TRY',
@@ -1137,7 +1143,7 @@ export default function App() {
           />
         </div>
         <div className={activeTab === 'dashboard' ? 'block animate-fade-in' : 'hidden'}>
-          {renderWorkspaceView('dashboard', <DashboardView cariler={cariler} stoklar={stoklar} islemler={islemler} expenses={expenses} employeeTransactions={employeeTransactions} recurringTransactions={recurringTransactions} onNavigate={handleNavigate} />)}
+          {renderWorkspaceView('dashboard', <DashboardView cariler={cariler} stoklar={stoklar} islemler={islemler} expenses={expenses} employeeTransactions={employeeTransactions} recurringTransactions={recurringTransactions} onNavigate={handleNavigate} isOnline={isOnline} lastSyncTime={lastSyncTime} />)}
         </div>
         <div className={activeTab === 'pos' ? 'block animate-fade-in' : 'hidden'}>
           {renderWorkspaceView('pos', <PosView

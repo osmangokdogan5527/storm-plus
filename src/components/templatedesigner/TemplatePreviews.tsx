@@ -167,13 +167,6 @@ export function TemplatePreviews({
             </div>
           )}
 
-          {/* Tax Info */}
-          {activeTemplate.showTaxInfo && (
-            <div className="text-[9px] text-zinc-700">
-              Marmara V.D. - VKN: 1029384756
-            </div>
-          )}
-
           {/* Welcome Note */}
           {activeTemplate.welcomeNote && (
             <div className="text-[10px] italic font-semibold pt-1">
@@ -224,13 +217,6 @@ export function TemplatePreviews({
             <div className="flex justify-between border-t border-black pt-0.5 mt-0.5">
               <span className="text-black">MÜŞTERİ:</span>
               <span className="font-black text-black uppercase">PERAKENDE MÜŞTERİ</span>
-            </div>
-          )}
-
-          {activeTemplate.showCustomerTaxAddress && (
-            <div className="text-[9px] text-zinc-700 leading-tight border-t border-dotted border-zinc-200 pt-0.5">
-              <div>VKN/TC: 12345678901</div>
-              <div>ADRES: Çankaya Mah. 12. Cadde No: 4 Ankara</div>
             </div>
           )}
 

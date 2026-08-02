@@ -40,7 +40,6 @@ export interface PrintTemplateConfig {
   companyNameSize?: 'normal' | 'large' | 'xlarge';
   showCompanyAddress: boolean;
   showBranchCashier?: boolean;
-  showTaxInfo?: boolean;
   welcomeNote?: string;
 
   // Metadata & Customer
@@ -48,7 +47,6 @@ export interface PrintTemplateConfig {
   showDateTime?: boolean;
   showPersonnelName?: boolean;
   showCustomerName?: boolean;
-  showCustomerTaxAddress?: boolean;
   showTableOrderType?: boolean;
 
   // Product Items & Table Format
@@ -118,14 +116,12 @@ const DEFAULT_THERMAL_TEMPLATES: PrintTemplateConfig[] = [
     companyNameSize: 'large',
     showCompanyAddress: true,
     showBranchCashier: true,
-    showTaxInfo: true,
     welcomeNote: 'Bizi Tercih Ettiğiniz İçin Teşekkür Ederiz',
 
     showReceiptNo: true,
     showDateTime: true,
     showPersonnelName: true,
     showCustomerName: true,
-    showCustomerTaxAddress: false,
     showTableOrderType: false,
 
     itemFormat: 'double_line',
@@ -170,14 +166,12 @@ const DEFAULT_THERMAL_TEMPLATES: PrintTemplateConfig[] = [
     companyNameSize: 'normal',
     showCompanyAddress: false,
     showBranchCashier: true,
-    showTaxInfo: false,
     welcomeNote: '',
 
     showReceiptNo: true,
     showDateTime: true,
     showPersonnelName: true,
     showCustomerName: false,
-    showCustomerTaxAddress: false,
     showTableOrderType: false,
 
     itemFormat: 'single_line',
@@ -222,14 +216,12 @@ const DEFAULT_THERMAL_TEMPLATES: PrintTemplateConfig[] = [
     companyNameSize: 'large',
     showCompanyAddress: true,
     showBranchCashier: true,
-    showTaxInfo: false,
     welcomeNote: 'Afiyet Olsun!',
 
     showReceiptNo: true,
     showDateTime: true,
     showPersonnelName: true,
     showCustomerName: true,
-    showCustomerTaxAddress: false,
     showTableOrderType: true,
 
     itemFormat: 'double_line',
@@ -338,14 +330,12 @@ export default function TemplateDesignerView() {
       companyNameSize: 'large',
       showCompanyAddress: true,
       showBranchCashier: true,
-      showTaxInfo: true,
       welcomeNote: 'Bizi Tercih Ettiğiniz İçin Teşekkür Ederiz',
 
       showReceiptNo: true,
       showDateTime: true,
       showPersonnelName: true,
       showCustomerName: true,
-      showCustomerTaxAddress: false,
       showTableOrderType: false,
 
       itemFormat: 'double_line',

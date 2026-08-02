@@ -430,14 +430,15 @@ export const StormLogo = ({
   );
 };
 
-export const APP_VERSION = '1.3.3';
+export const APP_VERSION = '1.3.4';
 
 export const CHANGELOG = {
-  version: '1.3.3',
+  version: '1.3.4',
   features: [
-    "Arayüz Tema Güncellemesi: Vurgu renklerine canlı #97d700 yeşil tonu tanımlandı.",
-    "Ultra Küçük Font Desteği: Genel Ayarlar menüsüne 12px 'Ultra Küçük' yazı boyutu seçeneği eklendi.",
-    "Fiş Tasarımcısı Sadeleştirmesi: Fiş şablonu düzenleme paneli sadeleştirildi ve hızlı hazır preset butonları eklendi."
+    "Hızlı Satış Ekranı UI İyileştirmesi: Hızlı Satış ekranındaki Tanımlı Bölümler (Kategoriler) bölümünün kullanıcı arayüzü güncellendi, yazıların okunamaması sorunu giderildi.",
+    "Gösterge Paneli ve Finansal Raporlar Optimizasyonu: Online platform (Yemeksepeti vb.) satışlarında artık komisyon kesintisi yapılmış *Net Kazanç* tutarı gösterge paneline yansımaktadır.",
+    "Fiş Şablonu Güncellemesi: Fiş şablonları önizleme ekranındaki örnek vergi numarası ve vergi dairesi bilgileri kaldırıldı.",
+    "Bulut Senkronizasyon Durumu Paneli: Gösterge paneline (Dashboard) verilerin bulut ile en son ne zaman senkronize edildiğini gösteren yeni bir panel eklendi."
   ],
   fixes: []
 };
@@ -689,6 +690,16 @@ export const PIN_ACCOUNTS = [
 ];
 
 export const changelogData = [
+  {
+    version: "1.3.4",
+    date: "02.08.2026",
+    changes: [
+      "Hızlı Satış Ekranı UI İyileştirmesi: Hızlı Satış ekranındaki Tanımlı Bölümler (Kategoriler) bölümünün kullanıcı arayüzü güncellendi, yazıların okunamaması sorunu giderildi.",
+      "Online Platform Net Kazanç Gösterimi: Yemeksepeti ve benzeri online platformlardan gelen siparişlerin satış tutarı, komisyon düşüldükten sonraki net tutar üzerinden ana gösterge paneline yansıtılacak şekilde güncellendi.",
+      "Fiş Şablonu Önizleme Düzenlemesi: Fiş şablonları önizleme ekranındaki örnek vergi numarası (VKN) ve vergi dairesi gibi ibareler kullanıcı talebi doğrultusunda kaldırıldı.",
+      "Bulut Senkronizasyon Durumu Paneli: Gösterge paneline (Dashboard) verilerin bulut ile en son ne zaman senkronize edildiğini gösteren yeni bir panel eklendi."
+    ]
+  },
   {
     version: "1.3.3",
     date: "02.08.2026",
