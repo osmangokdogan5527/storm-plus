@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LogOut, Lock, ChevronDown, MessageSquare, ShieldCheck, Pin, PanelLeft } from 'lucide-react';
-import { StormLogo, StormIconWrapper, TAB_DEFS, SIDEBAR_BG_PRESETS } from '../constants';
+import { StormLogo, StormIconWrapper, TAB_DEFS, SIDEBAR_BG_PRESETS, APP_VERSION } from '../constants';
 
 interface DesktopSidebarProps {
   isLightSidebar: boolean;
@@ -318,6 +318,12 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
                     <span className="text-[10px] uppercase tracking-widest">Yönetici Çıkışı</span>
                   </button>
                 ))}
+                <div className="pt-1 text-center">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 shadow-sm">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    v{APP_VERSION} Canlı Sürüm
+                  </span>
+                </div>
               </>
             ) : (
               /* Collapsed Footer representation */
