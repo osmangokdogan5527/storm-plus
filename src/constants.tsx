@@ -430,13 +430,12 @@ export const StormLogo = ({
   );
 };
 
-export const APP_VERSION = '1.3.5';
+export const APP_VERSION = '1.3.6';
 
 export const CHANGELOG = {
-  version: '1.3.5',
+  version: '1.3.6',
   features: [
-    "Hızlı Satış Bölüm & Kategori Sıralaması: POS ekranında Tanımlı Bölümler (Kategoriler) için sürükle-bırak (drag and drop) yöntemi ve ok tuşları ile isteğe bağlı özel sıralama yapabilme imkanı eklendi.",
-    "Bölüm Yönetimi ve Kalıcı Sıralama Hafızası: Bölüm Ekle / Düzenle penceresinde kategorilerin sırasını canlı olarak düzenleme, yukarı/aşağı taşıma ve sıralamanın yerel hafızada kalıcı olarak saklanması sağlandı."
+    "Senkronizasyon Düzeltmesi: Ön izleme paneli (Web) ve masaüstü (Electron) versiyonları arasındaki workspace (çalışma alanı) farklılıkları giderildi. Artık her iki platformda da verileriniz anlık olarak senkronize olacak ve web üzerinden uygulamanızı güvenle test edebileceksiniz."
   ],
   fixes: []
 };
@@ -688,6 +687,13 @@ export const PIN_ACCOUNTS = [
 ];
 
 export const changelogData = [
+  {
+    version: "1.3.6",
+    date: "03.08.2026",
+    changes: [
+      "Senkronizasyon Düzeltmesi: Ön izleme paneli (Web) ve masaüstü (Electron) versiyonları arasındaki workspace farklılıkları giderildi, verilerin her iki platformda da anlık senkronize olması sağlandı."
+    ]
+  },
   {
     version: "1.3.5",
     date: "03.08.2026",

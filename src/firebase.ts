@@ -104,8 +104,8 @@ export function getActiveWorkspace(): string {
   if (typeof window === 'undefined' || typeof localStorage === 'undefined') return 'default';
   const stored = localStorage.getItem('storm_app_workspace');
   if (stored) return stored;
-  const host = window.location.hostname.replace(/[^a-z0-9]/gi, '_');
-  return host || 'default';
+  // Removed hostname isolation to ensure web preview and desktop app sync on 'default' workspace
+  return 'default';
 }
 
 export function setActiveWorkspace(workspace: string) {
