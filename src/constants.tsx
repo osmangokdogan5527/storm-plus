@@ -430,15 +430,13 @@ export const StormLogo = ({
   );
 };
 
-export const APP_VERSION = '1.3.4';
+export const APP_VERSION = '1.3.5';
 
 export const CHANGELOG = {
-  version: '1.3.4',
+  version: '1.3.5',
   features: [
-    "Hızlı Satış Ekranı UI İyileştirmesi: Hızlı Satış ekranındaki Tanımlı Bölümler (Kategoriler) bölümünün kullanıcı arayüzü güncellendi, yazıların okunamaması sorunu giderildi.",
-    "Gösterge Paneli ve Finansal Raporlar Optimizasyonu: Online platform (Yemeksepeti vb.) satışlarında artık komisyon kesintisi yapılmış *Net Kazanç* tutarı gösterge paneline yansımaktadır.",
-    "Fiş Şablonu Güncellemesi: Fiş şablonları önizleme ekranındaki örnek vergi numarası ve vergi dairesi bilgileri kaldırıldı.",
-    "Bulut Senkronizasyon Durumu Paneli: Gösterge paneline (Dashboard) verilerin bulut ile en son ne zaman senkronize edildiğini gösteren yeni bir panel eklendi."
+    "Hızlı Satış Bölüm & Kategori Sıralaması: POS ekranında Tanımlı Bölümler (Kategoriler) için sürükle-bırak (drag and drop) yöntemi ve ok tuşları ile isteğe bağlı özel sıralama yapabilme imkanı eklendi.",
+    "Bölüm Yönetimi ve Kalıcı Sıralama Hafızası: Bölüm Ekle / Düzenle penceresinde kategorilerin sırasını canlı olarak düzenleme, yukarı/aşağı taşıma ve sıralamanın yerel hafızada kalıcı olarak saklanması sağlandı."
   ],
   fixes: []
 };
@@ -690,6 +688,14 @@ export const PIN_ACCOUNTS = [
 ];
 
 export const changelogData = [
+  {
+    version: "1.3.5",
+    date: "03.08.2026",
+    changes: [
+      "Hızlı Satış Bölüm & Kategori Sıralaması: POS ekranında Tanımlı Bölümler (Kategoriler) butonları için sürükle-bırak (drag and drop) yöntemi ve ok tuşlarıyla özel sıralama yapabilme desteği eklendi.",
+      "Bölüm Yönetimi ve Kalıcı Hafıza: Bölüm Ekle/Düzenle penceresinde kategorilerin sırasını canlı olarak düzenleme, yukarı/aşağı taşıma ve yapılan sıralamanın yerel hafızada kalıcı olarak saklanması sağlandı."
+    ]
+  },
   {
     version: "1.3.4",
     date: "02.08.2026",

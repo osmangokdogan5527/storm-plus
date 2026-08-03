@@ -422,6 +422,7 @@ export default function DashboardView({
       title: string;
       subtitle: string;
       date: string;
+      createdAt?: string;
       amount: number;
       currency: string;
       account: string;
@@ -448,6 +449,7 @@ export default function DashboardView({
                     ? "Tahsilat"
                     : "Cari Ödeme",
         date: islem.date,
+        createdAt: islem.createdAt,
         amount: islem.amount,
         currency: islem.currency || "TRY",
         account:
@@ -474,6 +476,7 @@ export default function DashboardView({
         title: exp.title,
         subtitle: `${exp.category} Gideri`,
         date: exp.date,
+        createdAt: exp.createdAt,
         amount: exp.amount,
         currency: exp.currency || "TRY",
         account: exp.account === "cash" ? "Kasa" : "Banka",
@@ -494,6 +497,7 @@ export default function DashboardView({
               ? "Personel Maaş Ödemesi"
               : "Personel Avansı",
         date: et.date,
+        createdAt: et.createdAt,
         amount: et.amount,
         currency: et.currency || "TRY",
         account:
@@ -507,10 +511,20 @@ export default function DashboardView({
       });
     });
 
-    // Sort descending by date, then id
+    // Sort descending by createdAt
     return list.sort((a, b) => {
-      const dateCompare = b.date.localeCompare(a.date);
+      const timeA = new Date(a.createdAt || a.date).getTime();
+      const timeB = new Date(b.createdAt || b.date).getTime();
+      
+      // If valid dates exist, use timestamp comparison
+      if (!isNaN(timeA) && !isNaN(timeB)) {
+        if (timeA !== timeB) return timeB - timeA;
+      }
+      
+      // Fallback to string compare
+      const dateCompare = (b.createdAt || b.date).localeCompare(a.createdAt || a.date);
       if (dateCompare !== 0) return dateCompare;
+      
       return b.id.localeCompare(a.id);
     });
   }, [islemler, expenses, employeeTransactions]);

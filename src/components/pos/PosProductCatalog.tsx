@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Stock } from '../../types';
-import { Search, Package, Check, Tag, Filter, Zap, Barcode, Plus, FolderPlus, Layers, LayoutGrid, ListFilter, X, Edit2 } from 'lucide-react';
+import { Search, Package, Check, Tag, Filter, Zap, Barcode, Plus, FolderPlus, Layers, LayoutGrid, ListFilter, X, Edit2, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
 import { reportErrorToTelegram } from '../../utils/telegramLogger';
 
 interface PosProductCatalogProps {
@@ -37,7 +37,7 @@ export const PosProductCatalog: React.FC<PosProductCatalogProps> = ({
     }
   });
 
-// Özel Eklenen Bölümler (Kullanıcı tamamen serbestçe tanımlar)
+  // Özel Eklenen Bölümler (Kullanıcı tamamen serbestçe tanımlar)
   const [customDepartments, setCustomDepartments] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('storm_pos_custom_departments');
@@ -46,6 +46,87 @@ export const PosProductCatalog: React.FC<PosProductCatalogProps> = ({
       return [];
     }
   });
+
+  // Özel Sıralama Hafızası (Sürükle-Bırak Sıralaması)
+  const [departmentOrder, setDepartmentOrder] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('storm_pos_department_order');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Drag and Drop durumları
+  const [draggedCategory, setDraggedCategory] = useState<string | null>(null);
+  const [dragOverCategory, setDragOverCategory] = useState<string | null>(null);
+
+  // Sıralamayı Kaydet
+  const saveDepartmentOrder = (newOrder: string[]) => {
+    setDepartmentOrder(newOrder);
+    try {
+      localStorage.setItem('storm_pos_department_order', JSON.stringify(newOrder));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Sürükle-Bırak Olay Yönetimi
+  const handleCategoryDragStart = (e: React.DragEvent, cat: string) => {
+    setDraggedCategory(cat);
+    e.dataTransfer.setData('text/plain', cat);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleCategoryDragOver = (e: React.DragEvent, cat: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverCategory !== cat) {
+      setDragOverCategory(cat);
+    }
+  };
+
+  const handleCategoryDrop = (e: React.DragEvent, targetCat: string) => {
+    e.preventDefault();
+    const sourceCat = draggedCategory || e.dataTransfer.getData('text/plain');
+    if (!sourceCat || sourceCat === targetCat) {
+      setDraggedCategory(null);
+      setDragOverCategory(null);
+      return;
+    }
+
+    const currentList = [...allCategories];
+    const fromIndex = currentList.indexOf(sourceCat);
+    const toIndex = currentList.indexOf(targetCat);
+
+    if (fromIndex !== -1 && toIndex !== -1) {
+      currentList.splice(fromIndex, 1);
+      currentList.splice(toIndex, 0, sourceCat);
+      saveDepartmentOrder(currentList);
+    }
+
+    setDraggedCategory(null);
+    setDragOverCategory(null);
+  };
+
+  const handleCategoryDragEnd = () => {
+    setDraggedCategory(null);
+    setDragOverCategory(null);
+  };
+
+  // Ok tuşları ile sıralama değiştirme
+  const moveCategory = (cat: string, direction: 'up' | 'down') => {
+    const currentList = [...allCategories];
+    const index = currentList.indexOf(cat);
+    if (index === -1) return;
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= currentList.length) return;
+
+    const temp = currentList[index];
+    currentList[index] = currentList[targetIndex];
+    currentList[targetIndex] = temp;
+    saveDepartmentOrder(currentList);
+  };
 
   // Eşlemeyi Kaydet
   const updateStockCategory = (stockId: string, categoryName: string) => {
@@ -147,7 +228,7 @@ export const PosProductCatalog: React.FC<PosProductCatalogProps> = ({
     }
   }, [stocksWithCategory]);
 
-  // Tüm geçerli kategorilerin birleşik listesi (Kategorisiz hariç)
+  // Tüm geçerli kategorilerin birleşik listesi (Kategorisiz hariç) - Özel Sıralamaya Göre
   const allCategories = useMemo(() => {
     const set = new Set<string>();
     customDepartments.forEach((d) => {
@@ -160,8 +241,19 @@ export const PosProductCatalog: React.FC<PosProductCatalogProps> = ({
         set.add(s.category.trim());
       }
     });
-    return Array.from(set);
-  }, [customDepartments, stocksWithCategory]);
+    const list = Array.from(set);
+
+    list.sort((a, b) => {
+      const indexA = departmentOrder.indexOf(a);
+      const indexB = departmentOrder.indexOf(b);
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return a.localeCompare(b, 'tr');
+    });
+
+    return list;
+  }, [customDepartments, stocksWithCategory, departmentOrder]);
 
   // Arama ve Kategoriye Göre Filtrelenmiş Ürün Listesi
   const filteredStocks = useMemo(() => {
@@ -284,27 +376,46 @@ export const PosProductCatalog: React.FC<PosProductCatalogProps> = ({
 
           {allCategories.map((cat) => {
             const count = categoryCounts[cat] || 0;
+            const isDragging = draggedCategory === cat;
+            const isOver = dragOverCategory === cat;
+
             return (
-              <button
+              <div
                 key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-black whitespace-nowrap transition-all cursor-pointer flex items-center gap-2 border-2 touch-manipulation active:scale-95 ${
-                  selectedCategory === cat
-                    ? 'bg-teal-400 text-slate-950 border-teal-300 shadow-lg shadow-teal-500/30'
-                    : 'bg-slate-800 text-slate-100 border-slate-700 hover:bg-slate-700 hover:text-white'
+                draggable={true}
+                onDragStart={(e) => handleCategoryDragStart(e, cat)}
+                onDragOver={(e) => handleCategoryDragOver(e, cat)}
+                onDrop={(e) => handleCategoryDrop(e, cat)}
+                onDragEnd={handleCategoryDragEnd}
+                className={`relative flex items-center shrink-0 transition-all duration-150 ${
+                  isDragging ? 'opacity-30 scale-95' : ''
                 }`}
               >
-                <span>{cat}</span>
-                <span
-                  className={`px-2 py-0.5 rounded-full text-xs font-mono font-black ${
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3.5 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-black whitespace-nowrap transition-all cursor-grab active:cursor-grabbing flex items-center gap-2 border-2 touch-manipulation active:scale-95 ${
                     selectedCategory === cat
-                      ? 'bg-slate-950 text-teal-300'
-                      : 'bg-slate-900 text-slate-300'
+                      ? 'bg-teal-400 text-slate-950 border-teal-300 shadow-lg shadow-teal-500/30'
+                      : isOver
+                      ? 'bg-teal-600/40 text-white border-teal-400 scale-105'
+                      : 'bg-slate-800 text-slate-100 border-slate-700 hover:bg-slate-700 hover:text-white'
                   }`}
+                  title="Tıklayın: Seç, Sürükleyin: Sıralamayı Değiştir"
                 >
-                  {count}
-                </span>
-              </button>
+                  <GripVertical size={14} className="text-slate-400/80 hover:text-teal-300 shrink-0" />
+                  <span>{cat}</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs font-mono font-black ${
+                      selectedCategory === cat
+                        ? 'bg-slate-950 text-teal-300'
+                        : 'bg-slate-900 text-slate-300'
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              </div>
             );
           })}
         </div>
@@ -425,50 +536,82 @@ export const PosProductCatalog: React.FC<PosProductCatalogProps> = ({
                 </div>
               </div>
 
-              {/* 2. MEVCUT BÖLÜMLER LİSTESİ */}
+              {/* 2. MEVCUT BÖLÜMLER VE SIRALAMA */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-black text-slate-200">Tanımlı Bölümler ({allCategories.length})</h4>
+                  <div>
+                    <h4 className="text-xs font-black text-slate-200">Tanımlı Bölümler & Sıralama ({allCategories.length})</h4>
+                    <p className="text-[10px] text-teal-400 font-medium">💡 Sürükle-bırak yapabilir veya ok tuşlarıyla sıralayabilirsiniz</p>
+                  </div>
                   {(allCategories.length > 0 || customDepartments.length > 0) && (
                     <button
                       type="button"
                       onClick={handleClearAllDepartments}
                       className="text-[10px] font-bold text-red-400 hover:underline cursor-pointer"
                     >
-                      Tüm Bölümleri Temizle
+                      Tümünü Temizle
                     </button>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto custom-scrollbar p-2 bg-slate-950 rounded-xl border border-slate-800">
+                <div className="space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar p-2 bg-slate-950 rounded-xl border border-slate-800">
                   {allCategories.length === 0 ? (
                     <p className="text-xs text-slate-400 p-2 font-medium">
                       Henüz eklenmiş özel bölüm bulunmuyor. Yukarıdaki kutudan dilediğiniz bölüm adını yazıp ekleyebilirsiniz.
                     </p>
                   ) : (
-                    allCategories.map((cat) => {
+                    allCategories.map((cat, idx) => {
                       return (
-                        <span
+                        <div
                           key={cat}
-                          className="px-3 py-1.5 bg-teal-500/20 border border-teal-500/30 text-teal-100 font-bold text-xs rounded-xl flex items-center gap-2 group shadow-sm"
+                          draggable={true}
+                          onDragStart={(e) => handleCategoryDragStart(e, cat)}
+                          onDragOver={(e) => handleCategoryDragOver(e, cat)}
+                          onDrop={(e) => handleCategoryDrop(e, cat)}
+                          onDragEnd={handleCategoryDragEnd}
+                          className="px-3 py-2 bg-slate-900 border border-slate-700/80 hover:border-teal-400/80 text-teal-100 font-bold text-xs rounded-xl flex items-center justify-between group shadow-sm transition-all"
                         >
-                          <span className="flex items-center gap-1.5">
-                            <span>📁</span> 
-                            <span className="truncate max-w-[150px]">{cat}</span>
-                          </span>
-                          <span className="text-[10px] text-teal-200/70 font-mono bg-teal-900/50 px-1.5 py-0.5 rounded-md">({categoryCounts[cat] || 0})</span>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleDeleteDepartment(cat);
-                            }}
-                            className="text-teal-400/50 hover:text-red-400 hover:bg-red-400/10 transition-colors ml-1 cursor-pointer p-1 rounded-md"
-                            title="Bu Bölümü Sil"
-                          >
-                            <X size={14} />
-                          </button>
-                        </span>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <GripVertical size={16} className="text-slate-500 hover:text-teal-300 cursor-grab active:cursor-grabbing shrink-0" />
+                            <span className="text-[11px] font-mono text-slate-400 w-5">{idx + 1}.</span>
+                            <span className="truncate font-black text-white">{cat}</span>
+                            <span className="text-[10px] text-teal-300 font-mono bg-teal-950 border border-teal-800/80 px-2 py-0.5 rounded-full shrink-0">
+                              {categoryCounts[cat] || 0} Ürün
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => moveCategory(cat, 'up')}
+                              disabled={idx === 0}
+                              className="p-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                              title="Yukarı Taşı"
+                            >
+                              <ArrowUp size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => moveCategory(cat, 'down')}
+                              disabled={idx === allCategories.length - 1}
+                              className="p-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                              title="Aşağı Taşı"
+                            >
+                              <ArrowDown size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleDeleteDepartment(cat);
+                              }}
+                              className="p-1 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-colors ml-1 cursor-pointer"
+                              title="Bu Bölümü Sil"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        </div>
                       );
                     })
                   )}

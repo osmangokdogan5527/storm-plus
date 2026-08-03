@@ -229,6 +229,20 @@ export function subscribeIslemler(callback: (islemler: Transaction[]) => void) {
     snapshot.forEach((docSnap) => {
       list.push({ id: docSnap.id, ...docSnap.data() } as Transaction);
     });
+
+    list.sort((a, b) => {
+      const dateA = a.date || "";
+      const dateB = b.date || "";
+      const dateCompare = dateB.localeCompare(dateA);
+      if (dateCompare !== 0) return dateCompare;
+      
+      const timeA = new Date(a.createdAt || a.date).getTime();
+      const timeB = new Date(b.createdAt || b.date).getTime();
+      if (!isNaN(timeA) && !isNaN(timeB) && timeA !== timeB) return timeB - timeA;
+      
+      return (b.createdAt || '').localeCompare(a.createdAt || '');
+    });
+
     callback(list);
   }, (error) => {
     handleFirestoreError(error, OperationType.GET, getPath(ISLEMLER_COLL));
@@ -524,6 +538,20 @@ export function subscribeExpenses(callback: (expenses: Expense[]) => void) {
     snapshot.forEach((docSnap) => {
       list.push({ id: docSnap.id, ...docSnap.data() } as Expense);
     });
+
+    list.sort((a, b) => {
+      const dateA = a.date || "";
+      const dateB = b.date || "";
+      const dateCompare = dateB.localeCompare(dateA);
+      if (dateCompare !== 0) return dateCompare;
+      
+      const timeA = new Date(a.createdAt || a.date).getTime();
+      const timeB = new Date(b.createdAt || b.date).getTime();
+      if (!isNaN(timeA) && !isNaN(timeB) && timeA !== timeB) return timeB - timeA;
+      
+      return (b.createdAt || '').localeCompare(a.createdAt || '');
+    });
+
     callback(list);
   }, (error) => {
     handleFirestoreError(error, OperationType.GET, getPath(GIDERLER_COLL));
@@ -641,6 +669,20 @@ export function subscribeEmployeeTransactions(callback: (transactions: EmployeeT
     snapshot.forEach((docSnap) => {
       list.push({ id: docSnap.id, ...docSnap.data() } as EmployeeTransaction);
     });
+
+    list.sort((a, b) => {
+      const dateA = a.date || "";
+      const dateB = b.date || "";
+      const dateCompare = dateB.localeCompare(dateA);
+      if (dateCompare !== 0) return dateCompare;
+      
+      const timeA = new Date(a.createdAt || a.date).getTime();
+      const timeB = new Date(b.createdAt || b.date).getTime();
+      if (!isNaN(timeA) && !isNaN(timeB) && timeA !== timeB) return timeB - timeA;
+      
+      return (b.createdAt || '').localeCompare(a.createdAt || '');
+    });
+
     callback(list);
   }, (error) => {
     handleFirestoreError(error, OperationType.GET, getPath(CALISAN_ISLEMLER_COLL));
