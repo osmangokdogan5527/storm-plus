@@ -9,10 +9,16 @@ import {
   subscribeBankAccounts,
   subscribeAccountTransactions,
   subscribeRecurringTransactions,
+  subscribeOnlineOrders,
+  subscribeOnlinePayouts,
+  subscribePosPlatforms,
+  subscribeSettings,
   saveBankAccount,
   User as FirebaseUser
 } from '../firebase';
 import { Cari, Stock, Transaction, Expense, Employee, EmployeeTransaction, BankAccount, AccountTransaction, RecurringTransaction } from '../types';
+import { OnlineMarketOrder, OnlineMarketPayout } from '../types/onlineMarket';
+import { PosPlatformConfig } from '../types/pos';
 
 export function useAppData(user: FirebaseUser | null) {
   // App data state
@@ -25,6 +31,14 @@ export function useAppData(user: FirebaseUser | null) {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [accountTransactions, setAccountTransactions] = useState<AccountTransaction[]>([]);
   const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
+  const [onlineOrders, setOnlineOrders] = useState<OnlineMarketOrder[]>([]);
+  const [onlinePayouts, setOnlinePayouts] = useState<OnlineMarketPayout[]>([]);
+  const [posPlatforms, setPosPlatforms] = useState<PosPlatformConfig[]>([]);
+  const [appSettings, setAppSettings] = useState<any>(null);
+  const [securitySettings, setSecuritySettings] = useState<any>(null);
+  const [printSettings, setPrintSettings] = useState<any>(null);
+  const [shortcutSettings, setShortcutSettings] = useState<any>(null);
+  const [backupSettings, setBackupSettings] = useState<any>(null);
   
   // Loading & connection state
   const [loading, setLoading] = useState(true);
@@ -46,6 +60,14 @@ export function useAppData(user: FirebaseUser | null) {
     let bankAccountsLoaded = false;
     let accountTransactionsLoaded = false;
     let recurringLoaded = false;
+    let onlineOrdersLoaded = false;
+    let onlinePayoutsLoaded = false;
+    let posPlatformsLoaded = false;
+    let appSettingsLoaded = false;
+    let securitySettingsLoaded = false;
+    let printSettingsLoaded = false;
+    let shortcutSettingsLoaded = false;
+    let backupSettingsLoaded = false;
 
     const checkLoadingFinished = () => {
       if (
@@ -57,7 +79,15 @@ export function useAppData(user: FirebaseUser | null) {
         employeeTransactionsLoaded &&
         bankAccountsLoaded &&
         accountTransactionsLoaded &&
-        recurringLoaded
+        recurringLoaded &&
+        onlineOrdersLoaded &&
+        onlinePayoutsLoaded &&
+        posPlatformsLoaded &&
+        appSettingsLoaded &&
+        securitySettingsLoaded &&
+        printSettingsLoaded &&
+        shortcutSettingsLoaded &&
+        backupSettingsLoaded
       ) {
         setLoading(false);
       }
@@ -66,6 +96,36 @@ export function useAppData(user: FirebaseUser | null) {
     const unsubscribeCari = subscribeCariler((data) => {
       setCariler(data);
       carilerLoaded = true;
+      checkLoadingFinished();
+    });
+
+    const unsubscribeAppSettings = subscribeSettings('appSettings', (data) => {
+      setAppSettings(data);
+      appSettingsLoaded = true;
+      checkLoadingFinished();
+    });
+
+    const unsubscribeSecuritySettings = subscribeSettings('securitySettings', (data) => {
+      setSecuritySettings(data);
+      securitySettingsLoaded = true;
+      checkLoadingFinished();
+    });
+
+    const unsubscribePrintSettings = subscribeSettings('printSettings', (data) => {
+      setPrintSettings(data);
+      printSettingsLoaded = true;
+      checkLoadingFinished();
+    });
+
+    const unsubscribeShortcutSettings = subscribeSettings('shortcutSettings', (data) => {
+      setShortcutSettings(data);
+      shortcutSettingsLoaded = true;
+      checkLoadingFinished();
+    });
+
+    const unsubscribeBackupSettings = subscribeSettings('backupSettings', (data) => {
+      setBackupSettings(data);
+      backupSettingsLoaded = true;
       checkLoadingFinished();
     });
 
@@ -139,6 +199,24 @@ export function useAppData(user: FirebaseUser | null) {
       checkLoadingFinished();
     });
 
+    const unsubscribeOnlineOrders = subscribeOnlineOrders((data) => {
+      setOnlineOrders(data);
+      onlineOrdersLoaded = true;
+      checkLoadingFinished();
+    });
+
+    const unsubscribeOnlinePayouts = subscribeOnlinePayouts((data) => {
+      setOnlinePayouts(data);
+      onlinePayoutsLoaded = true;
+      checkLoadingFinished();
+    });
+
+    const unsubscribePosPlatforms = subscribePosPlatforms((data) => {
+      setPosPlatforms(data);
+      posPlatformsLoaded = true;
+      checkLoadingFinished();
+    });
+
     return () => {
       unsubscribeCari();
       unsubscribeStok();
@@ -149,6 +227,14 @@ export function useAppData(user: FirebaseUser | null) {
       unsubscribeBankAccounts();
       unsubscribeAccountTxs();
       unsubscribeRecurring();
+      unsubscribeOnlineOrders();
+      unsubscribeOnlinePayouts();
+      unsubscribePosPlatforms();
+      unsubscribeAppSettings();
+      unsubscribeSecuritySettings();
+      unsubscribePrintSettings();
+      unsubscribeShortcutSettings();
+      unsubscribeBackupSettings();
     };
   }, [user]);
 
@@ -162,6 +248,14 @@ export function useAppData(user: FirebaseUser | null) {
     bankAccounts, setBankAccounts,
     accountTransactions, setAccountTransactions,
     recurringTransactions, setRecurringTransactions,
+    onlineOrders, setOnlineOrders,
+    onlinePayouts, setOnlinePayouts,
+    posPlatforms, setPosPlatforms,
+    appSettings, setAppSettings,
+    securitySettings, setSecuritySettings,
+    printSettings, setPrintSettings,
+    shortcutSettings, setShortcutSettings,
+    backupSettings, setBackupSettings,
     loading, setLoading
   };
 }

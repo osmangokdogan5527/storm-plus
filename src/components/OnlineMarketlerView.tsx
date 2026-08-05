@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { Stock, Cari, BankAccount, Transaction } from '../types';
 import { PosPlatformConfig, DEFAULT_POS_PLATFORMS } from '../types/pos';
-import { getActiveWorkspace } from '../firebase';
+import { getActiveWorkspace, saveOnlineOrder, deleteOnlineOrder, saveOnlinePayout, deleteOnlinePayout, savePosPlatform } from '../firebase';
 
 const getOnlineOrdersKey = () => {
   const ws = getActiveWorkspace();
@@ -44,6 +44,7 @@ import { reportErrorToTelegram } from '../utils/telegramLogger';
 import { PosPlatformSettingsModal } from './pos/PosPlatformSettingsModal';
 
 interface OnlineMarketlerViewProps {
+  appData?: any;
   stocks: Stock[];
   cariler: Cari[];
   bankAccounts: BankAccount[];
@@ -76,6 +77,7 @@ interface OnlineMarketlerViewProps {
 }
 
 export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
+  appData,
   stocks = [],
   cariler = [],
   bankAccounts = [],
@@ -104,77 +106,25 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
 
   const safePlatforms = Array.isArray(platforms) && platforms.length > 0 ? platforms : DEFAULT_POS_PLATFORMS;
 
-  // LOCALSTORAGE PLATFORMLAR KAYIT
-  useEffect(() => {
-    try {
-      localStorage.setItem('storm_pos_platform_rates', JSON.stringify(safePlatforms));
-    } catch (err: any) {
-      reportErrorToTelegram(err, 'OnlineMarketlerView:savePlatforms');
-    }
-  }, [safePlatforms]);
+  // Removed localStorage useEffect
 
   // ONLİNE SİPARİŞLER STATE
-  const [orders, setOrders] = useState<OnlineMarketOrder[]>(() => {
-    try {
-      const key = getOnlineOrdersKey();
-      const saved = localStorage.getItem(key) || (getActiveWorkspace() === 'storm_muhasebe' ? localStorage.getItem('storm_online_market_orders') : null);
-      const parsed = saved ? JSON.parse(saved) : [];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-      return [];
-    }
-  });
+  const orders = appData?.onlineOrders || [];
 
   const safeOrders = Array.isArray(orders) ? orders : [];
 
   // HAKEDİŞ TAHSİLATLARI STATE
-  const [payouts, setPayouts] = useState<OnlineMarketPayout[]>(() => {
-    try {
-      const key = getOnlinePayoutsKey();
-      const saved = localStorage.getItem(key) || (getActiveWorkspace() === 'storm_muhasebe' ? localStorage.getItem('storm_online_market_payouts') : null);
-      const parsed = saved ? JSON.parse(saved) : [];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-      return [];
-    }
-  });
+  const payouts = appData?.onlinePayouts || [];
 
   const safePayouts = Array.isArray(payouts) ? payouts : [];
 
-  // KAYIT YENİLEME
-  useEffect(() => {
-    try {
-      localStorage.setItem(getOnlineOrdersKey(), JSON.stringify(orders));
-      if (getActiveWorkspace() === 'storm_muhasebe') {
-        localStorage.setItem('storm_online_market_orders', JSON.stringify(orders));
-      }
-    } catch (err: any) {
-      reportErrorToTelegram(err, 'OnlineMarketlerView:saveOrders');
-    }
-  }, [orders]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(getOnlinePayoutsKey(), JSON.stringify(payouts));
-      if (getActiveWorkspace() === 'storm_muhasebe') {
-        localStorage.setItem('storm_online_market_payouts', JSON.stringify(payouts));
-      }
-    } catch (err: any) {
-      reportErrorToTelegram(err, 'OnlineMarketlerView:savePayouts');
-    }
-  }, [payouts]);
+  // Removed localStorage effects for orders and payouts
 
   // Hızlı Satış veya harici kaynaklardan sipariş eklendiğinde state'i otomatik yenileme
   useEffect(() => {
     const handleReloadOnlineData = () => {
       try {
-        const keyOrders = getOnlineOrdersKey();
-        const savedOrders = localStorage.getItem(keyOrders) || (getActiveWorkspace() === 'storm_muhasebe' ? localStorage.getItem('storm_online_market_orders') : null);
-        setOrders(savedOrders ? JSON.parse(savedOrders) : []);
-
-        const keyPayouts = getOnlinePayoutsKey();
-        const savedPayouts = localStorage.getItem(keyPayouts) || (getActiveWorkspace() === 'storm_muhasebe' ? localStorage.getItem('storm_online_market_payouts') : null);
-        setPayouts(savedPayouts ? JSON.parse(savedPayouts) : []);
+        // Realtime loading already handled by appData
       } catch (e) {
         console.error(e);
       }
@@ -298,7 +248,7 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
     });
 
     if (success) {
-      setOrders((prev) => [newOrder, ...prev]);
+      await saveOnlineOrder(newOrder);
       showToast(`${activeOrderPlatform.name} siparişi başarıyla kaydedildi! Net Alacak: ₺${orderNetAmount.toFixed(2)}`, 'success');
       setIsNewOrderModalOpen(false);
       setOrderGrossAmount('');
@@ -361,7 +311,7 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
     });
 
     if (success) {
-      setPayouts((prev) => [newPayout, ...prev]);
+      await saveOnlinePayout(newPayout);
       showToast(`${targetPlatform.name} platformundan ₺${numAmount.toFixed(2)} tutarında hakediş tahsilatı alındı!`, 'success');
       setIsPayoutModalOpen(false);
       setPayoutAmount('');
@@ -370,9 +320,9 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
   };
 
   // SİPARİŞ İPTALİ / SİLME
-  const handleDeleteOrder = (orderId: string) => {
+  const handleDeleteOrder = async (orderId: string) => {
     if (window.confirm('Bu online sipariş kaydını silmek istediğinizden emin misiniz?')) {
-      setOrders((prev) => prev.filter((o) => o.id !== orderId));
+      await deleteOnlineOrder(orderId);
       showToast('Sipariş kaydı silindi.', 'info');
     }
   };

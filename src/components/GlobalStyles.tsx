@@ -1,5 +1,4 @@
 import React from 'react';
-import { globalStylesPart2 } from './GlobalStylesPart2';
 
 interface GlobalStylesProps {
   bodyPatternSvg: string;
@@ -1080,8 +1079,6 @@ export const GlobalStyles: React.FC<GlobalStylesProps> = ({ themeCssRules, bodyP
           backdrop-filter: blur(20px) !important;
           border-color: rgba(139, 92, 246, 0.18) !important;
         }
-
-        ${globalStylesPart2}
       `}</style>
   );
 };

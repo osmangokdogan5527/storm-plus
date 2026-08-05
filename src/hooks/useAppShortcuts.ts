@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { saveSettings } from '../firebase';
 import { KeyboardShortcut } from '../types';
 import { DEFAULT_SHORTCUTS } from '../constants';
 
@@ -6,8 +7,30 @@ export function useAppShortcuts(
   handleNavigate: (tab: any) => void,
   setPendingIslemModal: (modal: any) => void,
   setPendingAddCari: (val: boolean) => void,
-  setPendingAddStock: (val: boolean) => void
+  setPendingAddStock: (val: boolean) => void,
+  cloudSettings?: any
 ) {
+  const isSettingsLoaded = useRef(false);
+
+  useEffect(() => {
+    if (cloudSettings && !isSettingsLoaded.current) {
+      isSettingsLoaded.current = true;
+      if (cloudSettings.shortcuts) {
+        setShortcuts(cloudSettings.shortcuts);
+      }
+    }
+  }, [cloudSettings]);
+
+  const syncToCloud = async (updates: any) => {
+    if (isSettingsLoaded.current) {
+      try {
+        await saveSettings('shortcutSettings', updates);
+      } catch (e) {
+        console.error("Buluta kısayol senkronizasyonu başarısız:", e);
+      }
+    }
+  };
+
   const [shortcuts, setShortcuts] = useState<KeyboardShortcut[]>(() => {
     const saved = localStorage.getItem('storm_muhasebe_shortcuts');
     if (saved) {
@@ -103,6 +126,14 @@ export function useAppShortcuts(
       window.removeEventListener('keydown', handleGlobalShortcuts, true);
     };
   }, [shortcuts, handleNavigate, setPendingIslemModal, setPendingAddCari, setPendingAddStock]);
+
+  
+  useEffect(() => {
+    if (isSettingsLoaded.current) {
+      localStorage.setItem('storm_muhasebe_shortcuts', JSON.stringify(shortcuts));
+      syncToCloud({ shortcuts });
+    }
+  }, [shortcuts]);
 
   return { shortcuts, setShortcuts };
 }

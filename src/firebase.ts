@@ -35,6 +35,9 @@ import {
   signInAnonymously
 } from 'firebase/auth';
 import { Cari, Stock, Transaction, Expense, Employee, EmployeeTransaction, RecurringTransaction } from './types';
+import { OnlineMarketOrder, OnlineMarketPayout } from './types/onlineMarket';
+import { PosPlatformConfig } from './types/pos';
+
 
 // Read config from the provisioned project
 const firebaseConfig = {
@@ -94,6 +97,11 @@ const CALISAN_ISLEMLER_COLL = 'calisanIslemler';
 const HESAPLAR_COLL = 'hesaplar';
 const HESAP_ISLEMLER_COLL = 'hesapIslemleri';
 const TEKRARLAYAN_COLL = 'tekrarlayanIslemler';
+const ONLINE_ORDERS_COLL = 'onlineOrders';
+const ONLINE_PAYOUTS_COLL = 'onlinePayouts';
+const POS_PLATFORMS_COLL = 'posPlatforms';
+const SETTINGS_COLL = 'settings';
+
 
 let currentUserId: string | null = null;
 export function setActiveUser(userId: string | null) {
@@ -886,3 +894,112 @@ export async function importAllDatabaseData(backupJson: any) {
   }
 }
 
+
+
+// ONLINE MARKETLER OPERATIONS
+export function subscribeOnlineOrders(callback: (orders: OnlineMarketOrder[]) => void) {
+  const q = query(collection(db, getPath(ONLINE_ORDERS_COLL)), orderBy('createdAt', 'desc'), limit(1000));
+  return onSnapshot(q, (snapshot) => {
+    const list: OnlineMarketOrder[] = [];
+    snapshot.forEach((docSnap) => list.push({ id: docSnap.id, ...docSnap.data() } as OnlineMarketOrder));
+    callback(list);
+  }, (error) => handleFirestoreError(error, OperationType.GET, getPath(ONLINE_ORDERS_COLL)));
+}
+
+export async function saveOnlineOrder(order: any, id?: string) {
+  try {
+    const docRef = id ? doc(db, getPath(ONLINE_ORDERS_COLL), id) : doc(collection(db, getPath(ONLINE_ORDERS_COLL)));
+    const newId = id || docRef.id;
+    const finalOrder = cleanUndefined({ id: newId, ...order });
+    await setDoc(docRef, finalOrder);
+    return newId;
+  } catch (error) {
+    handleFirestoreError(error, id ? OperationType.UPDATE : OperationType.CREATE, `${getPath(ONLINE_ORDERS_COLL)}/${id || 'new'}`);
+    throw error;
+  }
+}
+
+export async function deleteOnlineOrder(id: string) {
+  try {
+    await deleteDoc(doc(db, getPath(ONLINE_ORDERS_COLL), id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, `${getPath(ONLINE_ORDERS_COLL)}/${id}`);
+    throw error;
+  }
+}
+
+export function subscribeOnlinePayouts(callback: (payouts: OnlineMarketPayout[]) => void) {
+  const q = query(collection(db, getPath(ONLINE_PAYOUTS_COLL)), orderBy('createdAt', 'desc'), limit(1000));
+  return onSnapshot(q, (snapshot) => {
+    const list: OnlineMarketPayout[] = [];
+    snapshot.forEach((docSnap) => list.push({ id: docSnap.id, ...docSnap.data() } as OnlineMarketPayout));
+    callback(list);
+  }, (error) => handleFirestoreError(error, OperationType.GET, getPath(ONLINE_PAYOUTS_COLL)));
+}
+
+export async function saveOnlinePayout(payout: any, id?: string) {
+  try {
+    const docRef = id ? doc(db, getPath(ONLINE_PAYOUTS_COLL), id) : doc(collection(db, getPath(ONLINE_PAYOUTS_COLL)));
+    const newId = id || docRef.id;
+    const finalPayout = cleanUndefined({ id: newId, ...payout });
+    await setDoc(docRef, finalPayout);
+    return newId;
+  } catch (error) {
+    handleFirestoreError(error, id ? OperationType.UPDATE : OperationType.CREATE, `${getPath(ONLINE_PAYOUTS_COLL)}/${id || 'new'}`);
+    throw error;
+  }
+}
+
+export async function deleteOnlinePayout(id: string) {
+  try {
+    await deleteDoc(doc(db, getPath(ONLINE_PAYOUTS_COLL), id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, `${getPath(ONLINE_PAYOUTS_COLL)}/${id}`);
+    throw error;
+  }
+}
+
+export function subscribePosPlatforms(callback: (platforms: PosPlatformConfig[]) => void) {
+  const q = query(collection(db, getPath(POS_PLATFORMS_COLL)));
+  return onSnapshot(q, (snapshot) => {
+    const list: PosPlatformConfig[] = [];
+    snapshot.forEach((docSnap) => list.push({ id: docSnap.id, ...docSnap.data() } as PosPlatformConfig));
+    callback(list);
+  }, (error) => handleFirestoreError(error, OperationType.GET, getPath(POS_PLATFORMS_COLL)));
+}
+
+export async function savePosPlatform(platform: any, id?: string) {
+  try {
+    const docRef = id ? doc(db, getPath(POS_PLATFORMS_COLL), id) : doc(collection(db, getPath(POS_PLATFORMS_COLL)));
+    const newId = id || docRef.id;
+    const finalPlatform = cleanUndefined({ id: newId, ...platform });
+    await setDoc(docRef, finalPlatform);
+    return newId;
+  } catch (error) {
+    handleFirestoreError(error, id ? OperationType.UPDATE : OperationType.CREATE, `${getPath(POS_PLATFORMS_COLL)}/${id || 'new'}`);
+    throw error;
+  }
+}
+
+
+// SETTINGS OPERATIONS
+export function subscribeSettings(docId: string, callback: (data: any) => void) {
+  const docRef = doc(db, getPath(SETTINGS_COLL), docId);
+  return onSnapshot(docRef, (docSnap) => {
+    if (docSnap.exists()) {
+      callback(docSnap.data());
+    } else {
+      callback(null);
+    }
+  }, (error) => handleFirestoreError(error, OperationType.GET, `${getPath(SETTINGS_COLL)}/${docId}`));
+}
+
+export async function saveSettings(docId: string, data: any) {
+  try {
+    const docRef = doc(db, getPath(SETTINGS_COLL), docId);
+    await setDoc(docRef, cleanUndefined(data), { merge: true });
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, `${getPath(SETTINGS_COLL)}/${docId}`);
+    throw error;
+  }
+}

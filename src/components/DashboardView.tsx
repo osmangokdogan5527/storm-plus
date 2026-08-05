@@ -52,7 +52,7 @@ const ALL_WIDGETS: WidgetDef[] = [
     label: "Özet Finansal Göstergeler",
     description:
       "Kasa, Banka mevcudu, Net alacak/borç durumu, Net kar/zarar ve Stok toplam değer özet kartları.",
-    span: "lg:col-span-3",
+    span: "lg:col-span-3 xl:col-span-4",
   },
   {
     id: "cloud_status",
@@ -690,7 +690,7 @@ export default function DashboardView({
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {widgetsOrder.map((widgetId, index) => {
               const widgetDef = ALL_WIDGETS.find((w) => w.id === widgetId);
               if (!widgetDef) return null;
@@ -783,12 +783,12 @@ export default function DashboardView({
 
 
       {/* Customizable Master Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {widgetsOrder
           .filter((widgetId) => !hiddenWidgets.includes(widgetId))
           .map((widgetId, index) => {
             const widgetDef = ALL_WIDGETS.find((w) => w.id === widgetId);
-            const spanClass = widgetDef?.span || "lg:col-span-3";
+            const spanClass = widgetDef?.span || "lg:col-span-3 xl:col-span-4";
 
             switch (widgetId) {
               case "stats_grid":

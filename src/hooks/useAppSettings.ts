@@ -1,6 +1,39 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { saveSettings } from '../firebase';
 
-export function useAppSettings() {
+
+export function useAppSettings(cloudSettings?: any) {
+  const isSettingsLoaded = useRef(false);
+
+  useEffect(() => {
+    if (cloudSettings && !isSettingsLoaded.current) {
+      isSettingsLoaded.current = true;
+      if (cloudSettings.activeTheme) setActiveTheme(cloudSettings.activeTheme);
+      if (cloudSettings.designStyle) setDesignStyle(cloudSettings.designStyle);
+      if (cloudSettings.activeLogoTheme) setActiveLogoTheme(cloudSettings.activeLogoTheme);
+      if (cloudSettings.appFontSize) setAppFontSize(cloudSettings.appFontSize);
+      if (cloudSettings.sidebarBg) setSidebarBg(cloudSettings.sidebarBg);
+      if (cloudSettings.sidebarPattern) setSidebarPattern(cloudSettings.sidebarPattern);
+      if (cloudSettings.sidebarPatternOpacity !== undefined) setSidebarPatternOpacity(cloudSettings.sidebarPatternOpacity);
+      if (cloudSettings.sidebarPatternColor) setSidebarPatternColor(cloudSettings.sidebarPatternColor);
+      if (cloudSettings.hiddenTabs) setHiddenTabs(cloudSettings.hiddenTabs);
+      if (cloudSettings.tabOrder) setTabOrder(cloudSettings.tabOrder);
+      if (cloudSettings.geminiApiKey) setGeminiApiKey(cloudSettings.geminiApiKey);
+      if (cloudSettings.isAiEnabled !== undefined) setIsAiEnabled(cloudSettings.isAiEnabled);
+      if (cloudSettings.autoBackupEnabled !== undefined) setAutoBackupEnabled(cloudSettings.autoBackupEnabled);
+    }
+  }, [cloudSettings]);
+
+  const syncToCloud = async (updates: any) => {
+    if (isSettingsLoaded.current) {
+      try {
+        await saveSettings('appSettings', updates);
+      } catch (e) {
+        console.error("Buluta ayar senkronizasyonu başarısız:", e);
+      }
+    }
+  };
+
   const isMobileInitial = typeof window !== 'undefined' && window.innerWidth < 768;
 
   const [activeTheme, setActiveTheme] = useState<string>(() => {
@@ -73,6 +106,7 @@ export function useAppSettings() {
         ? prev.filter((t) => t !== tabId)
         : [...prev, tabId];
       localStorage.setItem('storm_muhasebe_hidden_tabs', JSON.stringify(next));
+      syncToCloud({ hiddenTabs: next });
       return next;
     });
   };
@@ -96,6 +130,7 @@ export function useAppSettings() {
             order.splice(insertIdx, 0, 'pos', 'online_marketler');
           }
           localStorage.setItem('storm_muhasebe_tab_order', JSON.stringify(order));
+          syncToCloud({ tabOrder: order });
           return order;
         }
       } catch (e) {}
@@ -114,6 +149,7 @@ export function useAppSettings() {
       newOrder[targetIndex] = temp;
       setTabOrder(newOrder);
       localStorage.setItem('storm_muhasebe_tab_order', JSON.stringify(newOrder));
+      syncToCloud({ tabOrder: newOrder });
     }
   };
 
@@ -135,6 +171,40 @@ export function useAppSettings() {
       (window as any).electronAPI.setAutoBackup(autoBackupEnabled);
     }
   }, [autoBackupEnabled]);
+
+  
+  useEffect(() => {
+    if (isSettingsLoaded.current) {
+      syncToCloud({
+        activeTheme,
+        designStyle,
+        activeLogoTheme,
+        appFontSize,
+        sidebarBg,
+        sidebarPattern,
+        sidebarPatternOpacity,
+        sidebarPatternColor,
+        geminiApiKey,
+        isAiEnabled,
+        autoBackupEnabled
+      });
+      localStorage.setItem('kolay_hesap_accent_theme', activeTheme);
+      localStorage.setItem('storm_muhasebe_design_style', designStyle);
+      localStorage.setItem('storm_muhasebe_logo_theme', activeLogoTheme);
+      localStorage.setItem('storm_muhasebe_font_size', appFontSize);
+      localStorage.setItem('storm_muhasebe_sidebar_bg', sidebarBg);
+      localStorage.setItem('storm_muhasebe_sidebar_pattern', sidebarPattern);
+      localStorage.setItem('storm_muhasebe_sidebar_pattern_opacity', sidebarPatternOpacity.toString());
+      localStorage.setItem('storm_muhasebe_sidebar_pattern_color', sidebarPatternColor);
+      localStorage.setItem('storm_muhasebe_gemini_api_key', geminiApiKey);
+      localStorage.setItem('storm_muhasebe_ai_enabled', isAiEnabled.toString());
+      localStorage.setItem('storm_auto_backup_enabled', autoBackupEnabled.toString());
+    }
+  }, [
+    activeTheme, designStyle, activeLogoTheme, appFontSize, sidebarBg,
+    sidebarPattern, sidebarPatternOpacity, sidebarPatternColor,
+    geminiApiKey, isAiEnabled, autoBackupEnabled
+  ]);
 
   return {
     activeTheme, setActiveTheme,

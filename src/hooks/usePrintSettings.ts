@@ -1,6 +1,30 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { saveSettings } from '../firebase';
 
-export function usePrintSettings() {
+export function usePrintSettings(cloudSettings?: any) {
+  const isSettingsLoaded = useRef(false);
+
+  useEffect(() => {
+    if (cloudSettings && !isSettingsLoaded.current) {
+      isSettingsLoaded.current = true;
+      if (cloudSettings.companyName) setCompanyName(cloudSettings.companyName);
+      if (cloudSettings.companyAddress) setCompanyAddress(cloudSettings.companyAddress);
+      if (cloudSettings.companyPhone) setCompanyPhone(cloudSettings.companyPhone);
+      if (cloudSettings.logoType) setLogoType(cloudSettings.logoType);
+      if (cloudSettings.logoImageUrl) setLogoImageUrl(cloudSettings.logoImageUrl);
+    }
+  }, [cloudSettings]);
+
+  const syncToCloud = async (updates: any) => {
+    if (isSettingsLoaded.current) {
+      try {
+        await saveSettings('printSettings', updates);
+      } catch (e) {
+        console.error("Buluta baskı ayarları senkronizasyonu başarısız:", e);
+      }
+    }
+  };
+
   const [companyName, setCompanyName] = useState('Firma Adı');
   const [companyAddress, setCompanyAddress] = useState('Firma Adresi');
   const [companyPhone, setCompanyPhone] = useState('0555 555 55 55');
@@ -42,6 +66,7 @@ export function usePrintSettings() {
       logoImageUrl
     };
     localStorage.setItem('storm_muhasebe_print_settings', JSON.stringify(newSettings));
+    syncToCloud(newSettings);
     setPrintSettingsSuccess('Baskı ayarları başarıyla kaydedildi.');
     setTimeout(() => setPrintSettingsSuccess(null), 3000);
   };

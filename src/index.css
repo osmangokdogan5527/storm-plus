@@ -320,6 +320,7 @@ body:has([data-design-style="pro-solid"]),
 
 /* Override all the hardcoded dark backgrounds in the main content area */
 [data-design-style="pro-solid"] .bg-\[\#111111\],
+[data-design-style="pro-solid"] .bg-\[\#070709\],
 [data-design-style="pro-solid"] .bg-\[\#06040e\],
 [data-design-style="pro-solid"] .bg-\[\#151515\],
 [data-design-style="pro-solid"] .bg-\[\#0a0a0a\],
@@ -371,6 +372,8 @@ body:has([data-design-style="pro-solid"]),
 [data-design-style="pro-solid"] .text-zinc-50,
 [data-design-style="pro-solid"] .text-zinc-100,
 [data-design-style="pro-solid"] .text-slate-100,
+[data-design-style="pro-solid"] .text-slate-200,
+[data-design-style="pro-solid"] .text-zinc-200,
 [data-design-style="pro-solid"] .text-gray-100,
 [data-design-style="pro-solid"] .text-gray-200,
 [data-design-style="pro-solid"] .text-gray-300,
@@ -810,3 +813,44 @@ body:has([data-design-style="pro-solid"]),
 
 
 
+[data-design-style="pro-solid"] aside,
+[data-design-style="pro-solid"] aside .text-white,
+[data-design-style="pro-solid"] aside .text-zinc-50,
+[data-design-style="pro-solid"] aside .text-zinc-100,
+[data-design-style="pro-solid"] aside .text-slate-100,
+
+
+[data-design-style="pro-solid"] aside button {
+  color: #f1f5f9 !important;
+}
+
+[data-design-style="pro-solid"] aside .text-zinc-300,
+[data-design-style="pro-solid"] aside .text-slate-300,
+[data-design-style="pro-solid"] aside .text-zinc-400,
+[data-design-style="pro-solid"] aside .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+[data-design-style="pro-solid"] aside .text-teal-400 {
+  color: #2dd4bf !important;
+}
+
+[data-design-style="pro-solid"] aside .text-rose-500,
+[data-design-style="pro-solid"] aside .text-red-400 {
+  color: #fb7185 !important;
+}
+
+[data-design-style="pro-solid"] aside .text-emerald-400 {
+  color: #34d399 !important;
+}
+
+
+
+[data-design-style="pro-solid"] aside .bg-black\/20 {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+[data-design-style="pro-solid"] aside .bg-black\/15 {
+  background-color: rgba(0, 0, 0, 0.15) !important;
+}

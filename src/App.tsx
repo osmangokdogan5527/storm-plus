@@ -29,7 +29,8 @@ import {
   getActiveWorkspace,
   saveBankAccount,
   createTransaction,
-  db
+  db,
+  saveSettings,
 } from './firebase';
 import { reportErrorToTelegram } from './utils/telegramLogger';
 import { PosCartItem, PosPaymentSplit } from './types/pos';
@@ -121,6 +122,37 @@ export default function App() {
   const [pendingAddStock, setPendingAddStock] = useState<boolean>(false);
   const [isIslemlerSubMenuOpen, setIsIslemlerSubMenuOpen] = useState(false);
 
+  
+
+  // 1. Auth State
+  const {
+    user, setUser,
+    authLoading, setAuthLoading,
+    authError, setAuthError,
+    enteredPin, setEnteredPin,
+    handlePinLogin, handleSignOut
+  } = useAppAuth(showToast, setUserRole, setActiveTab);
+  
+  // 2. Data State (Depends on user)
+  const {
+    cariler, setCariler,
+    stoklar, setStoklar,
+    islemler, setIslemler,
+    expenses, setExpenses,
+    employees, setEmployees,
+    employeeTransactions, setEmployeeTransactions,
+    bankAccounts, setBankAccounts,
+    accountTransactions, setAccountTransactions,
+    recurringTransactions, setRecurringTransactions,
+    appSettings, setAppSettings,
+    securitySettings, setSecuritySettings,
+    printSettings, setPrintSettings,
+    shortcutSettings, setShortcutSettings,
+    backupSettings, setBackupSettings,
+    loading, setLoading
+  } = useAppData(user);
+  
+  // 3. Settings State
   const {
     activeTheme, setActiveTheme,
     designStyle, setDesignStyle,
@@ -135,7 +167,10 @@ export default function App() {
     geminiApiKey, setGeminiApiKey,
     isAiEnabled, setIsAiEnabled,
     autoBackupEnabled, setAutoBackupEnabled
-  } = useAppSettings();
+  } = useAppSettings(appSettings);
+  
+
+  
 
   const {
     isBackupLoading,
@@ -161,13 +196,7 @@ export default function App() {
 
   
   // Auth state variables
-  const {
-    user, setUser,
-    authLoading, setAuthLoading,
-    authError, setAuthError,
-    enteredPin, setEnteredPin,
-    handlePinLogin, handleSignOut
-  } = useAppAuth(showToast, setUserRole, setActiveTab);
+  
 
   
   // Admin Dashboard State
@@ -282,6 +311,46 @@ export default function App() {
     return defaultPerms;
   });
 
+const isSecurityLoaded = React.useRef(false);
+  React.useEffect(() => {
+    if (securitySettings && !isSecurityLoaded.current) {
+      isSecurityLoaded.current = true;
+      if (securitySettings.usersList) setUsersList(securitySettings.usersList);
+      if (securitySettings.sensitiveTabs) setSensitiveTabs(securitySettings.sensitiveTabs);
+      if (securitySettings.adminPin) setAdminPin(securitySettings.adminPin);
+      if (securitySettings.isSecurityActive !== undefined) setIsSecurityActive(securitySettings.isSecurityActive);
+      if (securitySettings.actionPermissions) setActionPermissions(securitySettings.actionPermissions);
+    }
+  }, [securitySettings]);
+
+  const syncSecurityToCloud = async (updates: any) => {
+    if (isSecurityLoaded.current) {
+      try {
+        await saveSettings('securitySettings', updates);
+      } catch (e) {}
+    }
+  };
+
+  React.useEffect(() => {
+    if (isSecurityLoaded.current) {
+      localStorage.setItem('storm_muhasebe_users', JSON.stringify(usersList));
+      localStorage.setItem('storm_muhasebe_sensitive_tabs', JSON.stringify(sensitiveTabs));
+      localStorage.setItem('storm_muhasebe_admin_pin', adminPin);
+      localStorage.setItem('storm_muhasebe_security_active', isSecurityActive.toString());
+      localStorage.setItem('storm_muhasebe_action_permissions', JSON.stringify(actionPermissions));
+      
+      syncSecurityToCloud({
+        usersList,
+        sensitiveTabs,
+        adminPin,
+        isSecurityActive,
+        actionPermissions
+      });
+    }
+  }, [usersList, sensitiveTabs, adminPin, isSecurityActive, actionPermissions]);
+  
+  
+
   useEffect(() => {
     if (user) {
       setProfileName(user.displayName || '');
@@ -347,7 +416,7 @@ export default function App() {
     }
     setActiveTab(tabId as any);
   }, [isSecurityActive, userRole, sensitiveTabs]);
-  const { shortcuts, setShortcuts } = useAppShortcuts(handleNavigate, setPendingIslemModal, setPendingAddCari, setPendingAddStock);
+  const { shortcuts, setShortcuts } = useAppShortcuts(handleNavigate, setPendingIslemModal, setPendingAddCari, setPendingAddStock, shortcutSettings);
   const [aiPrefilledData, setAiPrefilledData] = useState<{
     islem: 'sale' | 'purchase' | 'collection' | 'payment' | 'expense' | 'employee_payment' | 'sale_return' | 'purchase_return' | 'add_customer' | 'add_supplier' | 'add_product' | string;
     cariAdi?: string;
@@ -377,7 +446,7 @@ export default function App() {
     logoType, setLogoType,
     logoImageUrl, setLogoImageUrl,
     printSettingsSuccess, handleSavePrintSettings
-  } = usePrintSettings();
+  } = usePrintSettings(printSettings);
 
 
   useEffect(() => {
@@ -511,7 +580,8 @@ export default function App() {
             }
           }
           
-          alert(`Güncelleme indirilirken hata oluştu:\n${friendlyError}`);
+          alert(`Güncelleme indirilirken hata oluştu:
+${friendlyError}`);
         });
       }
     }
@@ -523,18 +593,7 @@ export default function App() {
     };
   }, []);
 
-  const {
-    cariler, setCariler,
-    stoklar, setStoklar,
-    islemler, setIslemler,
-    expenses, setExpenses,
-    employees, setEmployees,
-    employeeTransactions, setEmployeeTransactions,
-    bankAccounts, setBankAccounts,
-    accountTransactions, setAccountTransactions,
-    recurringTransactions, setRecurringTransactions,
-    loading, setLoading
-  } = useAppData(user);
+  
 
 
 
@@ -588,6 +647,7 @@ export default function App() {
       const b = parseInt(hex.substring(4, 6), 16);
       rules += `\n--accent-rgb: ${r}, ${g}, ${b};`;
     }
+    
     return rules;
   }, [currentThemeData]);
   const activePatternObj = useMemo(() => {
@@ -617,7 +677,7 @@ export default function App() {
   }, [sidebarPattern, sidebarPatternOpacity, designStyle, activePatternObj, sidebarPatternColor]);
 
   const renderWorkspaceView = useCallback((id: string, content: any) => (
-    <div className={`w-full max-w-7xl mx-auto ${isLightSidebar ? 'text-gray-800' : 'text-gray-100'} transition-colors duration-300`}>
+    <div className={`w-full max-w-[1600px] mx-auto ${isLightSidebar ? 'text-gray-800' : 'text-gray-100'} transition-colors duration-300`}>
       {content}
     </div>
   ), [isLightSidebar]);
@@ -1119,7 +1179,7 @@ export default function App() {
         isSecurityActive={isSecurityActive}
       />
 {/* 3. MAIN WORKSPACE CONTENT */}
-      <main className="relative z-10 flex-1 p-4 sm:p-6 overflow-y-auto max-w-7xl mx-auto w-full pb-20 md:pb-6">
+      <main className="relative z-10 flex-1 p-4 sm:p-6 overflow-y-auto max-w-[1600px] mx-auto w-full pb-20 md:pb-6">
         <div className={activeTab === 'menu' ? 'block animate-fade-in md:hidden' : 'hidden'}>
           <MobileMenuView
             tabOrder={tabOrder}
