@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { auth, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, User as FirebaseUser, setActiveUser } from '../firebase';
 import { PIN_ACCOUNTS } from '../constants';
+import { logUserActivity } from '../utils/userLogger';
 
 export function useAppAuth(
   showToast: (text: string | null, type?: 'success' | 'error' | 'info') => void,
@@ -61,6 +62,9 @@ export function useAppAuth(
   };
 
   const handleSignOut = async () => {
+    if (user) {
+      logUserActivity(user.uid, user.displayName || 'Bilinmeyen Kullanıcı', 'logout');
+    }
     try {
       await signOut(auth);
       localStorage.removeItem('storm_muhasebe_active_user');

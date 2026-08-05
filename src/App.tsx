@@ -227,7 +227,7 @@ export default function App() {
           
           const savedUser = parsed.find((u: any) => u.id === defaultUser.id || u.id === matchId);
           if (savedUser) {
-            const legacyNames = ['XSTORM', 'Yönetici', 'Muhasebe Departmanı', 'Kullanıcı 3', 'Kullanıcı 4', 'Kullanıcı 5'];
+            const legacyNames = ['XSTORM', 'Yönetici', 'Muhasebe Departmanı', 'Kullanıcı 1', 'Kullanıcı 2', 'Kullanıcı 3', 'Kullanıcı 4', 'Kullanıcı 5', 'OSES KARTALTEPE'];
             const isNameCustomized = savedUser.name && !legacyNames.includes(savedUser.name) && savedUser.name !== defaultUser.name;
             const isPinCustomized = savedUser.pin && savedUser.pin !== '270212' && savedUser.pin !== defaultUser.pin;
             

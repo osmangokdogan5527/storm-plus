@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, ChevronDown, Shield, X, CloudLightning, RotateCcw, Download, Trash2, AlertTriangle, Check, ChevronUp, MessageSquare, Building2, Sparkles } from 'lucide-react';
+import { User, Users, Lock, ChevronDown, Shield, X, CloudLightning, RotateCcw, Download, Trash2, AlertTriangle, Check, ChevronUp, MessageSquare, Building2, Sparkles } from 'lucide-react';
 import { StormLogo, APP_VERSION } from '../constants';
 
 interface AuthScreenProps {
@@ -76,7 +76,18 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   changelogData, setZoomImage
 }) => {
 
-  const [adminTab, setAdminTab] = React.useState<'errors' | 'feedback'>('errors');
+  const [adminTab, setAdminTab] = React.useState<'errors' | 'feedback' | 'userLogs'>('userLogs');
+  const [userLogs, setUserLogs] = React.useState<any[]>([]);
+  React.useEffect(() => {
+    if (showAdminDashboard) {
+      const logsStr = localStorage.getItem('storm_user_logs');
+      if (logsStr) {
+        try {
+          setUserLogs(JSON.parse(logsStr));
+        } catch (e) {}
+      }
+    }
+  }, [showAdminDashboard, adminTab]);
   const [expandedLogId, setExpandedLogId] = React.useState<string | null>(null);
 
   const isFluidMesh = designStyle === 'fluid-mesh';
@@ -330,6 +341,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                           const defaultTab = window.innerWidth < 768 ? 'menu' : 'cariler';
                           setActiveTab(defaultTab);
                           setActiveUser(selectedPinAccount.id);
+                          logUserActivity(selectedPinAccount.id, selectedPinAccount.name, 'login');
                           setUser(userData as any);
                         } else {
                           setAuthError('Hatalı şifre girdiniz.');
@@ -369,7 +381,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                                 const defaultTab = window.innerWidth < 768 ? 'menu' : 'cariler';
                                 setActiveTab(defaultTab);
                                 setActiveUser(selectedPinAccount.id);
-                                setUser(userData as any);
+                                logUserActivity(selectedPinAccount.id, selectedPinAccount.name, 'login');
+                          setUser(userData as any);
                               } else {
                                 setAuthError('Hatalı şifre girdiniz.');
                                 setTimeout(() => setEnteredPin(''), 400);
@@ -412,7 +425,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                               const defaultTab = window.innerWidth < 768 ? 'menu' : 'cariler';
                               setActiveTab(defaultTab);
                               setActiveUser(selectedPinAccount.id);
-                              setUser(userData as any);
+                              logUserActivity(selectedPinAccount.id, selectedPinAccount.name, 'login');
+                          setUser(userData as any);
                             } else {
                               setAuthError('Hatalı şifre girdiniz.');
                               setTimeout(() => setEnteredPin(''), 400);
@@ -626,7 +640,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           </div>
 
           <div className="space-y-6">
-            {changelogData.map((log, idx) => (
+            {changelogData.slice(0, 1).map((log, idx) => (
               <div key={idx} className={`relative pl-4 border-l-2 ${idx === 0 ? 'border-teal-500' : timelineBorder}`}>
                 <div className="flex items-center gap-3 mb-2">
                   <span className={`text-sm font-bold tracking-widest ${idx === 0 ? textActive : textPrimary}`}>
@@ -655,7 +669,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         {/* Admin Dashboard Modal */}
         {showAdminDashboard && (
           <div className={`fixed inset-0 z-[100] flex items-center justify-center p-6 ${isCleanLight ? 'bg-slate-900/50 backdrop-blur-md' : 'bg-black/90 backdrop-blur-md'}`}>
-            <div className={`w-full max-w-4xl rounded-2xl shadow-2xl flex flex-col max-h-[85vh] animate-fade-in ${
+            <div className={`w-full max-w-6xl rounded-2xl shadow-2xl flex flex-col h-[90vh] max-h-[90vh] animate-fade-in ${
               isCleanLight
                 ? 'bg-white border border-slate-200 text-slate-800'
                 : isNavyPerf
@@ -684,6 +698,16 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                     Sistem Hataları
                   </button>
                   <button
+                    onClick={() => setAdminTab('userLogs')}
+                    className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition cursor-pointer ${
+                      adminTab === 'userLogs' 
+                        ? 'bg-teal-500/10 text-teal-500 border border-teal-500/10' 
+                        : `${textTertiary} hover:${textPrimary}`
+                    }`}
+                  >
+                    Giriş/Çıkışlar
+                  </button>
+                  <button
                     onClick={() => setAdminTab('feedback')}
                     className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition cursor-pointer ${
                       adminTab === 'feedback' 
@@ -701,9 +725,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                       if (adminTab === 'errors') {
                         localStorage.removeItem('storm_error_logs');
                         setErrorLogs([]);
-                      } else {
+                      } else if (adminTab === 'feedback') {
                         localStorage.removeItem('storm_feedback_logs');
                         setFeedbackList([]);
+                      } else {
+                        localStorage.removeItem('storm_user_logs');
+                        setUserLogs([]);
                       }
                     }}
                     className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-lg text-xs font-bold uppercase tracking-widest transition cursor-pointer"
@@ -724,6 +751,41 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               
               {/* Content */}
               <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+                {adminTab === 'userLogs' && (
+                  userLogs.length === 0 ? (
+                    <div className="text-center py-12 text-white/40">
+                      <Users size={48} className="mx-auto mb-4 text-teal-500/50" />
+                      <p className={`text-sm uppercase tracking-widest font-bold ${textTertiary}`}>Giriş/Çıkış Kaydı Bulunamadı</p>
+                      <p className={`text-xs font-mono mt-2 ${textMuted}`}>Henüz kullanıcı hareketi kaydedilmemiş.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {userLogs.map((log: any) => (
+                        <div key={log.id} className={`p-4 rounded-xl flex items-center justify-between transition-colors ${
+                          isCleanLight 
+                             ? 'bg-slate-50 border border-slate-200' 
+                             : 'bg-white/5 border border-white/10'
+                        }`}>
+                          <div className="flex items-center gap-4">
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${log.action === 'login' ? 'bg-teal-500/10 text-teal-500' : 'bg-rose-500/10 text-rose-500'}`}>
+                              <Lock size={20} />
+                            </div>
+                            <div>
+                              <p className={`text-sm font-bold uppercase tracking-widest ${textPrimary}`}>{log.userName}</p>
+                              <p className={`text-xs font-mono mt-1 ${log.action === 'login' ? 'text-teal-400' : 'text-rose-400'}`}>
+                                {log.action === 'login' ? 'Sisteme Giriş Yaptı' : 'Sistemden Çıkış Yaptı'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className={`text-right text-xs font-mono ${textTertiary}`}>
+                            <p>{new Date(log.timestamp).toLocaleDateString('tr-TR')}</p>
+                            <p className="mt-1">{new Date(log.timestamp).toLocaleTimeString('tr-TR')}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                )}
                 {adminTab === 'errors' && (
                   errorLogs.length === 0 ? (
                     <div className="text-center py-12 text-white/40">

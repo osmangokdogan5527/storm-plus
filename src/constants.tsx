@@ -430,12 +430,14 @@ export const StormLogo = ({
   );
 };
 
-export const APP_VERSION = '1.3.8';
+export const APP_VERSION = '1.3.9';
 
 export const CHANGELOG = {
-  version: '1.3.8',
+  version: '1.3.9',
   features: [
-    "Kritik Senkronizasyon Çözümü: Bilgisayar (Electron) versiyonunda girilen verilerin (müşteri, stok vb.) ön izleme (Web) ekranına düşmesini engelleyen eski önbellek sorunu kesin olarak çözüldü."
+    "Kritik Senkronizasyon Çözümü: Bilgisayar (Electron) versiyonunda girilen verilerin (müşteri, stok vb.) ön izleme (Web) ekranına düşmesini engelleyen eski önbellek sorunu kesin olarak çözüldü.",
+    "Yönetici Paneli Güncellemesi: Yönetici paneline kullanıcıların sisteme giriş ve çıkış hareketlerini (saat/tarih ile) anlık olarak görebilecekleri 'Giriş/Çıkışlar' bölümü eklendi.",
+    "Arayüz İyileştirmesi: Sürüm notları (Güncellemeler) bölümü sadece en güncel sürümü gösterecek şekilde sadeleştirildi."
   ],
   fixes: []
 };
@@ -682,16 +684,18 @@ export const SIDEBAR_PATTERNS = [
 ];
 
 export const PIN_ACCOUNTS = [
-  { name: 'Kullanıcı 1', pin: '111111', email: 'admin@storm.com', password: 'storm_admin_pass' },
+  { name: 'OSES KARTALTEPE', pin: '111111', email: 'admin@storm.com', password: 'storm_admin_pass' },
   { name: 'Kullanıcı 2', pin: '222222', email: 'user2@storm.com', password: 'storm_user2_pass' },
 ];
 
 export const changelogData = [
   {
-    version: "1.3.8",
+    version: "1.3.9",
     date: "05.08.2026",
     changes: [
-      "Kritik Senkronizasyon Çözümü: Bilgisayar (Electron) versiyonunda oluşturulan müşteri ve stokların web (ön izleme) versiyonunda görünmesini engelleyen yerel önbellek kaynaklı workspace (çalışma alanı) uyumsuzluğu kesin olarak giderildi. Artık veriler anlık ve eksiksiz senkronize olacak."
+      "Kritik Senkronizasyon Çözümü: Bilgisayar (Electron) versiyonunda oluşturulan müşteri ve stokların web (ön izleme) versiyonunda görünmesini engelleyen yerel önbellek kaynaklı workspace (çalışma alanı) uyumsuzluğu kesin olarak giderildi. Artık veriler anlık ve eksiksiz senkronize olacak.",
+      "Yönetici Paneli Güncellemesi: Yönetici paneline kullanıcıların sisteme giriş ve çıkış hareketlerini (saat/tarih ile) anlık olarak görebilecekleri 'Giriş/Çıkışlar' bölümü eklendi.",
+      "Arayüz İyileştirmesi: Sürüm notları (Güncellemeler) bölümü sadece en güncel sürümü gösterecek şekilde sadeleştirildi."
     ]
   },
   {
