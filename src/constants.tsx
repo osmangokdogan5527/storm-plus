@@ -435,9 +435,7 @@ export const APP_VERSION = '1.3.9';
 export const CHANGELOG = {
   version: '1.3.9',
   features: [
-    "Kritik Senkronizasyon Çözümü: Bilgisayar (Electron) versiyonunda girilen verilerin (müşteri, stok vb.) ön izleme (Web) ekranına düşmesini engelleyen eski önbellek sorunu kesin olarak çözüldü.",
-    "Yönetici Paneli Güncellemesi: Yönetici paneline kullanıcıların sisteme giriş ve çıkış hareketlerini (saat/tarih ile) anlık olarak görebilecekleri 'Giriş/Çıkışlar' bölümü eklendi.",
-    "Arayüz İyileştirmesi: Sürüm notları (Güncellemeler) bölümü sadece en güncel sürümü gösterecek şekilde sadeleştirildi."
+    "Kritik Senkronizasyon Çözümü: Bilgisayar (Electron) versiyonunda girilen verilerin (müşteri, stok vb.) ön izleme (Web) ekranına düşmesini engelleyen eski önbellek sorunu kesin olarak çözüldü."
   ],
   fixes: []
 };
@@ -693,9 +691,7 @@ export const changelogData = [
     version: "1.3.9",
     date: "05.08.2026",
     changes: [
-      "Kritik Senkronizasyon Çözümü: Bilgisayar (Electron) versiyonunda oluşturulan müşteri ve stokların web (ön izleme) versiyonunda görünmesini engelleyen yerel önbellek kaynaklı workspace (çalışma alanı) uyumsuzluğu kesin olarak giderildi. Artık veriler anlık ve eksiksiz senkronize olacak.",
-      "Yönetici Paneli Güncellemesi: Yönetici paneline kullanıcıların sisteme giriş ve çıkış hareketlerini (saat/tarih ile) anlık olarak görebilecekleri 'Giriş/Çıkışlar' bölümü eklendi.",
-      "Arayüz İyileştirmesi: Sürüm notları (Güncellemeler) bölümü sadece en güncel sürümü gösterecek şekilde sadeleştirildi."
+      "Kritik Senkronizasyon Çözümü: Bilgisayar (Electron) versiyonunda oluşturulan müşteri ve stokların web (ön izleme) versiyonunda görünmesini engelleyen yerel önbellek kaynaklı workspace (çalışma alanı) uyumsuzluğu kesin olarak giderildi. Artık veriler anlık ve eksiksiz senkronize olacak."
     ]
   },
   {

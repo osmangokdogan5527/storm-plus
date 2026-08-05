@@ -1,4 +1,5 @@
 import React from 'react';
+import { logUserActivity } from '../utils/userLogger';
 import { User, Users, Lock, ChevronDown, Shield, X, CloudLightning, RotateCcw, Download, Trash2, AlertTriangle, Check, ChevronUp, MessageSquare, Building2, Sparkles } from 'lucide-react';
 import { StormLogo, APP_VERSION } from '../constants';
 
