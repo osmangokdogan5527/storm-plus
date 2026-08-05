@@ -430,14 +430,12 @@ export const StormLogo = ({
   );
 };
 
-export const APP_VERSION = '1.3.7';
+export const APP_VERSION = '1.3.8';
 
 export const CHANGELOG = {
-  version: '1.3.7',
+  version: '1.3.8',
   features: [
-    "Geniş Ekran Optimizasyonu: Uygulama genişliği 1600px'e çıkarılarak büyük ekranlarda daha ferah bir kullanım sağlandı.",
-    "Dashboard İyileştirmesi: Dashboard bileşenleri ekstra geniş ekranlarda 4 sütunlu yerleşime geçecek şekilde optimize edildi.",
-    "Tema ve UI Düzeltmeleri: Temalardaki metin ve arkaplan zıtlık sorunları giderildi."
+    "Kritik Senkronizasyon Çözümü: Bilgisayar (Electron) versiyonunda girilen verilerin (müşteri, stok vb.) ön izleme (Web) ekranına düşmesini engelleyen eski önbellek sorunu kesin olarak çözüldü."
   ],
   fixes: []
 };
@@ -690,6 +688,13 @@ export const PIN_ACCOUNTS = [
 
 export const changelogData = [
   {
+    version: "1.3.8",
+    date: "05.08.2026",
+    changes: [
+      "Kritik Senkronizasyon Çözümü: Bilgisayar (Electron) versiyonunda oluşturulan müşteri ve stokların web (ön izleme) versiyonunda görünmesini engelleyen yerel önbellek kaynaklı workspace (çalışma alanı) uyumsuzluğu kesin olarak giderildi. Artık veriler anlık ve eksiksiz senkronize olacak."
+    ]
+  },
+  {
     version: "1.3.7",
     date: "05.08.2026",
     changes: [
@@ -753,216 +758,6 @@ export const changelogData = [
     changes: [
       "Hızlı Satış Bölüm & Kategori Yönetimi: POS ekranında özel bölüm ekleme, silme ve ürünleri kategorilere esnek atama altyapısı.",
       "Tam Ekran Modu: Ayarlar içerisinden uygulamayı tek tıkla tam ekran kullanabilme özelliği eklendi."
-    ]
-  },
-  {
-    version: "1.2.9",
-    date: "31.07.2026",
-    changes: [
-      "Sol Menü Hiyerarşisi Güncellemesi: 'Hızlı Satış' sekmesi sol navigasyon panelinde Gösterge Paneli'nin hemen altına taşındı."
-    ]
-  },
-  {
-    version: "1.2.8",
-    date: "31.07.2026",
-    changes: [
-      "Hızlı Satış Ergonomik Alt Panel: Kasa göstergesi, KDV/iskonto ve ödeme alanı sol panele çekilerek geniş sepet alanı sağlandı."
-    ]
-  },
-  {
-    version: "1.2.7",
-    date: "31.07.2026",
-    changes: [
-      "Dokunmatik İskonto Butonları: Yüzde, tutar ve net tutar iskonto seçim butonları dokunmatik kasa kullanımına uygun olarak büyütüldü."
-    ]
-  },
-  {
-    version: "1.2.6",
-    date: "31.07.2026",
-    changes: [
-      "Gelişmiş Fiş & Adisyon Şablonu: Termal yazıcılar için dinamik logo, başlık, alt bilgi ve sütun düzenleme altyapısı kuruldu."
-    ]
-  },
-  {
-    version: "1.2.5",
-    date: "31.07.2026",
-    changes: [
-      "Storm AI Akıllı Asistan Sürümü: Yapay zekaya doğrudan Türkçe komut vererek otomatik fatura, tahsilat ve stok işlemi oluşturma."
-    ]
-  },
-  {
-    version: "1.2.4",
-    date: "31.07.2026",
-    changes: [
-      "Kamera ile Barkod Okuma Desteği: Kamera üzerinden ürün barkodlarını anında tarayıp sepete ekleme ve arama desteği."
-    ]
-  },
-  {
-    version: "1.2.3",
-    date: "31.07.2026",
-    changes: [
-      "Otomatik Fiş/Adisyon Numaratörü: Her satış işlemi için benzersiz, çakışmasız sıralı adisyon numarası üretimi."
-    ]
-  },
-  {
-    version: "1.2.2",
-    date: "31.07.2026",
-    changes: [
-      "Çoklu Para Birimi (Döviz) Takibi: TL cinsinden cari bakiye takibi."
-    ]
-  },
-  {
-    version: "1.2.1",
-    date: "31.07.2026",
-    changes: [
-      "Kasa ve Banka Hesapları Yönetimi: Birden fazla nakit kasa, banka hesabı ve kasalar arası virman/transfer modülü."
-    ]
-  },
-  {
-    version: "1.2.0",
-    date: "30.07.2026",
-    changes: [
-      "Personel ve Maaş Takip Sistemi: Çalışan kartları, maaş tahakkukları, avans ödemeleri ve personel cari hareketleri."
-    ]
-  },
-  {
-    version: "1.1.9",
-    date: "30.07.2026",
-    changes: [
-      "Kar/Zarar ve Finansal Grafikler: Aylık gelir-gider trendleri, KDV analizleri ve detaylı kar-zarar raporlama ekranı."
-    ]
-  },
-  {
-    version: "1.1.8",
-    date: "30.07.2026",
-    changes: [
-      "Çek ve Senet Takip Modülü: Müşteri ve borçlu çek/senetlerinin vade takibi, durum güncellemeleri ve cirolama işlemleri."
-    ]
-  },
-  {
-    version: "1.1.7",
-    date: "30.07.2026",
-    changes: [
-      "Tekrarlayan Düzenli Masraflar: Kira, fatura ve sabit giderlerin otomatik periyodik masraf kaydı olarak işlenmesi."
-    ]
-  },
-  {
-    version: "1.1.6",
-    date: "30.07.2026",
-    changes: [
-      "Otomatik Veri Yedekleme: Tüm uygulama verilerinin Excel, CSV ve JSON formatlarında tek tıkla yedeklenmesi ve geri yüklenmesi."
-    ]
-  },
-  {
-    version: "1.1.5",
-    date: "30.07.2026",
-    changes: [
-      "Kullanıcı Yetkilendirme ve PIN Güvenliği: Yönetici ve Personel rolleri ile hassas menülere PIN kodu erişim kısıtlaması."
-    ]
-  },
-  {
-    version: "1.1.4",
-    date: "30.07.2026",
-    changes: [
-      "A4/A5 PDF Fatura Tasarımları: Kurumsal fatura şablonu, PDF indirme ve e-posta ile müşteriye gönderme entegrasyonu."
-    ]
-  },
-  {
-    version: "1.1.3",
-    date: "30.07.2026",
-    changes: [
-      "Kritik Stok Uyarısı ve Stok Hareketleri: Minimum stok seviyesine düşen ürünler için otomatik bildirim ve detaylı stok geçmişi."
-    ]
-  },
-  {
-    version: "1.1.2",
-    date: "30.07.2026",
-    changes: [
-      "Kritik Alacak ve Borç Bildirimleri: Vadesi geçen alacaklar ve ödeme günü gelen borçlar için ana panelde canlı uyarılar."
-    ]
-  },
-  {
-    version: "1.1.1",
-    date: "30.07.2026",
-    changes: [
-      "Adisyon Askıya Alma (Park Etme): POS ekranında aynı anda birden fazla satışı askıya alma ve kaldığı yerden devam etme."
-    ]
-  },
-  {
-    version: "1.1.0",
-    date: "30.07.2026",
-    changes: [
-      "Parçalı Ödeme Desteği: Tek bir satışı Nakit + Kredi Kartı veya Açık Hesap olarak bölerek tahsil edebilme altyapısı."
-    ]
-  },
-  {
-    version: "1.0.9",
-    date: "30.07.2026",
-    changes: [
-      "Cari Ekstre ve Müşteri Hesap Dökümü: Müşteri ve tedarikçiler için detaylı hesap ekstresi ve yazdırılabilir PDF çıktısı."
-    ]
-  },
-  {
-    version: "1.0.8",
-    date: "30.07.2026",
-    changes: [
-      "Masraf ve Gider Yönetimi: İşletme harcamalarının kategorize edilerek (Mutfak, Kira, Fatura) kayıt altına alınması."
-    ]
-  },
-  {
-    version: "1.0.7",
-    date: "30.07.2026",
-    changes: [
-      "Gelişmiş Arama ve Canlı Filtreleme: Cari, stok ve faturalarda anlık hızlı arama ve klavye yön tuşları desteği."
-    ]
-  },
-  {
-    version: "1.0.6",
-    date: "30.07.2026",
-    changes: [
-      "Tema ve Görünüm Seçenekleri: Karanlık Mod (Dark Mode), Aydınlık Mod (Light Mode) ve renkli vurgu temaları."
-    ]
-  },
-  {
-    version: "1.0.5",
-    date: "30.07.2026",
-    changes: [
-      "Klavye Kısayolları Desteği: F1-F12 fonksiyon tuşları ile hızlı fatura kesme, cari ekleme ve modül geçişleri."
-    ]
-  },
-  {
-    version: "1.0.4",
-    date: "30.07.2026",
-    changes: [
-      "Stok ve Ürün Yönetim Modülü: Barkod, alış/satış fiyatları, KDV oranları (%0, %1, %10, %20) ve birim tanımları."
-    ]
-  },
-  {
-    version: "1.0.3",
-    date: "30.07.2026",
-    changes: [
-      "Tahsilat ve Ödeme Kayıtları: Nakit, Kredi Kartı ve Havale/EFT yöntemleriyle cari borç/alacak kapama işlemleri."
-    ]
-  },
-  {
-    version: "1.0.2",
-    date: "30.07.2026",
-    changes: [
-      "Cari Hesap Yönetimi: Müşteri ve Tedarikçi kartlarının oluşturulması, bakiye takibi ve iletişim rehberi."
-    ]
-  },
-  {
-    version: "1.0.1",
-    date: "30.07.2026",
-    changes: [
-      "Gösterge Paneli (Dashboard): Kasa bakiyesi, toplam alacak, toplam borç ve aylık satış özet bilgi kartları."
-    ]
-  },
-  {
-    version: "1.0.0",
-    date: "30.07.2026",
-    changes: [
-      "Storm Ön Muhasebe İlk Sürüm: Çevrimdışı (offline-first) çalışan masaüstü (Electron) ve web ön muhasebe yazılım altyapısı."
     ]
   }
 ];

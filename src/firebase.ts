@@ -109,10 +109,8 @@ export function setActiveUser(userId: string | null) {
 }
 
 export function getActiveWorkspace(): string {
-  if (typeof window === 'undefined' || typeof localStorage === 'undefined') return 'default';
-  const stored = localStorage.getItem('storm_app_workspace');
-  if (stored) return stored;
-  // Removed hostname isolation to ensure web preview and desktop app sync on 'default' workspace
+  // Always force 'default' workspace so Web and Desktop are guaranteed to use the same path.
+  // We ignore localStorage so that legacy cached values do not split the database.
   return 'default';
 }
 
