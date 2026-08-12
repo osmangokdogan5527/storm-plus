@@ -19,7 +19,7 @@ export const PosPlatformSettingsModal: React.FC<PosPlatformSettingsModalProps> =
     Array.isArray(platforms) ? platforms : []
   );
   const [newPlatformName, setNewPlatformName] = useState('');
-  const [newCommissionRate, setNewCommissionRate] = useState<number | ''>(15);
+  const [newCommissionRate, setNewCommissionRate] = useState<number | ''>(38);
 
   React.useEffect(() => {
     if (Array.isArray(platforms)) {
@@ -50,7 +50,7 @@ export const PosPlatformSettingsModal: React.FC<PosPlatformSettingsModalProps> =
       id: newId,
       key: newId,
       name: cleanName,
-      commissionRate: typeof newCommissionRate === 'number' ? newCommissionRate : 15,
+      commissionRate: typeof newCommissionRate === 'number' ? newCommissionRate : 38,
       bgColor: 'bg-indigo-600 hover:bg-indigo-500',
       borderColor: 'border-indigo-400',
       textColor: 'text-white',
@@ -60,7 +60,7 @@ export const PosPlatformSettingsModal: React.FC<PosPlatformSettingsModalProps> =
     };
     setLocalPlatforms((prev) => [...prev, newPlat]);
     setNewPlatformName('');
-    setNewCommissionRate(15);
+    setNewCommissionRate(38);
   };
 
   const handleDeletePlatform = (id: string) => {

@@ -9,8 +9,8 @@ export interface GeneralSettingsProps {
   setDesignStyle: (style: string) => void;
   activeLogoTheme: string;
   setActiveLogoTheme: (theme: string) => void;
-  appFontSize: 'xsmall' | 'small' | 'medium' | 'large';
-  setAppFontSize: (size: 'xsmall' | 'small' | 'medium' | 'large') => void;
+  appFontSize: number;
+  setAppFontSize: (size: number) => void;
   sidebarBg: string;
   setSidebarBg: (bg: string) => void;
   sidebarPattern: string;
@@ -232,42 +232,104 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({
 
                 {/* Section B: Uygulama Yazı Boyutu */}
                 <div className="pt-4 border-t border-white/10">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center">
-                      <span className="font-serif font-bold text-base">A</span>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center">
+                        <span className="font-serif font-bold text-base">A</span>
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-bold text-white uppercase tracking-wider">Uygulama Yazı Boyutu (6px - 18px)</h3>
+                        <p className="text-[11px] text-white/50 mt-0.5">Yazı boyutunu 6px ile 18px arasında doğrudan seçin</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">Uygulama Yazı Boyutu</h3>
-                      <p className="text-[11px] text-white/50 mt-0.5">Uygulama genelindeki metinlerin büyüklüğü</p>
+                    <div className="px-3 py-1 rounded-xl bg-teal-500/20 border border-teal-500/40 text-teal-300 font-mono font-black text-sm">
+                      {typeof appFontSize === 'number' ? appFontSize : 14} px
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {[
-                      { id: 'xsmall', name: 'Ultra Küçük', desc: '12px' },
-                      { id: 'small', name: 'Küçük', desc: '14px' },
-                      { id: 'medium', name: 'Normal', desc: '16px' },
-                      { id: 'large', name: 'Büyük', desc: '18px' },
-                    ].map((preset) => {
-                      const isSelected = appFontSize === preset.id;
-                      return (
-                        <button
-                          key={preset.id}
-                          onClick={() => {
-                            setAppFontSize(preset.id as 'xsmall' | 'small' | 'medium' | 'large');
-                            localStorage.setItem('storm_muhasebe_font_size', preset.id);
+                  {/* Slider & Stepper Controls */}
+                  <div className="p-3 bg-white/5 rounded-2xl border border-white/10 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const currentPx = typeof appFontSize === 'number' ? appFontSize : 14;
+                          const next = Math.max(6, currentPx - 1);
+                          setAppFontSize(next);
+                          localStorage.setItem('storm_muhasebe_font_size', next.toString());
+                        }}
+                        disabled={(typeof appFontSize === 'number' ? appFontSize : 14) <= 6}
+                        className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-white font-bold flex items-center justify-center border border-white/10 cursor-pointer active:scale-95 transition-all shrink-0"
+                        title="1px Azalt"
+                      >
+                        -
+                      </button>
+                      
+                      <div className="flex-1 flex flex-col gap-1">
+                        <input
+                          type="range"
+                          min={6}
+                          max={18}
+                          step={1}
+                          value={typeof appFontSize === 'number' ? appFontSize : 14}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setAppFontSize(val);
+                            localStorage.setItem('storm_muhasebe_font_size', val.toString());
                           }}
-                          className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border transition cursor-pointer ${
-                            isSelected 
-                              ? 'border-teal-500 bg-teal-500/15 text-white shadow-[0_2px_10px_rgba(45,212,191,0.2)] font-bold' 
-                              : 'border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white'
-                          }`}
-                        >
-                          <span className="text-xs font-semibold">{preset.name}</span>
-                          <span className="text-[10px] text-white/40 font-mono mt-0.5">{preset.desc}</span>
-                        </button>
-                      );
-                    })}
+                          className="w-full accent-teal-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
+                        />
+                        <div className="flex justify-between text-[10px] font-mono text-white/40 px-0.5">
+                          <span>6px</span>
+                          <span>12px</span>
+                          <span>18px</span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const currentPx = typeof appFontSize === 'number' ? appFontSize : 14;
+                          const next = Math.min(18, currentPx + 1);
+                          setAppFontSize(next);
+                          localStorage.setItem('storm_muhasebe_font_size', next.toString());
+                        }}
+                        disabled={(typeof appFontSize === 'number' ? appFontSize : 14) >= 18}
+                        className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-white font-bold flex items-center justify-center border border-white/10 cursor-pointer active:scale-95 transition-all shrink-0"
+                        title="1px Artır"
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    {/* Quick Px Selector Badges (6px to 18px) */}
+                    <div>
+                      <span className="text-[10px] font-bold text-white/50 uppercase tracking-wider block mb-1.5">
+                        Piksel Seçimi (6px - 18px)
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {[6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map((px) => {
+                          const isSelected = appFontSize === px;
+                          return (
+                            <button
+                              key={px}
+                              type="button"
+                              onClick={() => {
+                                setAppFontSize(px);
+                                localStorage.setItem('storm_muhasebe_font_size', px.toString());
+                              }}
+                              className={`px-2.5 py-1 rounded-lg border text-xs font-mono font-bold transition cursor-pointer active:scale-95 ${
+                                isSelected
+                                  ? 'border-teal-400 bg-teal-500 text-slate-950 font-black shadow-[0_2px_8px_rgba(45,212,191,0.4)]'
+                                  : 'border-white/10 hover:border-white/30 bg-white/5 text-white/70 hover:text-white'
+                              }`}
+                            >
+                              {px}px
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 
                 {/* Section C: Tam Ekran Modu */}

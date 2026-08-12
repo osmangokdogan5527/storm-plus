@@ -110,33 +110,138 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
 
   // ONLİNE SİPARİŞLER STATE
   const orders = appData?.onlineOrders || [];
-
   const safeOrders = Array.isArray(orders) ? orders : [];
 
   // HAKEDİŞ TAHSİLATLARI STATE
   const payouts = appData?.onlinePayouts || [];
-
   const safePayouts = Array.isArray(payouts) ? payouts : [];
 
-  // Removed localStorage effects for orders and payouts
+  const [localOrders, setLocalOrders] = useState<OnlineMarketOrder[]>([]);
+  const [localPayouts, setLocalPayouts] = useState<OnlineMarketPayout[]>([]);
 
-  // Hızlı Satış veya harici kaynaklardan sipariş eklendiğinde state'i otomatik yenileme
+  // LocalStorage'daki ve Hızlı Satış'tan gelen siparişleri yükleme ve Firestore'a senkronize etme
   useEffect(() => {
-    const handleReloadOnlineData = () => {
+    const loadAndSyncLocalData = async () => {
       try {
-        // Realtime loading already handled by appData
+        const ws = getActiveWorkspace();
+        const orderKey = `storm_online_market_orders_${ws}`;
+        const rawOrders = localStorage.getItem(orderKey) || (ws === 'storm_muhasebe' ? localStorage.getItem('storm_online_market_orders') : null);
+        if (rawOrders) {
+          try {
+            const parsedOrders: OnlineMarketOrder[] = JSON.parse(rawOrders);
+            if (Array.isArray(parsedOrders) && parsedOrders.length > 0) {
+              setLocalOrders(parsedOrders);
+              // Firestore'da eksik olan yerel siparişleri kaydet
+              for (const order of parsedOrders) {
+                if (order && (order.id || order.orderNo)) {
+                  const existsInFirebase = safeOrders.some(
+                    (o) => o.id === order.id || (o.orderNo && o.orderNo === order.orderNo)
+                  );
+                  if (!existsInFirebase) {
+                    await saveOnlineOrder(order, order.id);
+                  }
+                }
+              }
+            } else {
+              setLocalOrders([]);
+            }
+          } catch (e) {
+            setLocalOrders([]);
+          }
+        } else {
+          setLocalOrders([]);
+        }
+
+        const payoutKey = `storm_online_market_payouts_${ws}`;
+        const rawPayouts = localStorage.getItem(payoutKey) || (ws === 'storm_muhasebe' ? localStorage.getItem('storm_online_market_payouts') : null);
+        if (rawPayouts) {
+          try {
+            const parsedPayouts: OnlineMarketPayout[] = JSON.parse(rawPayouts);
+            if (Array.isArray(parsedPayouts) && parsedPayouts.length > 0) {
+              setLocalPayouts(parsedPayouts);
+              for (const payout of parsedPayouts) {
+                if (payout && (payout.id || payout.payoutNo)) {
+                  const existsInFirebase = safePayouts.some(
+                    (p) => p.id === payout.id || (p.payoutNo && p.payoutNo === payout.payoutNo)
+                  );
+                  if (!existsInFirebase) {
+                    await saveOnlinePayout(payout, payout.id);
+                  }
+                }
+              }
+            } else {
+              setLocalPayouts([]);
+            }
+          } catch (e) {
+            setLocalPayouts([]);
+          }
+        } else {
+          setLocalPayouts([]);
+        }
       } catch (e) {
-        console.error(e);
+        console.error('Error in loadAndSyncLocalData:', e);
       }
     };
 
-    window.addEventListener('storm_online_orders_updated', handleReloadOnlineData);
-    window.addEventListener('storage', handleReloadOnlineData);
+    loadAndSyncLocalData();
+
+    window.addEventListener('storm_online_orders_updated', loadAndSyncLocalData);
+    window.addEventListener('storage', loadAndSyncLocalData);
     return () => {
-      window.removeEventListener('storm_online_orders_updated', handleReloadOnlineData);
-      window.removeEventListener('storage', handleReloadOnlineData);
+      window.removeEventListener('storm_online_orders_updated', loadAndSyncLocalData);
+      window.removeEventListener('storage', loadAndSyncLocalData);
     };
-  }, []);
+  }, [safeOrders.length, safePayouts.length]);
+
+  // Firestore ve Local Data Birleştirme
+  const safeOrdersCombined = React.useMemo(() => {
+    const map = new Map<string, OnlineMarketOrder>();
+    safeOrders.forEach((o) => {
+      if (o && (o.id || o.orderNo)) map.set(o.id || o.orderNo, o);
+    });
+    localOrders.forEach((o) => {
+      if (o && (o.id || o.orderNo) && !map.has(o.id || o.orderNo)) {
+        map.set(o.id || o.orderNo, o);
+      }
+    });
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime()
+    );
+  }, [safeOrders, localOrders]);
+
+  const safePayoutsCombined = React.useMemo(() => {
+    const map = new Map<string, OnlineMarketPayout>();
+    safePayouts.forEach((p) => {
+      if (p && (p.id || p.payoutNo)) map.set(p.id || p.payoutNo, p);
+    });
+    localPayouts.forEach((p) => {
+      if (p && (p.id || p.payoutNo) && !map.has(p.id || p.payoutNo)) {
+        map.set(p.id || p.payoutNo, p);
+      }
+    });
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime()
+    );
+  }, [safePayouts, localPayouts]);
+
+  // Platform Eşleştirme Yardımcı Fonksiyonu
+  const isMatchPlatform = (item: any, plat: PosPlatformConfig) => {
+    if (!item || !plat) return false;
+    const pId = (item.platformId || '').toLowerCase().trim();
+    const pName = (item.platformName || '').toLowerCase().trim();
+    const targetId = (plat.id || '').toLowerCase().trim();
+    const targetName = (plat.name || '').toLowerCase().trim();
+    const targetKey = (plat.key || '').toLowerCase().trim();
+
+    return (
+      pId === targetId ||
+      pId === targetKey ||
+      pName === targetName ||
+      (targetId && pId.includes(targetId)) ||
+      (targetName && pName.includes(targetName)) ||
+      (targetId && pName.includes(targetId))
+    );
+  };
 
   // MODALLAR
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -165,16 +270,16 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
   const [payoutNote, setPayoutNote] = useState<string>('');
 
   // SEÇİLİ PLATFORM İÇİN ORAN VE HESAPLAMA
-  const activeOrderPlatform = safePlatforms.find((p) => p && p.id === orderPlatformId) || safePlatforms[0] || { id: 'yemeksepeti', name: 'Yemeksepeti', commissionRate: 15 };
-  const orderCommRate = activeOrderPlatform ? activeOrderPlatform.commissionRate : 15;
+  const activeOrderPlatform = safePlatforms.find((p) => p && p.id === orderPlatformId) || safePlatforms[0] || { id: 'yemeksepeti', name: 'Yemeksepeti', commissionRate: 38 };
+  const orderCommRate = activeOrderPlatform ? activeOrderPlatform.commissionRate : 38;
   const numericGross = typeof orderGrossAmount === 'number' ? orderGrossAmount : Number(orderGrossAmount) || 0;
   const orderCommAmount = (numericGross * orderCommRate) / 100;
   const orderNetAmount = numericGross - orderCommAmount;
 
   // HAKEDİŞ / ALACAK HESAPLAMALARI
   const platformSummaries: OnlineMarketPlatformSummary[] = safePlatforms.map((plat) => {
-    const platOrders = safeOrders.filter((o) => o && o.platformId === plat.id && o.status !== 'cancelled');
-    const platPayouts = safePayouts.filter((p) => p && p.platformId === plat.id);
+    const platOrders = safeOrdersCombined.filter((o) => o && isMatchPlatform(o, plat) && o.status !== 'cancelled');
+    const platPayouts = safePayoutsCombined.filter((p) => p && isMatchPlatform(p, plat));
 
     const totalGross = platOrders.reduce((sum, o) => sum + (o?.grossAmount || 0), 0);
     const totalCommission = platOrders.reduce((sum, o) => sum + (o?.commissionAmount || 0), 0);
@@ -322,15 +427,66 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
   // SİPARİŞ İPTALİ / SİLME
   const handleDeleteOrder = async (orderId: string) => {
     if (window.confirm('Bu online sipariş kaydını silmek istediğinizden emin misiniz?')) {
-      await deleteOnlineOrder(orderId);
+      try {
+        await deleteOnlineOrder(orderId);
+      } catch (err) {
+        console.error('Firestore delete order error:', err);
+      }
+      const ws = getActiveWorkspace();
+      const orderKey = `storm_online_market_orders_${ws}`;
+      const rawOrders = localStorage.getItem(orderKey) || (ws === 'storm_muhasebe' ? localStorage.getItem('storm_online_market_orders') : null);
+      if (rawOrders) {
+        try {
+          const parsed: OnlineMarketOrder[] = JSON.parse(rawOrders);
+          const updated = parsed.filter((o) => o.id !== orderId && o.orderNo !== orderId);
+          localStorage.setItem(orderKey, JSON.stringify(updated));
+          if (ws === 'storm_muhasebe') {
+            localStorage.setItem('storm_online_market_orders', JSON.stringify(updated));
+          }
+        } catch (e) {}
+      }
+      setLocalOrders((prev) => prev.filter((o) => o.id !== orderId && o.orderNo !== orderId));
+      window.dispatchEvent(new Event('storm_online_orders_updated'));
       showToast('Sipariş kaydı silindi.', 'info');
     }
   };
 
+  const handleDeletePayout = async (payoutId: string) => {
+    if (window.confirm('Bu hakediş tahsilat kaydını silmek istediğinizden emin misiniz?')) {
+      try {
+        await deleteOnlinePayout(payoutId);
+      } catch (err) {
+        console.error('Firestore delete payout error:', err);
+      }
+      const ws = getActiveWorkspace();
+      const payoutKey = `storm_online_market_payouts_${ws}`;
+      const rawPayouts = localStorage.getItem(payoutKey) || (ws === 'storm_muhasebe' ? localStorage.getItem('storm_online_market_payouts') : null);
+      if (rawPayouts) {
+        try {
+          const parsed: OnlineMarketPayout[] = JSON.parse(rawPayouts);
+          const updated = parsed.filter((p) => p.id !== payoutId && p.payoutNo !== payoutId);
+          localStorage.setItem(payoutKey, JSON.stringify(updated));
+          if (ws === 'storm_muhasebe') {
+            localStorage.setItem('storm_online_market_payouts', JSON.stringify(updated));
+          }
+        } catch (e) {}
+      }
+      setLocalPayouts((prev) => prev.filter((p) => p.id !== payoutId && p.payoutNo !== payoutId));
+      window.dispatchEvent(new Event('storm_online_orders_updated'));
+      showToast('Hakediş tahsilat kaydı silindi.', 'info');
+    }
+  };
+
   // FİLTRELENMİŞ SİPARİŞLER
-  const filteredOrders = safeOrders.filter((o) => {
+  const filteredOrders = safeOrdersCombined.filter((o) => {
     if (!o) return false;
-    const matchesPlatform = selectedPlatformFilter === 'all' || o.platformId === selectedPlatformFilter;
+    const matchesPlatform =
+      selectedPlatformFilter === 'all' ||
+      o.platformId === selectedPlatformFilter ||
+      isMatchPlatform(
+        o,
+        safePlatforms.find((p) => p.id === selectedPlatformFilter) || ({ id: selectedPlatformFilter, name: selectedPlatformFilter } as any)
+      );
     const term = (searchTerm || '').toLowerCase();
     const matchesSearch =
       !term ||
@@ -341,9 +497,15 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
   });
 
   // FİLTRELENMİŞ TAHSİLATLAR
-  const filteredPayouts = safePayouts.filter((p) => {
+  const filteredPayouts = safePayoutsCombined.filter((p) => {
     if (!p) return false;
-    const matchesPlatform = selectedPlatformFilter === 'all' || p.platformId === selectedPlatformFilter;
+    const matchesPlatform =
+      selectedPlatformFilter === 'all' ||
+      p.platformId === selectedPlatformFilter ||
+      isMatchPlatform(
+        p,
+        safePlatforms.find((p) => p.id === selectedPlatformFilter) || ({ id: selectedPlatformFilter, name: selectedPlatformFilter } as any)
+      );
     const term = (searchTerm || '').toLowerCase();
     const matchesSearch =
       !term ||
@@ -445,7 +607,7 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
             ₺{grandTotalGross.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <p className="text-xs text-slate-500 mt-1 flex items-center gap-1 font-semibold">
-            <span className="text-blue-600 font-extrabold">{orders.length}</span> sipariş kaydı
+            <span className="text-blue-600 font-extrabold">{safeOrdersCombined.length}</span> sipariş kaydı
           </p>
         </div>
 
@@ -685,7 +847,7 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
                   : { color: '#475569' }
               }
             >
-              Tüm Online Siparişler ({safeOrders.length})
+              Tüm Online Siparişler ({safeOrdersCombined.length})
             </button>
             <button
               onClick={() => setActiveTab('payouts')}
@@ -700,7 +862,7 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
                   : { color: '#475569' }
               }
             >
-              Hakediş Tahsilat Geçmişi ({safePayouts.length})
+              Hakediş Tahsilat Geçmişi ({safePayoutsCombined.length})
             </button>
           </div>
 
@@ -817,6 +979,7 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
                     <th className="py-3 px-3">Aktarılan Hesap</th>
                     <th className="py-3 px-3 text-right">Tahsil Edilen Tutar</th>
                     <th className="py-3 px-3">Açıklama</th>
+                    <th className="py-3 px-3 text-center">İşlem</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200/80">
@@ -833,6 +996,15 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
                         ₺{pay.amount.toFixed(2)}
                       </td>
                       <td className="py-3 px-3 text-slate-600 font-medium max-w-xs truncate">{pay.note || '-'}</td>
+                      <td className="py-3 px-3 text-center whitespace-nowrap">
+                        <button
+                          onClick={() => handleDeletePayout(pay.id)}
+                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-all cursor-pointer"
+                          title="Tahsilat Kaydını Sil"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

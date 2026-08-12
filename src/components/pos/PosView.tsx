@@ -149,16 +149,50 @@ export const PosView: React.FC<PosViewProps> = ({
   const [completedSaleSummary, setCompletedSaleSummary] = useState<PosSaleSummary | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
+  // OTOMATİK FİŞ EKRANI AÇMA AYARI (VARSAYILAN: KAPALI)
+  const [autoShowReceipt, setAutoShowReceipt] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('storm_pos_auto_show_receipt');
+      return saved === 'true'; // Default false: Otomatik fiş ekranı açılmasın
+    } catch (e) {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('storm_pos_auto_show_receipt', autoShowReceipt ? 'true' : 'false');
+    } catch (err: any) {
+      reportErrorToTelegram(err, 'PosView:saveAutoShowReceipt');
+    }
+  }, [autoShowReceipt]);
+
   // ONLINE PLATFORMLAR STATE
   const [platforms, setPlatforms] = useState<PosPlatformConfig[]>(() => {
     try {
       const saved = localStorage.getItem('storm_pos_platform_rates');
+      const is38Set = localStorage.getItem('storm_pos_platform_38_migrated');
       const loaded: PosPlatformConfig[] = saved ? JSON.parse(saved) : DEFAULT_POS_PLATFORMS;
-      return loaded
+      let finalPlatforms = loaded
         .filter((p) => p.id !== 'trendyol' && p.key !== 'trendyol')
         .map((p) => (p.name === 'Uber Eats' ? { ...p, name: 'Uber Trendyol' } : p));
+
+      if (!is38Set) {
+        finalPlatforms = finalPlatforms.map((p) => ({
+          ...p,
+          commissionRate: 38,
+        }));
+        try {
+          localStorage.setItem('storm_pos_platform_38_migrated', 'true');
+          localStorage.setItem('storm_pos_platform_rates', JSON.stringify(finalPlatforms));
+        } catch (e) {
+          // ignore storage errors
+        }
+      }
+
+      return finalPlatforms;
     } catch (e) {
-      return DEFAULT_POS_PLATFORMS;
+      return DEFAULT_POS_PLATFORMS.map((p) => ({ ...p, commissionRate: 38 }));
     }
   });
   const [isPlatformSettingsOpen, setIsPlatformSettingsOpen] = useState<boolean>(false);
@@ -541,7 +575,9 @@ export const PosView: React.FC<PosViewProps> = ({
         };
 
         setCompletedSaleSummary(saleSummary);
-        setIsReceiptModalOpen(true);
+        if (autoShowReceipt) {
+          setIsReceiptModalOpen(true);
+        }
 
         // Eğer aktif masa varsa satışı tamamlandığında masayı boşalt
         if (activeTableId) {
@@ -668,7 +704,9 @@ export const PosView: React.FC<PosViewProps> = ({
         };
 
         setCompletedSaleSummary(saleSummary);
-        setIsReceiptModalOpen(true);
+        if (autoShowReceipt) {
+          setIsReceiptModalOpen(true);
+        }
 
         // SEPETİ SIFIRLA
         setCartItems([]);
@@ -797,6 +835,37 @@ export const PosView: React.FC<PosViewProps> = ({
             <span style={{ color: '#ffffff', fontWeight: 900 }}>
               Masa Planı ({(tables || []).filter((t) => t.status === 'occupied' || t.status === 'bill_printed').length} Dolu)
             </span>
+          </button>
+
+          {/* SON FİŞİ GÖR / YAZDIR BUTONU */}
+          {completedSaleSummary && (
+            <button
+              type="button"
+              onClick={() => setIsReceiptModalOpen(true)}
+              className="px-3.5 py-2 rounded-xl font-black flex items-center gap-2 cursor-pointer transition-all shadow-md active:scale-95 border touch-manipulation hover:brightness-110"
+              style={{ backgroundColor: '#0284c7', color: '#ffffff', borderColor: '#38bdf8' }}
+              title="Son Tamamlanan Satışın Fişini Yazdır / İncele"
+            >
+              <Receipt size={16} className="text-white" />
+              <span style={{ color: '#ffffff', fontWeight: 900 }}>
+                Son Fiş (#{completedSaleSummary.receiptNo})
+              </span>
+            </button>
+          )}
+
+          {/* OTOMATİK FİŞ AÇMA GEÇİŞ TOGGLE'I */}
+          <button
+            type="button"
+            onClick={() => setAutoShowReceipt(!autoShowReceipt)}
+            className={`px-3 py-2 rounded-xl font-extrabold flex items-center gap-1.5 cursor-pointer transition-all border text-xs active:scale-95 touch-manipulation shrink-0 ${
+              autoShowReceipt
+                ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/50'
+                : 'bg-slate-900 text-slate-400 border-slate-700/80 hover:text-slate-200'
+            }`}
+            title="Satış yapıldığında otomatik fiş penceresini aç/kapat"
+          >
+            <Receipt size={14} className={autoShowReceipt ? 'text-emerald-400' : 'text-slate-500'} />
+            <span>Oto. Fiş: <strong className={autoShowReceipt ? 'text-emerald-300' : 'text-rose-400'}>{autoShowReceipt ? 'Açık' : 'Kapalı'}</strong></span>
           </button>
         </div>
       </div>

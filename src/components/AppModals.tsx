@@ -1,11 +1,13 @@
 import React from 'react';
-import { RotateCcw, CloudLightning, Check, MessageSquare, ImageIcon, ShieldCheck, X, Download, ShieldAlert, Info } from 'lucide-react';
+import { RotateCcw, CloudLightning, Check, MessageSquare, ImageIcon, ShieldCheck, X, Download, ShieldAlert, Info, Package } from 'lucide-react';
 import { StormLogo, } from '../constants';
 import AiAssistant from "./AiAssistant";
 
 interface AppModalsProps {
   resetModalOpen: boolean;
   setResetModalOpen: (open: boolean) => void;
+  resetExcludeStocks?: boolean;
+  setResetExcludeStocks?: (exclude: boolean) => void;
   resetConfirmationText: string;
   setResetConfirmationText: (text: string) => void;
   resetError: string | null;
@@ -67,6 +69,8 @@ interface AppModalsProps {
 export const AppModals: React.FC<AppModalsProps> = ({
   resetModalOpen,
   setResetModalOpen,
+  resetExcludeStocks,
+  setResetExcludeStocks,
   resetConfirmationText,
   setResetConfirmationText,
   resetError,
@@ -132,14 +136,41 @@ export const AppModals: React.FC<AppModalsProps> = ({
           <div className="bg-[#ffffff] rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl p-6 overflow-hidden">
             <div className="flex items-center gap-3 text-rose-600 mb-4">
               <RotateCcw className="w-6 h-6" />
-              <h3 className="text-lg font-extrabold uppercase tracking-wider text-slate-900">Verileri Sıfırla</h3>
+              <h3 className="text-lg font-extrabold uppercase tracking-wider text-slate-900">
+                {resetExcludeStocks ? 'Stoklar Hariç Verileri Sıfırla' : 'Tüm Verileri Sıfırla'}
+              </h3>
             </div>
             
             <p className="text-sm text-slate-600 mb-4 leading-relaxed">
-              Bu işlem STORM MUHASEBE üzerindeki <strong>tüm Cari Hesapları, Stokları, Finansal Hareketleri, Ödemeleri/Tahsilatları ve Çek/Senet</strong> verilerini kalıcı olarak silecektir. 
+              {resetExcludeStocks ? (
+                <>
+                  Bu işlem <strong>stok listenizi ve ürün tanımlarınızı koruyarak</strong> STORM MUHASEBE üzerindeki tüm Cari Hesapları, Finansal Hareketleri, Ödemeleri/Tahsilatları ve Sipariş verilerini temizleyecektir.
+                </>
+              ) : (
+                <>
+                  Bu işlem STORM MUHASEBE üzerindeki <strong>tüm Cari Hesapları, Stokları, Finansal Hareketleri, Ödemeleri/Tahsilatları ve Sipariş</strong> verilerini kalıcı olarak silecektir.
+                </>
+              )}
               <br />
               <span className="text-rose-600 font-semibold block mt-2">Bu işlem geri alınamaz!</span>
             </p>
+
+            {/* Mode toggle switch in modal */}
+            {setResetExcludeStocks && (
+              <div className="mb-4 bg-amber-500/10 border border-amber-500/20 p-3 rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Package className="w-4 h-4 text-amber-600" />
+                  <span className="text-xs font-bold text-slate-800">Stok Kartlarını Koru (Silme)</span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={!!resetExcludeStocks}
+                  onChange={(e) => setResetExcludeStocks(e.target.checked)}
+                  disabled={isResetting}
+                  className="w-4.5 h-4.5 text-amber-600 rounded border-slate-300 focus:ring-amber-500 cursor-pointer"
+                />
+              </div>
+            )}
 
             <div className="mb-5">
               <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">
@@ -180,11 +211,11 @@ export const AppModals: React.FC<AppModalsProps> = ({
                 disabled={isResetting || resetConfirmationText.trim().toUpperCase() !== 'SIFIRLA'}
                 className={`px-5 py-2 text-xs font-extrabold text-white uppercase tracking-wider rounded-lg transition shadow-md flex items-center gap-2 ${
                   resetConfirmationText.trim().toUpperCase() === 'SIFIRLA' && !isResetting
-                    ? 'bg-rose-600 hover:bg-rose-700 cursor-pointer'
+                    ? resetExcludeStocks ? 'bg-amber-600 hover:bg-amber-700 cursor-pointer' : 'bg-rose-600 hover:bg-rose-700 cursor-pointer'
                     : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
                 }`}
               >
-                {isResetting ? 'Sıfırlanıyor...' : 'Her Şeyi Sıfırla'}
+                {isResetting ? 'Sıfırlanıyor...' : resetExcludeStocks ? 'Stoklar Hariç Sıfırla' : 'Her Şeyi Sıfırla'}
               </button>
             </div>
           </div>

@@ -803,9 +803,21 @@ export async function saveAccountTransaction(transaction: any, id?: string) {
   }
 }
 
-export async function clearAllDatabaseData() {
+export async function clearAllDatabaseData(options?: { excludeStocks?: boolean }) {
   try {
-    const collections = [CARILER_COLL, STOKLAR_COLL, ISLEMLER_COLL, GIDERLER_COLL, CALISANLAR_COLL, CALISAN_ISLEMLER_COLL, HESAPLAR_COLL, HESAP_ISLEMLER_COLL, TEKRARLAYAN_COLL];
+    const collections = [
+      CARILER_COLL,
+      ...(options?.excludeStocks ? [] : [STOKLAR_COLL]),
+      ISLEMLER_COLL,
+      GIDERLER_COLL,
+      CALISANLAR_COLL,
+      CALISAN_ISLEMLER_COLL,
+      HESAPLAR_COLL,
+      HESAP_ISLEMLER_COLL,
+      TEKRARLAYAN_COLL,
+      ONLINE_ORDERS_COLL,
+      ONLINE_PAYOUTS_COLL
+    ];
     for (const colName of collections) {
       const q = collection(db, getPath(colName));
       const snapshot = await getDocs(q);
@@ -827,13 +839,21 @@ export async function clearAllDatabaseData() {
       }
     }
 
-    // Clear online marketler orders & payouts from localStorage
+    // Clear online marketler orders & payouts, parked sales, tables from localStorage
     if (typeof localStorage !== 'undefined') {
-      Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith('storm_online_market_orders') || key.startsWith('storm_online_market_payouts')) {
-          localStorage.removeItem(key);
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (
+          key.startsWith('storm_online_market_orders') ||
+          key.startsWith('storm_online_market_payouts') ||
+          key.startsWith('storm_pos_parked_sales') ||
+          key.startsWith('storm_pos_restaurant_tables')
+        )) {
+          keysToRemove.push(key);
         }
-      });
+      }
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new Event('storm_online_orders_updated'));
       }

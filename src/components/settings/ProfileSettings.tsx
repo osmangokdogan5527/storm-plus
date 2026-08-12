@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, ShieldCheck, Download, Upload, FolderOpen, RotateCcw, Shield } from 'lucide-react';
+import { User, ShieldCheck, Download, Upload, FolderOpen, RotateCcw, Shield, Package } from 'lucide-react';
 
 export interface ProfileSettingsProps {
   profileName: string;
@@ -19,6 +19,7 @@ export interface ProfileSettingsProps {
   handleOpenBackupFolder: () => void;
   backupMessage: { text: string; type: 'success' | 'error' } | null;
   setResetModalOpen: (open: boolean) => void;
+  setResetExcludeStocks?: (exclude: boolean) => void;
   onOpenBackupWizard?: () => void;
 }
 
@@ -40,6 +41,7 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
   handleOpenBackupFolder,
   backupMessage,
   setResetModalOpen,
+  setResetExcludeStocks,
   onOpenBackupWizard
 }) => {
   return (
@@ -215,11 +217,28 @@ export const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                 </p>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-white/5 flex justify-end">
+              <div className="mt-6 pt-4 border-t border-white/5 flex flex-wrap items-center justify-end gap-3">
+                <button
+                  id="reset-database-preserve-stocks-btn"
+                  onClick={() => {
+                    if (setResetExcludeStocks) setResetExcludeStocks(true);
+                    setResetModalOpen(true);
+                  }}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider transition cursor-pointer shadow-md hover:shadow-lg active:scale-98"
+                  title="Stok kartlarını koruyarak cari, finansal hareket ve siparişleri temizler"
+                >
+                  <Package size={14} />
+                  <span>Stokları Silmeden Sıfırla</span>
+                </button>
+
                 <button
                   id="reset-database-btn-settings"
-                  onClick={() => setResetModalOpen(true)}
+                  onClick={() => {
+                    if (setResetExcludeStocks) setResetExcludeStocks(false);
+                    setResetModalOpen(true);
+                  }}
                   className="flex items-center justify-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-extrabold uppercase tracking-wider transition cursor-pointer shadow-md hover:shadow-lg active:scale-98"
+                  title="Tüm cari, stok ve finansal verileri temizler"
                 >
                   <RotateCcw size={14} />
                   <span>Veritabanını Sıfırla</span>

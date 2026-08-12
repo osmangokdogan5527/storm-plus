@@ -11,7 +11,11 @@ export function useAppSettings(cloudSettings?: any) {
       if (cloudSettings.activeTheme) setActiveTheme(cloudSettings.activeTheme);
       if (cloudSettings.designStyle) setDesignStyle(cloudSettings.designStyle);
       if (cloudSettings.activeLogoTheme) setActiveLogoTheme(cloudSettings.activeLogoTheme);
-      if (cloudSettings.appFontSize) setAppFontSize(cloudSettings.appFontSize);
+      if (cloudSettings.appFontSize !== undefined) {
+        const raw = cloudSettings.appFontSize;
+        const val = typeof raw === 'number' ? raw : (raw === 'xsmall' ? 12 : raw === 'small' ? 13 : raw === 'medium' ? 14 : raw === 'large' ? 16 : parseInt(raw, 10) || 14);
+        setAppFontSize(Math.min(18, Math.max(6, val)));
+      }
       if (cloudSettings.sidebarBg) setSidebarBg(cloudSettings.sidebarBg);
       if (cloudSettings.sidebarPattern) setSidebarPattern(cloudSettings.sidebarPattern);
       if (cloudSettings.sidebarPatternOpacity !== undefined) setSidebarPatternOpacity(cloudSettings.sidebarPatternOpacity);
@@ -66,8 +70,15 @@ export function useAppSettings(cloudSettings?: any) {
     return localStorage.getItem('storm_muhasebe_logo_theme') || 'theme';
   });
 
-  const [appFontSize, setAppFontSize] = useState<'xsmall' | 'small' | 'medium' | 'large'>(() => {
-    return (localStorage.getItem('storm_muhasebe_font_size') as 'xsmall' | 'small' | 'medium' | 'large') || 'medium';
+  const [appFontSize, setAppFontSize] = useState<number>(() => {
+    const saved = localStorage.getItem('storm_muhasebe_font_size');
+    if (!saved) return 14;
+    if (saved === 'xsmall') return 12;
+    if (saved === 'small') return 13;
+    if (saved === 'medium') return 14;
+    if (saved === 'large') return 16;
+    const parsed = parseInt(saved, 10);
+    return isNaN(parsed) ? 14 : Math.min(18, Math.max(6, parsed));
   });
 
   const [sidebarBg, setSidebarBg] = useState<string>(() => {
@@ -112,7 +123,7 @@ export function useAppSettings(cloudSettings?: any) {
   };
 
   const [tabOrder, setTabOrder] = useState<string[]>(() => {
-    const defaultOrder = ['dashboard', 'pos', 'online_marketler', 'cariler', 'kasa', 'islemler', 'stoklar', 'masraflar', 'calisanlar', 'raporlar', 'ayarlar'];
+    const defaultOrder = ['dashboard', 'pos', 'online_marketler', 'gunluk_satis_raporu', 'cariler', 'kasa', 'islemler', 'stoklar', 'masraflar', 'calisanlar', 'raporlar', 'ayarlar'];
     const saved = localStorage.getItem('storm_muhasebe_tab_order');
     if (saved) {
       try {
@@ -122,12 +133,12 @@ export function useAppSettings(cloudSettings?: any) {
           const missing = defaultOrder.filter((t: string) => !filtered.includes(t));
           let order = [...filtered, ...missing];
 
-          // Reorder 'pos' right under 'dashboard' and 'online_marketler' right under 'pos'
+          // Reorder 'pos', 'online_marketler', 'gunluk_satis_raporu' right under 'dashboard'
           if (order.includes('pos')) {
-            order = order.filter((t) => t !== 'pos' && t !== 'online_marketler');
+            order = order.filter((t) => t !== 'pos' && t !== 'online_marketler' && t !== 'gunluk_satis_raporu');
             const dashIdx = order.indexOf('dashboard');
             const insertIdx = dashIdx >= 0 ? dashIdx + 1 : 0;
-            order.splice(insertIdx, 0, 'pos', 'online_marketler');
+            order.splice(insertIdx, 0, 'pos', 'online_marketler', 'gunluk_satis_raporu');
           }
           localStorage.setItem('storm_muhasebe_tab_order', JSON.stringify(order));
           syncToCloud({ tabOrder: order });
@@ -191,7 +202,7 @@ export function useAppSettings(cloudSettings?: any) {
       localStorage.setItem('kolay_hesap_accent_theme', activeTheme);
       localStorage.setItem('storm_muhasebe_design_style', designStyle);
       localStorage.setItem('storm_muhasebe_logo_theme', activeLogoTheme);
-      localStorage.setItem('storm_muhasebe_font_size', appFontSize);
+      localStorage.setItem('storm_muhasebe_font_size', appFontSize.toString());
       localStorage.setItem('storm_muhasebe_sidebar_bg', sidebarBg);
       localStorage.setItem('storm_muhasebe_sidebar_pattern', sidebarPattern);
       localStorage.setItem('storm_muhasebe_sidebar_pattern_opacity', sidebarPatternOpacity.toString());

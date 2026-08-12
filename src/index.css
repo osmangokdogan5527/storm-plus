@@ -854,3 +854,81 @@ body:has([data-design-style="pro-solid"]),
 [data-design-style="pro-solid"] aside .bg-black\/15 {
   background-color: rgba(0, 0, 0, 0.15) !important;
 }
+
+/* =========================================
+   RGB ANIMATED NEON CYCLE FOR FREQUENT TABS
+   (Hızlı Satış, Online Marketler, Günlük Satış Raporu)
+   ========================================= */
+
+@keyframes rgbCycleColor {
+  0%   { color: #ff2a6d !important; fill: #ff2a6d !important; stroke: #ff2a6d !important; text-shadow: 0 0 10px rgba(255, 42, 109, 0.7); }
+  20%  { color: #ffaa00 !important; fill: #ffaa00 !important; stroke: #ffaa00 !important; text-shadow: 0 0 10px rgba(255, 170, 0, 0.7); }
+  40%  { color: #05ffa1 !important; fill: #05ffa1 !important; stroke: #05ffa1 !important; text-shadow: 0 0 10px rgba(5, 255, 161, 0.7); }
+  60%  { color: #00b8ff !important; fill: #00b8ff !important; stroke: #00b8ff !important; text-shadow: 0 0 10px rgba(0, 184, 255, 0.7); }
+  80%  { color: #bd00ff !important; fill: #bd00ff !important; stroke: #bd00ff !important; text-shadow: 0 0 10px rgba(189, 0, 255, 0.7); }
+  100% { color: #ff2a6d !important; fill: #ff2a6d !important; stroke: #ff2a6d !important; text-shadow: 0 0 10px rgba(255, 42, 109, 0.7); }
+}
+
+@keyframes rgbCycleBorder {
+  0%   { border-color: rgba(255, 42, 109, 0.8) !important; box-shadow: 0 0 14px rgba(255, 42, 109, 0.35), inset 0 0 10px rgba(255, 42, 109, 0.15) !important; }
+  20%  { border-color: rgba(255, 170, 0, 0.8) !important; box-shadow: 0 0 14px rgba(255, 170, 0, 0.35), inset 0 0 10px rgba(255, 170, 0, 0.15) !important; }
+  40%  { border-color: rgba(5, 255, 161, 0.8) !important; box-shadow: 0 0 14px rgba(5, 255, 161, 0.35), inset 0 0 10px rgba(5, 255, 161, 0.15) !important; }
+  60%  { border-color: rgba(0, 184, 255, 0.8) !important; box-shadow: 0 0 14px rgba(0, 184, 255, 0.35), inset 0 0 10px rgba(0, 184, 255, 0.15) !important; }
+  80%  { border-color: rgba(189, 0, 255, 0.8) !important; box-shadow: 0 0 14px rgba(189, 0, 255, 0.35), inset 0 0 10px rgba(189, 0, 255, 0.15) !important; }
+  100% { border-color: rgba(255, 42, 109, 0.8) !important; box-shadow: 0 0 14px rgba(255, 42, 109, 0.35), inset 0 0 10px rgba(255, 42, 109, 0.15) !important; }
+}
+
+@keyframes rgbCycleBackground {
+  0%   { background-color: rgba(255, 42, 109, 0.12) !important; }
+  20%  { background-color: rgba(255, 170, 0, 0.12) !important; }
+  40%  { background-color: rgba(5, 255, 161, 0.12) !important; }
+  60%  { background-color: rgba(0, 184, 255, 0.12) !important; }
+  80%  { background-color: rgba(189, 0, 255, 0.12) !important; }
+  100% { background-color: rgba(255, 42, 109, 0.12) !important; }
+}
+
+/* Target Hızlı Satış, Online Marketler, Günlük Satış Raporu buttons */
+#tab-btn-pos,
+#tab-btn-online_marketler,
+#tab-btn-gunluk_satis_raporu,
+#mob-nav-pos,
+#mob-nav-online_marketler,
+#mob-nav-gunluk_satis_raporu {
+  position: relative !important;
+  border-width: 1.5px !important;
+  border-style: solid !important;
+  animation: rgbCycleBorder 3.5s linear infinite, rgbCycleBackground 3.5s linear infinite !important;
+}
+
+#tab-btn-pos span,
+#tab-btn-online_marketler span,
+#tab-btn-gunluk_satis_raporu span,
+#mob-nav-pos span,
+#mob-nav-online_marketler span,
+#mob-nav-gunluk_satis_raporu span {
+  animation: rgbCycleColor 3.5s linear infinite !important;
+  font-weight: 800 !important;
+}
+
+#tab-btn-pos svg,
+#tab-btn-pos svg path,
+#tab-btn-online_marketler svg,
+#tab-btn-online_marketler svg path,
+#tab-btn-gunluk_satis_raporu svg,
+#tab-btn-gunluk_satis_raporu svg path,
+#mob-nav-pos svg,
+#mob-nav-pos svg path,
+#mob-nav-online_marketler svg,
+#mob-nav-online_marketler svg path,
+#mob-nav-gunluk_satis_raporu svg,
+#mob-nav-gunluk_satis_raporu svg path {
+  animation: rgbCycleColor 3.5s linear infinite !important;
+}
+
+#tab-btn-pos .storm-icon-wrapper,
+#tab-btn-online_marketler .storm-icon-wrapper,
+#tab-btn-gunluk_satis_raporu .storm-icon-wrapper {
+  animation: rgbCycleBorder 3.5s linear infinite !important;
+  background-color: rgba(0, 0, 0, 0.3) !important;
+}
+

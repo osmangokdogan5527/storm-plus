@@ -1,5 +1,5 @@
 import React from "react";
-import { LayoutDashboard, Users, Package, Receipt, Briefcase, Wallet, DollarSign, Landmark, BarChart3, Settings, ShoppingCart, Store } from "lucide-react";
+import { LayoutDashboard, Users, Package, Receipt, Briefcase, Wallet, DollarSign, Landmark, BarChart3, Settings, ShoppingCart, Store, CalendarDays } from "lucide-react";
 import { KeyboardShortcut } from "./types";
 export const StormLogo = ({ 
   className = "", 
@@ -430,12 +430,13 @@ export const StormLogo = ({
   );
 };
 
-export const APP_VERSION = '1.3.9';
+export const APP_VERSION = '1.4.0';
 
 export const CHANGELOG = {
-  version: '1.3.9',
+  version: '1.4.0',
   features: [
-    "Kritik Senkronizasyon Çözümü: Bilgisayar (Electron) versiyonunda girilen verilerin (müşteri, stok vb.) ön izleme (Web) ekranına düşmesini engelleyen eski önbellek sorunu kesin olarak çözüldü."
+    "Stok Korumalı Veritabanı Sıfırlama: Sistem ayarlarındaki veritabanı sıfırlama seçeneğine, mevcut stok ve ürün listesini koruyarak sadece cari hesap, finansal hareket ve sipariş geçmişini temizleme imkanı sunan 'Stokları Silmeden Sıfırla' özelliği eklendi.",
+    "Online Marketler & Sipariş Entegrasyonu İyileştirmesi: Yemeksepeti ve diğer online platformlardan gelen siparişlerin anlık Firestore senkronizasyonu ve veritabanı eşleştirmeleri güçlendirildi."
   ],
   fixes: []
 };
@@ -650,6 +651,7 @@ export const TAB_DEFS: Record<string, { label: string; icon: React.ReactNode }> 
   dashboard: { label: 'Gösterge Paneli', icon: <LayoutDashboard size={18} strokeWidth={2.4} /> },
   pos: { label: 'Hızlı Satış', icon: <ShoppingCart size={18} strokeWidth={2.4} /> },
   online_marketler: { label: 'Online Marketler', icon: <Store size={18} strokeWidth={2.4} /> },
+  gunluk_satis_raporu: { label: 'Günlük Satış Raporu', icon: <CalendarDays size={18} strokeWidth={2.4} /> },
   cariler: { label: 'Cari Hesaplar', icon: <Users size={18} strokeWidth={2.4} /> },
   stoklar: { label: 'Stok Durumu', icon: <Package size={18} strokeWidth={2.4} /> },
   islemler: { label: 'Finansal Hareketler', icon: <Receipt size={18} strokeWidth={2.4} /> },
@@ -687,6 +689,14 @@ export const PIN_ACCOUNTS = [
 ];
 
 export const changelogData = [
+  {
+    version: "1.4.0",
+    date: "12.08.2026",
+    changes: [
+      "Stok Korumalı Veritabanı Sıfırlama: Veritabanı sıfırlama bölümüne stok kartlarını ve ürün tanımlarını koruyarak sadece cari hesapları, kasa/banka hareketlerini ve sipariş geçmişini temizleyen 'Stokları Silmeden Sıfırla' seçeneği eklendi.",
+      "Online Marketler & Sipariş Senkronizasyonu: Yemeksepeti ve benzeri platformlardan gelen siparişlerin veritabanı senkronizasyonu ve geçmiş verilerle otomatik entegrasyonu güçlendirildi."
+    ]
+  },
   {
     version: "1.3.9",
     date: "05.08.2026",

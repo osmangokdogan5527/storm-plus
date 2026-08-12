@@ -29,6 +29,7 @@ import {
   getActiveWorkspace,
   saveBankAccount,
   createTransaction,
+  saveOnlineOrder,
   db,
   saveSettings,
 } from './firebase';
@@ -36,6 +37,7 @@ import { reportErrorToTelegram } from './utils/telegramLogger';
 import { PosCartItem, PosPaymentSplit } from './types/pos';
 import { PosView } from './components/pos/PosView';
 import { OnlineMarketlerView } from './components/OnlineMarketlerView';
+import { GunlukSatisRaporuView } from './components/GunlukSatisRaporuView';
 import { enableNetwork, disableNetwork } from 'firebase/firestore';
 import { BackupWizardModal } from './components/backup/BackupWizardModal';
 import DashboardView from './components/DashboardView';
@@ -450,11 +452,18 @@ const isSecurityLoaded = React.useRef(false);
 
 
   useEffect(() => {
-    let size = '16px';
-    if (appFontSize === 'xsmall') size = '12px';
-    if (appFontSize === 'small') size = '14px';
-    if (appFontSize === 'large') size = '18px';
-    document.documentElement.style.setProperty('--app-font-size', size);
+    let pxVal = 14;
+    if (typeof appFontSize === 'number') {
+      pxVal = appFontSize;
+    } else if (typeof appFontSize === 'string') {
+      if (appFontSize === 'xsmall') pxVal = 12;
+      else if (appFontSize === 'small') pxVal = 13;
+      else if (appFontSize === 'medium') pxVal = 14;
+      else if (appFontSize === 'large') pxVal = 16;
+      else pxVal = parseInt(appFontSize, 10) || 14;
+    }
+    const clamped = Math.min(18, Math.max(6, pxVal));
+    document.documentElement.style.setProperty('--app-font-size', `${clamped}px`);
   }, [appFontSize]);
 
 
@@ -629,6 +638,7 @@ ${friendlyError}`);
 
 
   const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [resetExcludeStocks, setResetExcludeStocks] = useState(false);
   const [resetConfirmationText, setResetConfirmationText] = useState('');
   const [resetError, setResetError] = useState('');
   const [isResetting, setIsResetting] = useState(false);
@@ -737,6 +747,7 @@ ${friendlyError}`);
       handleOpenBackupFolder={handleOpenBackupFolder}
       backupMessage={backupMessage}
       setResetModalOpen={setResetModalOpen}
+      setResetExcludeStocks={setResetExcludeStocks}
       onOpenBackupWizard={() => setIsBackupWizardOpen(true)}
       geminiApiKey={geminiApiKey}
       setGeminiApiKey={setGeminiApiKey}
@@ -761,20 +772,33 @@ ${friendlyError}`);
   const handleResetAllData = async () => {
     try {
       setIsResetting(true);
-      await clearAllDatabaseData();
+      await clearAllDatabaseData({ excludeStocks: resetExcludeStocks });
 
       // Clear local storage online market order and payout keys across all workspaces
       if (typeof localStorage !== 'undefined') {
-        Object.keys(localStorage).forEach((key) => {
-          if (key.startsWith('storm_online_market_orders') || key.startsWith('storm_online_market_payouts')) {
-            localStorage.removeItem(key);
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (
+            key.startsWith('storm_online_market_orders') ||
+            key.startsWith('storm_online_market_payouts') ||
+            key.startsWith('storm_pos_parked_sales') ||
+            key.startsWith('storm_pos_restaurant_tables')
+          )) {
+            keysToRemove.push(key);
           }
-        });
+        }
+        keysToRemove.forEach((k) => localStorage.removeItem(k));
         window.dispatchEvent(new Event('storm_online_orders_updated'));
       }
 
       setResetModalOpen(false);
-      showToast("Tüm veriler başarıyla sıfırlandı.", "success");
+      showToast(
+        resetExcludeStocks
+          ? "Stoklar hariç tüm veriler başarıyla sıfırlandı."
+          : "Tüm veriler başarıyla sıfırlandı.",
+        "success"
+      );
     } catch (e: any) {
       setResetError(e.message || "Sıfırlama sırasında bir hata oluştu.");
     } finally {
@@ -960,6 +984,9 @@ ${friendlyError}`);
             note: `Hızlı Satış Fişi No: ${saleData.receiptNo}`,
             status: 'completed',
           };
+
+          // Save online order directly to Firestore database
+          await saveOnlineOrder(newOnlineOrder);
 
           const ws = getActiveWorkspace();
           const targetKey = `storm_online_market_orders_${ws}`;
@@ -1224,6 +1251,15 @@ ${friendlyError}`);
             onRecordPayout={handleRecordOnlinePayout}
           />)}
         </div>
+        <div className={activeTab === 'gunluk_satis_raporu' ? 'block animate-fade-in' : 'hidden'}>
+          {renderWorkspaceView('gunluk_satis_raporu', <GunlukSatisRaporuView
+            islemler={islemler}
+            stoklar={stoklar}
+            cariler={cariler}
+            bankAccounts={bankAccounts}
+            showToast={showToast as any}
+          />)}
+        </div>
         <div className={activeTab === 'cariler' ? 'block animate-fade-in' : 'hidden'}>
           {renderWorkspaceView('cariler', <CarilerView 
             cariler={cariler}
@@ -1315,6 +1351,8 @@ ${friendlyError}`);
       <AppModals
         resetModalOpen={resetModalOpen}
         setResetModalOpen={setResetModalOpen}
+        resetExcludeStocks={resetExcludeStocks}
+        setResetExcludeStocks={setResetExcludeStocks}
         resetConfirmationText={resetConfirmationText}
         setResetConfirmationText={setResetConfirmationText}
         resetError={resetError}

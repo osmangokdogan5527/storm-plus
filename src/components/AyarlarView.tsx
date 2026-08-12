@@ -48,8 +48,8 @@ export interface AyarlarViewProps {
   setDesignStyle: (style: string) => void;
   activeLogoTheme: string;
   setActiveLogoTheme: (theme: string) => void;
-  appFontSize: 'xsmall' | 'small' | 'medium' | 'large';
-  setAppFontSize: (size: 'xsmall' | 'small' | 'medium' | 'large') => void;
+  appFontSize: number;
+  setAppFontSize: (size: number) => void;
   sidebarBg: string;
   setSidebarBg: (bg: string) => void;
   sidebarPattern: string;
@@ -95,6 +95,7 @@ export interface AyarlarViewProps {
   handleOpenBackupFolder: () => void;
   backupMessage: { text: string; type: 'success' | 'error' } | null;
   setResetModalOpen: (open: boolean) => void;
+  setResetExcludeStocks?: (exclude: boolean) => void;
   geminiApiKey: string;
   setGeminiApiKey: (key: string) => void;
   isAiEnabled: boolean;
@@ -177,6 +178,7 @@ export default function AyarlarView({
   handleOpenBackupFolder,
   backupMessage,
   setResetModalOpen,
+  setResetExcludeStocks,
   geminiApiKey,
   setGeminiApiKey,
   isAiEnabled,
@@ -527,6 +529,7 @@ export default function AyarlarView({
             handleOpenBackupFolder={handleOpenBackupFolder}
             backupMessage={backupMessage}
             setResetModalOpen={setResetModalOpen}
+            setResetExcludeStocks={setResetExcludeStocks}
             onOpenBackupWizard={onOpenBackupWizard}
           />
         )}
