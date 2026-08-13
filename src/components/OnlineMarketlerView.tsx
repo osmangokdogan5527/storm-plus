@@ -24,17 +24,9 @@ import {
 } from 'lucide-react';
 import { Stock, Cari, BankAccount, Transaction } from '../types';
 import { PosPlatformConfig, DEFAULT_POS_PLATFORMS } from '../types/pos';
-import { getActiveWorkspace, saveOnlineOrder, deleteOnlineOrder, saveOnlinePayout, deleteOnlinePayout, savePosPlatform } from '../firebase';
+import { getActiveWorkspace, removeTransaction,  savePosPlatform } from '../firebase';
 
-const getOnlineOrdersKey = () => {
-  const ws = getActiveWorkspace();
-  return `storm_online_market_orders_${ws}`;
-};
 
-const getOnlinePayoutsKey = () => {
-  const ws = getActiveWorkspace();
-  return `storm_online_market_payouts_${ws}`;
-};
 import {
   OnlineMarketOrder,
   OnlineMarketPayout,
@@ -109,120 +101,86 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
   // Removed localStorage useEffect
 
   // ONLİNE SİPARİŞLER STATE
-  const orders = appData?.onlineOrders || [];
-  const safeOrders = Array.isArray(orders) ? orders : [];
-
-  // HAKEDİŞ TAHSİLATLARI STATE
-  const payouts = appData?.onlinePayouts || [];
-  const safePayouts = Array.isArray(payouts) ? payouts : [];
-
-  const [localOrders, setLocalOrders] = useState<OnlineMarketOrder[]>([]);
-  const [localPayouts, setLocalPayouts] = useState<OnlineMarketPayout[]>([]);
-
-  // LocalStorage'daki ve Hızlı Satış'tan gelen siparişleri yükleme ve Firestore'a senkronize etme
-  useEffect(() => {
-    const loadAndSyncLocalData = async () => {
-      try {
-        const ws = getActiveWorkspace();
-        const orderKey = `storm_online_market_orders_${ws}`;
-        const rawOrders = localStorage.getItem(orderKey) || (ws === 'storm_muhasebe' ? localStorage.getItem('storm_online_market_orders') : null);
-        if (rawOrders) {
-          try {
-            const parsedOrders: OnlineMarketOrder[] = JSON.parse(rawOrders);
-            if (Array.isArray(parsedOrders) && parsedOrders.length > 0) {
-              setLocalOrders(parsedOrders);
-              // Firestore'da eksik olan yerel siparişleri kaydet
-              for (const order of parsedOrders) {
-                if (order && (order.id || order.orderNo)) {
-                  const existsInFirebase = safeOrders.some(
-                    (o) => o.id === order.id || (o.orderNo && o.orderNo === order.orderNo)
-                  );
-                  if (!existsInFirebase) {
-                    await saveOnlineOrder(order, order.id);
-                  }
-                }
-              }
-            } else {
-              setLocalOrders([]);
-            }
-          } catch (e) {
-            setLocalOrders([]);
-          }
-        } else {
-          setLocalOrders([]);
-        }
-
-        const payoutKey = `storm_online_market_payouts_${ws}`;
-        const rawPayouts = localStorage.getItem(payoutKey) || (ws === 'storm_muhasebe' ? localStorage.getItem('storm_online_market_payouts') : null);
-        if (rawPayouts) {
-          try {
-            const parsedPayouts: OnlineMarketPayout[] = JSON.parse(rawPayouts);
-            if (Array.isArray(parsedPayouts) && parsedPayouts.length > 0) {
-              setLocalPayouts(parsedPayouts);
-              for (const payout of parsedPayouts) {
-                if (payout && (payout.id || payout.payoutNo)) {
-                  const existsInFirebase = safePayouts.some(
-                    (p) => p.id === payout.id || (p.payoutNo && p.payoutNo === payout.payoutNo)
-                  );
-                  if (!existsInFirebase) {
-                    await saveOnlinePayout(payout, payout.id);
-                  }
-                }
-              }
-            } else {
-              setLocalPayouts([]);
-            }
-          } catch (e) {
-            setLocalPayouts([]);
-          }
-        } else {
-          setLocalPayouts([]);
-        }
-      } catch (e) {
-        console.error('Error in loadAndSyncLocalData:', e);
-      }
-    };
-
-    loadAndSyncLocalData();
-
-    window.addEventListener('storm_online_orders_updated', loadAndSyncLocalData);
-    window.addEventListener('storage', loadAndSyncLocalData);
-    return () => {
-      window.removeEventListener('storm_online_orders_updated', loadAndSyncLocalData);
-      window.removeEventListener('storage', loadAndSyncLocalData);
-    };
-  }, [safeOrders.length, safePayouts.length]);
-
-  // Firestore ve Local Data Birleştirme
+  // Artık sadece islemler (ana muhasebe) referans alınır.
   const safeOrdersCombined = React.useMemo(() => {
-    const map = new Map<string, OnlineMarketOrder>();
-    safeOrders.forEach((o) => {
-      if (o && (o.id || o.orderNo)) map.set(o.id || o.orderNo, o);
-    });
-    localOrders.forEach((o) => {
-      if (o && (o.id || o.orderNo) && !map.has(o.id || o.orderNo)) {
-        map.set(o.id || o.orderNo, o);
+    const orders: OnlineMarketOrder[] = [];
+    safeIslemler.forEach(islem => {
+      if (islem.type === 'sale') {
+        let isOnlineOrder = false;
+        let pName = '';
+        let pId = '';
+        let receiptNo = islem.invoiceNo || islem.id;
+
+        if (islem.cariId && islem.cariId.startsWith('plat_cari_')) {
+           isOnlineOrder = true;
+           pName = islem.cariName || 'Bilinmeyen Platform';
+           pId = pName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        } else if (islem.description?.includes('POS Hızlı Satış Fişi No:') && islem.description?.includes('(')) {
+           const match = islem.description.match(/POS Hızlı Satış Fişi No: (POS-\d+-\d+) \((.+?)\)/);
+           if (match) {
+             isOnlineOrder = true;
+             receiptNo = match[1];
+             pName = match[2];
+             pId = pName.toLowerCase().replace(/[^a-z0-9]/g, '');
+           }
+        } else if (islem.description?.includes('Online Sipariş')) {
+           isOnlineOrder = true;
+           pName = islem.cariName || 'Bilinmeyen Platform';
+           pId = pName.toLowerCase().replace(/[^a-z0-9]/g, '');
+        }
+
+        if (isOnlineOrder) {
+           const platformConf = safePlatforms.find(p => p.id === pId || p.key === pId || p.name.toLowerCase() === pName.toLowerCase()) || safePlatforms[0];
+           const commRate = platformConf ? platformConf.commissionRate : 0;
+           
+           // POS'tan girilen siparişlerin 'amount'u NET tutardır.
+           const netAmount = islem.amount;
+           const grossAmount = Number((netAmount / (1 - (commRate / 100))).toFixed(2));
+           const commAmount = Number((grossAmount - netAmount).toFixed(2));
+
+           orders.push({
+              id: islem.id,
+              orderNo: receiptNo,
+              platformId: pId,
+              platformName: pName,
+              date: (islem.date || islem.createdAt || '').split('T')[0],
+              time: (islem.date && islem.date.includes('T')) ? islem.date.split('T')[1].substring(0,5) : '12:00',
+              customerName: islem.cariName || `${pName} Müşterisi`,
+              grossAmount: grossAmount,
+              commissionRate: commRate,
+              commissionAmount: commAmount,
+              netAmount: netAmount,
+              items: [],
+              status: 'completed',
+              note: islem.description,
+              createdAt: islem.createdAt || islem.date
+           });
+        }
       }
     });
-    return Array.from(map.values()).sort(
-      (a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime()
-    );
-  }, [safeOrders, localOrders]);
+    return orders.sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime());
+  }, [safeIslemler, safePlatforms]);
 
   const safePayoutsCombined = React.useMemo(() => {
-    const map = new Map<string, OnlineMarketPayout>();
-    safePayouts.forEach((p) => {
-      if (p && (p.id || p.payoutNo)) map.set(p.id || p.payoutNo, p);
-    });
-    localPayouts.forEach((p) => {
-      if (p && (p.id || p.payoutNo) && !map.has(p.id || p.payoutNo)) {
-        map.set(p.id || p.payoutNo, p);
+    const payouts: OnlineMarketPayout[] = [];
+    safeIslemler.forEach(islem => {
+      if (islem.type === 'collection' && islem.cariId && islem.cariId.startsWith('plat_cari_')) {
+         payouts.push({
+            id: islem.id,
+            payoutNo: islem.invoiceNo || islem.id,
+            platformId: islem.cariName?.toLowerCase().replace(/[^a-z0-9]/g, '') || '',
+            platformName: islem.cariName || 'Platform',
+            date: (islem.date || islem.createdAt || '').split('T')[0],
+            amount: islem.amount,
+            destinationAccountType: islem.account === 'bank' ? 'bank' : 'cash',
+            destinationAccountName: islem.account === 'bank' ? 'Banka Hesabı' : 'Kasa',
+            note: islem.description,
+            createdAt: islem.createdAt || islem.date
+         });
       }
     });
-    return Array.from(map.values()).sort(
-      (a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime()
-    );
-  }, [safePayouts, localPayouts]);
+    return payouts.sort((a, b) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime());
+  }, [safeIslemler]);
 
   // Platform Eşleştirme Yardımcı Fonksiyonu
   const isMatchPlatform = (item: any, plat: PosPlatformConfig) => {
@@ -248,12 +206,12 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
   const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
   const [selectedPlatformForAction, setSelectedPlatformForAction] = useState<PosPlatformConfig | null>(null);
-  const [syncToMainAccounting, setSyncToMainAccounting] = useState<boolean>(false);
 
   // FİLTRELER
   const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'payouts'>('overview');
   const [selectedPlatformFilter, setSelectedPlatformFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
   // YENİ SİPARİŞ FORM STATE'LERİ
   const [orderPlatformId, setOrderPlatformId] = useState<string>('yemeksepeti');
@@ -349,11 +307,11 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
       date: dateStr,
       customerName: custName,
       items: orderItems,
-      syncToMainAccounting,
+      syncToMainAccounting: true,
     });
 
     if (success) {
-      await saveOnlineOrder(newOrder);
+      
       showToast(`${activeOrderPlatform.name} siparişi başarıyla kaydedildi! Net Alacak: ₺${orderNetAmount.toFixed(2)}`, 'success');
       setIsNewOrderModalOpen(false);
       setOrderGrossAmount('');
@@ -412,68 +370,15 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
       bankAccountName: destName,
       date: dateStr,
       note: payoutNote.trim() || `${targetPlatform.name} hakediş tahsilatı`,
-      syncToMainAccounting,
+      syncToMainAccounting: true,
     });
 
     if (success) {
-      await saveOnlinePayout(newPayout);
+      
       showToast(`${targetPlatform.name} platformundan ₺${numAmount.toFixed(2)} tutarında hakediş tahsilatı alındı!`, 'success');
       setIsPayoutModalOpen(false);
       setPayoutAmount('');
       setPayoutNote('');
-    }
-  };
-
-  // SİPARİŞ İPTALİ / SİLME
-  const handleDeleteOrder = async (orderId: string) => {
-    if (window.confirm('Bu online sipariş kaydını silmek istediğinizden emin misiniz?')) {
-      try {
-        await deleteOnlineOrder(orderId);
-      } catch (err) {
-        console.error('Firestore delete order error:', err);
-      }
-      const ws = getActiveWorkspace();
-      const orderKey = `storm_online_market_orders_${ws}`;
-      const rawOrders = localStorage.getItem(orderKey) || (ws === 'storm_muhasebe' ? localStorage.getItem('storm_online_market_orders') : null);
-      if (rawOrders) {
-        try {
-          const parsed: OnlineMarketOrder[] = JSON.parse(rawOrders);
-          const updated = parsed.filter((o) => o.id !== orderId && o.orderNo !== orderId);
-          localStorage.setItem(orderKey, JSON.stringify(updated));
-          if (ws === 'storm_muhasebe') {
-            localStorage.setItem('storm_online_market_orders', JSON.stringify(updated));
-          }
-        } catch (e) {}
-      }
-      setLocalOrders((prev) => prev.filter((o) => o.id !== orderId && o.orderNo !== orderId));
-      window.dispatchEvent(new Event('storm_online_orders_updated'));
-      showToast('Sipariş kaydı silindi.', 'info');
-    }
-  };
-
-  const handleDeletePayout = async (payoutId: string) => {
-    if (window.confirm('Bu hakediş tahsilat kaydını silmek istediğinizden emin misiniz?')) {
-      try {
-        await deleteOnlinePayout(payoutId);
-      } catch (err) {
-        console.error('Firestore delete payout error:', err);
-      }
-      const ws = getActiveWorkspace();
-      const payoutKey = `storm_online_market_payouts_${ws}`;
-      const rawPayouts = localStorage.getItem(payoutKey) || (ws === 'storm_muhasebe' ? localStorage.getItem('storm_online_market_payouts') : null);
-      if (rawPayouts) {
-        try {
-          const parsed: OnlineMarketPayout[] = JSON.parse(rawPayouts);
-          const updated = parsed.filter((p) => p.id !== payoutId && p.payoutNo !== payoutId);
-          localStorage.setItem(payoutKey, JSON.stringify(updated));
-          if (ws === 'storm_muhasebe') {
-            localStorage.setItem('storm_online_market_payouts', JSON.stringify(updated));
-          }
-        } catch (e) {}
-      }
-      setLocalPayouts((prev) => prev.filter((p) => p.id !== payoutId && p.payoutNo !== payoutId));
-      window.dispatchEvent(new Event('storm_online_orders_updated'));
-      showToast('Hakediş tahsilat kaydı silindi.', 'info');
     }
   };
 
@@ -542,8 +447,8 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
               >
                 Otomatik Komisyon Düşüşü
               </span>
-              <span className="text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                ✓ Bağımsız Modül (Ana Muhasebeden İzole)
+              <span className="text-[11px] font-extrabold bg-blue-100 text-blue-800 border border-blue-200 px-2.5 py-0.5 rounded-full">
+                ✓ Tam Entegre (Ana Muhasebeye İşlenir)
               </span>
             </h1>
             <p className="text-xs font-semibold text-slate-500 mt-1">
@@ -873,6 +778,7 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
               <input
                 type="text"
                 placeholder="Sipariş / Fiş Ara..."
+                onFocus={() => setIsKeyboardOpen(true)}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-800 font-medium focus:outline-none focus:border-[var(--accent-500)]"
@@ -900,7 +806,7 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
           <div className="overflow-x-auto custom-scrollbar">
             {filteredOrders.length === 0 ? (
               <div className="py-12 text-center text-slate-500 text-xs font-medium">
-                {safeOrders.length === 0
+                {safeOrdersCombined.length === 0
                   ? 'Henüz kaydedilmiş online sipariş bulunmuyor. "+ Yeni Online Sipariş Gir" butonunu kullanarak siparişlerinizi ekleyebilirsiniz.'
                   : 'Arama kriterlerinize uygun online sipariş bulunamadı.'}
               </div>
@@ -915,7 +821,6 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
                     <th className="py-3 px-3 text-right">Brüt Tutar</th>
                     <th className="py-3 px-3 text-center">Komisyon</th>
                     <th className="py-3 px-3 text-right">Net Alacak</th>
-                    <th className="py-3 px-3 text-center">İşlem</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200/80">
@@ -945,15 +850,6 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
                       <td className="py-3 px-3 text-right font-black text-emerald-700 whitespace-nowrap">
                         ₺{ord.netAmount.toFixed(2)}
                       </td>
-                      <td className="py-3 px-3 text-center whitespace-nowrap">
-                        <button
-                          onClick={() => handleDeleteOrder(ord.id)}
-                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-all cursor-pointer"
-                          title="Siparişi Sil"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -979,7 +875,6 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
                     <th className="py-3 px-3">Aktarılan Hesap</th>
                     <th className="py-3 px-3 text-right">Tahsil Edilen Tutar</th>
                     <th className="py-3 px-3">Açıklama</th>
-                    <th className="py-3 px-3 text-center">İşlem</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200/80">
@@ -996,15 +891,6 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
                         ₺{pay.amount.toFixed(2)}
                       </td>
                       <td className="py-3 px-3 text-slate-600 font-medium max-w-xs truncate">{pay.note || '-'}</td>
-                      <td className="py-3 px-3 text-center whitespace-nowrap">
-                        <button
-                          onClick={() => handleDeletePayout(pay.id)}
-                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-all cursor-pointer"
-                          title="Tahsilat Kaydını Sil"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -1146,22 +1032,6 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
                   onChange={(e) => setOrderNote(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-[var(--accent-500)]"
                 />
-              </div>
-
-              {/* İsteğe Bağlı Ana Muhasebe Senkronizasyonu */}
-              <div className="pt-1 p-2.5 bg-slate-950/80 rounded-xl border border-slate-800/80">
-                <label className="flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={syncToMainAccounting}
-                    onChange={(e) => setSyncToMainAccounting(e.target.checked)}
-                    className="w-4 h-4 rounded bg-slate-900 border-slate-700 cursor-pointer accent-[var(--accent-500)]"
-                  />
-                  <div>
-                    <span className="font-medium text-slate-200 block">Ana Muhasebeye (İşlemler & Faturalar) da Ekle</span>
-                    <span className="text-[10px] text-slate-400">İşaretlenmezse sipariş sadece Online Marketler panelinde bağımsız olarak kalır.</span>
-                  </div>
-                </label>
               </div>
 
               {/* Modal Buttons */}
@@ -1318,22 +1188,6 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
                   onChange={(e) => setPayoutNote(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-emerald-500/50"
                 />
-              </div>
-
-              {/* İsteğe Bağlı Ana Muhasebe Senkronizasyonu */}
-              <div className="pt-1 p-2.5 bg-slate-950/80 rounded-xl border border-slate-800/80">
-                <label className="flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={syncToMainAccounting}
-                    onChange={(e) => setSyncToMainAccounting(e.target.checked)}
-                    className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-emerald-500 cursor-pointer"
-                  />
-                  <div>
-                    <span className="font-medium text-slate-200 block">Ana Muhasebeye (Kasa / Banka Hareketleri) de İşle</span>
-                    <span className="text-[10px] text-slate-400">İşaretlenmezse hakediş tahsilatı sadece Online Marketler panelinde kalır.</span>
-                  </div>
-                </label>
               </div>
 
               {/* Modal Buttons */}

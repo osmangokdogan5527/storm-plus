@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from "react";
+import { VirtualKeyboard } from "../VirtualKeyboard";
 import { Stock } from '../../types';
 import { Search, Package, Check, Tag, Filter, Zap, Barcode, Plus, FolderPlus, Layers, LayoutGrid, ListFilter, X, Edit2, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
 import { reportErrorToTelegram } from '../../utils/telegramLogger';
@@ -23,6 +24,7 @@ export const PosProductCatalog: React.FC<PosProductCatalogProps> = ({
 }) => {
   const safeStocks = Array.isArray(stocks) ? stocks : [];
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'grouped'>('grid'); // 'grid' or 'grouped'
   const [isDepartmentModalOpen, setIsDepartmentModalOpen] = useState<boolean>(false);
   const [newDepartmentName, setNewDepartmentName] = useState<string>('');
@@ -303,12 +305,15 @@ export const PosProductCatalog: React.FC<PosProductCatalogProps> = ({
             </div>
             <input
               ref={searchInputRef}
+              onFocus={() => setIsKeyboardOpen(true)}
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Barkod Okutun veya Ürün Ara (Ad, Kod, Barkod)... [F1]"
               className="w-full pl-13 pr-12 py-3.5 sm:py-4 bg-slate-950 border-2 border-teal-500/80 rounded-2xl text-white placeholder-slate-400 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-teal-400 font-mono font-black shadow-inner transition-all"
             />
+
+            
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
@@ -462,7 +467,7 @@ export const PosProductCatalog: React.FC<PosProductCatalogProps> = ({
                 </div>
 
                 {/* BÖLÜM GRİDİ */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7 gap-2 sm:gap-2.5">
                   {catStocks.map((stock) => (
                     <ProductCard
                       key={stock.id}
@@ -478,7 +483,7 @@ export const PosProductCatalog: React.FC<PosProductCatalogProps> = ({
           </div>
         ) : (
           /* STANDART IZGARA GÖRÜNÜMÜ */
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7 gap-2 sm:gap-2.5">
             {filteredStocks.map((stock) => (
               <ProductCard
                 key={stock.id}
@@ -687,7 +692,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <div
       onClick={() => onAddToCart(stock)}
-      className={`group relative flex flex-col justify-between p-3.5 sm:p-4 rounded-2xl border-2 text-left transition-all duration-150 cursor-pointer touch-manipulation select-none active:scale-[0.96] shadow-xl ${
+      className={`group relative flex flex-col justify-between p-2 sm:p-2.5 rounded-xl border-2 text-left transition-all duration-150 cursor-pointer touch-manipulation select-none active:scale-[0.96] shadow-md ${
         isOutOfStock
           ? 'bg-slate-900 border-red-500/60 hover:border-red-400'
           : 'bg-slate-900 border-slate-700 hover:border-teal-400 hover:bg-slate-850'
@@ -696,7 +701,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     >
       <div className="w-full">
         {/* Görsel veya İkon */}
-        <div className="w-full h-28 sm:h-32 mb-3 rounded-xl bg-slate-950 border border-slate-700 overflow-hidden flex items-center justify-center relative">
+        <div className="w-full h-20 sm:h-24 mb-2 rounded-lg bg-slate-950 border border-slate-700 overflow-hidden flex items-center justify-center relative">
           {stock.imageUrl ? (
             <img
               src={stock.imageUrl}
@@ -705,14 +710,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
             />
           ) : (
             <Package
-              size={40}
+              size={32}
               className="text-slate-400 group-hover:text-teal-300 transition-colors"
             />
           )}
 
           {/* STOK ROZETİ */}
           <div
-            className={`absolute top-2 right-2 px-2.5 py-1 rounded-lg text-xs font-black border shadow-md ${
+            className={`absolute top-1.5 right-1.5 px-2 py-0.5 rounded-md text-[10px] font-black border shadow-sm ${
               isOutOfStock
                 ? 'bg-red-600 text-white border-red-400'
                 : isLowStock
@@ -724,13 +729,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </div>
 
           {/* BÖLÜM ROZETİ */}
-          <div className="absolute bottom-2 left-2 max-w-[85%]">
+          <div className="absolute bottom-1.5 left-1.5 max-w-[85%]">
             <span
               onClick={(e) => {
                 e.stopPropagation();
                 setIsCategorySelectorOpen(!isCategorySelectorOpen);
               }}
-              className="px-2.5 py-1 rounded-lg bg-slate-900/90 hover:bg-slate-800 text-teal-300 border border-teal-500/50 text-[10px] sm:text-xs font-black truncate block cursor-pointer touch-manipulation"
+              className="px-2 py-0.5 rounded-md bg-slate-900/90 hover:bg-slate-800 text-teal-300 border border-teal-500/50 text-[9px] sm:text-[10px] font-black truncate block cursor-pointer touch-manipulation"
               title="Bölümü Değiştirmek İçin Tıklayın"
             >
               🏷️ {stock.category}
@@ -780,26 +785,26 @@ const ProductCard: React.FC<ProductCardProps> = ({
         )}
 
         {/* ÜRÜN ADI VE KODU - ULTRA YÜKSEK KONTRAST BEYAZ YAZI */}
-        <h4 className="text-xs sm:text-sm font-black text-white line-clamp-2 leading-tight group-hover:text-teal-300 transition-colors min-h-[2.25rem]">
+        <h4 className="text-[11px] sm:text-xs font-black text-white line-clamp-2 leading-tight group-hover:text-teal-300 transition-colors min-h-[1.75rem]">
           {stock.name}
         </h4>
-        <span className="text-[11px] font-mono font-bold text-slate-300 block mt-1">
+        <span className="text-[9px] sm:text-[10px] font-mono font-bold text-slate-400 block mt-0.5">
           {stock.code}
         </span>
       </div>
 
       {/* FİYAT & EKLEME BUTONU */}
-      <div className="mt-3 pt-2.5 border-t border-slate-700/80 flex items-center justify-between w-full">
+      <div className="mt-2 pt-2 border-t border-slate-700/80 flex items-center justify-between w-full">
         <div>
-          <span className="text-sm sm:text-base font-black text-teal-300 tracking-tight block font-mono">
+          <span className="text-xs sm:text-sm font-black text-teal-300 tracking-tight block font-mono">
             ₺{stock.salesPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
           </span>
-          <span className="text-[10px] text-slate-300 block font-mono font-bold">
-            %{stock.taxRate ?? 0} KDV Dahil
+          <span className="text-[9px] text-slate-400 block font-mono font-bold">
+            %{stock.taxRate ?? 0} KDV
           </span>
         </div>
 
-        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-teal-400 text-slate-950 flex items-center justify-center font-black text-lg sm:text-xl shadow-lg shadow-teal-500/30 group-hover:bg-teal-300 group-hover:scale-105 transition-all shrink-0">
+        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-teal-400 text-slate-950 flex items-center justify-center font-black text-lg shadow-md shadow-teal-500/30 group-hover:bg-teal-300 group-hover:scale-105 transition-all shrink-0">
           +
         </div>
       </div>

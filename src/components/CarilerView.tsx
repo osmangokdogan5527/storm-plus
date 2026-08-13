@@ -64,6 +64,7 @@ function CarilerView({
   const safeBankAccounts = Array.isArray(bankAccounts) ? bankAccounts : [];
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [filterType, setFilterType] = useState<
     "all" | "customer" | "supplier" | "receivable" | "payable" | "passive"
   >("all");
@@ -511,6 +512,7 @@ function CarilerView({
           />
           <input
             id="search-cari"
+            onFocus={() => setIsKeyboardOpen(true)}
             type="text"
             placeholder="Cari adı, kodu, telefon veya e-posta ile ara..."
             value={searchTerm}

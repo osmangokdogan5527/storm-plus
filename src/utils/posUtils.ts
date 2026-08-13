@@ -58,7 +58,7 @@ export function generateReceiptNo(): string {
 export function calculateCartSummary(
   items: PosCartItem[],
   generalDiscountVal: number = 0,
-  discountMode: 'percent' | 'amount' | 'target' = 'percent',
+  discountMode: 'percent' | 'amount' | 'target' | 'markup_percent' | 'markup_amount' = 'percent',
   globalTaxRate: number = 0
 ) {
   try {
@@ -90,6 +90,11 @@ export function calculateCartSummary(
       } else {
         generalDiscountAmount = 0;
       }
+    } else if (discountMode === 'markup_percent') {
+      const rate = Math.max(0, val);
+      generalDiscountAmount = -((subtotalAfterLineDiscounts * rate) / 100);
+    } else if (discountMode === 'markup_amount') {
+      generalDiscountAmount = -(Math.max(0, val));
     }
 
     const grandTotal = Math.max(0, subtotalAfterLineDiscounts - generalDiscountAmount);

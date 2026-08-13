@@ -227,6 +227,9 @@ export default function DashboardView({
       const cur = islem.currency || "TRY";
       if (cur !== dashboardCurrency) return;
 
+      // HOTFIX: Eski online sipariş satışlarının (POS olarak kaydedilenlerin) nakit/pos bakiyelerini şişirmesini engelle
+      if (islem.type === 'sale' && islem.cariId && islem.cariId.startsWith('plat_cari_')) return;
+
       const islemAmount = islem.amount || 0;
       const islemDate = new Date(islem.date).getTime();
       const isCurrentMonth =
@@ -432,6 +435,8 @@ export default function DashboardView({
 
     // 1. Add normal transactions (islemler)
     islemler.forEach((islem) => {
+      // HOTFIX: Eski online sipariş satışlarının (POS olarak kaydedilenlerin) finansal hareketlerde görünmesini engelle
+      if (islem.type === 'sale' && islem.cariId && islem.cariId.startsWith('plat_cari_')) return;
       const isIncoming = ["sale", "collection", "purchase_return"].includes(islem.type);
       list.push({
         id: `islem-${islem.id}`,

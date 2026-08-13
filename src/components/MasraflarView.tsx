@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from "react";
+import { VirtualKeyboard } from "./VirtualKeyboard";
 import { Expense, RecurringTransaction, BankAccount, Cari } from '../types';
 import { saveExpense, deleteExpense } from '../firebase';
 import { getPendingRecurringItems, getTodayISO } from '../utils/recurringUtils';
@@ -82,6 +83,7 @@ export default function MasraflarView({
 }: MasraflarViewProps) {
   const [activeSubTab, setActiveSubTab] = useState<'expenses' | 'recurring'>('expenses');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const selectedCurrency = "TRY";
   const [categoryPeriod, setCategoryPeriod] = useState<'all' | 'month' | 'year'>('all');
@@ -407,12 +409,14 @@ export default function MasraflarView({
               </span>
               <input
                 id="expense-search"
+                onFocus={() => setIsKeyboardOpen(true)}
                 type="text"
                 placeholder="Masraf adı veya açıklama ara..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-200 focus:border-rose-500 focus:ring-rose-500 rounded-xl pl-9 pr-4 py-2 text-xs font-medium text-slate-900"
               />
+              
             </div>
             
             <div className="flex flex-wrap gap-2">
@@ -799,6 +803,15 @@ export default function MasraflarView({
       )}
         </>
       )}
+
+      <VirtualKeyboard
+        isOpen={isKeyboardOpen}
+        onClose={() => setIsKeyboardOpen(false)}
+        initialValue={searchTerm}
+        onConfirm={setSearchTerm}
+        title="Masraf Arama"
+        placeholder="Arama metni girin..."
+      />
     </div>
   );
 }

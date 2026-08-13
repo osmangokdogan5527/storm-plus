@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { VirtualKeyboard } from '../VirtualKeyboard';
+
 import { Stock } from '../../types';
 import { saveStock } from '../../firebase';
 import { compressImage } from '../../utils/imageCompressor';
@@ -38,6 +40,14 @@ export function StockModal({
     category: '',
     brand: ''
   });
+  
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+  const [keyboardTarget, setKeyboardTarget] = useState<'name' | 'code' | 'barcode' | 'category' | 'brand'>('name');
+  
+  const handleKeyboardConfirm = (val: string) => {
+    setFormData(prev => ({ ...prev, [keyboardTarget]: val }));
+  };
+
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -225,8 +235,9 @@ export function StockModal({
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest mb-1.5 font-mono">Ürün / Hizmet Adı *</label>
-                  <input 
+                  <div className="relative"><input 
                     id="form-stock-name"
+                    onFocus={() => { setKeyboardTarget('name'); setIsKeyboardOpen(true); }}
                     type="text"
                     required
                     placeholder="Örn: Bilgisayar Masası, Yazılım Hizmeti..."
@@ -234,6 +245,7 @@ export function StockModal({
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 text-white rounded text-xs focus:outline-hidden focus:border-teal-500"
                   />
+</div>
                 </div>
 
                 <div className="col-span-2">
@@ -262,8 +274,7 @@ export function StockModal({
                           type="file" 
                           accept="image/*" 
                           className="hidden" 
-                          onChange={handleImageUpload}
-                        />
+                          onChange={handleImageUpload} autoComplete="off" inputMode="none" />
                       </label>
                       <p className="text-[10px] text-white/40 mt-1">Önerilen: 500x500px, PNG veya JPG.</p>
                     </div>
@@ -317,8 +328,9 @@ export function StockModal({
 
                 <div>
                   <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest mb-1.5 font-mono">Kategori</label>
-                  <input 
+                  <div className="relative"><input 
                     id="form-stock-category"
+                    onFocus={() => { setKeyboardTarget('category'); setIsKeyboardOpen(true); }}
                     type="text"
                     placeholder="Örn: Mobilya, Kırtasiye..."
                     value={formData.category}
@@ -326,6 +338,7 @@ export function StockModal({
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 text-white rounded text-xs focus:outline-hidden focus:border-teal-500"
                     list="category-suggestions"
                   />
+</div>
                   <datalist id="category-suggestions">
                     {categories.map(cat => <option key={cat} value={cat} />)}
                   </datalist>
@@ -333,8 +346,9 @@ export function StockModal({
 
                 <div>
                   <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest mb-1.5 font-mono">Marka / Üretici</label>
-                  <input 
+                  <div className="relative"><input 
                     id="form-stock-brand"
+                    onFocus={() => { setKeyboardTarget('brand'); setIsKeyboardOpen(true); }}
                     type="text"
                     placeholder="Örn: Storm, Samsung..."
                     value={formData.brand}
@@ -342,6 +356,7 @@ export function StockModal({
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 text-white rounded text-xs focus:outline-hidden focus:border-teal-500"
                     list="brand-suggestions"
                   />
+</div>
                   <datalist id="brand-suggestions">
                     {brands.map(brnd => <option key={brnd} value={brnd} />)}
                   </datalist>

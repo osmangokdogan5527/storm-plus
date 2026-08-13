@@ -1,0 +1,149 @@
+   122	  // Kayıp siparişleri finansal işlemlerden (islemler) kurtarma
+   123	  useEffect(() => {
+   124	    const recoverMissingOrders = async () => {
+   125	      const missingOrders: OnlineMarketOrder[] = [];
+   126	      const now = new Date();
+   127	      
+   128	      safeIslemler.forEach(islem => {
+   129	        if (islem.type === 'sale' && islem.description?.includes('POS Hızlı Satış Fişi No:') && islem.description?.includes('(')) {
+   130	          const match = islem.description.match(/POS Hızlı Satış Fişi No: (POS-\d+-\d+) \((.+?)\)/);
+   131	          if (match) {
+   132	            const receiptNo = match[1];
+   133	            const platformName = match[2];
+   134	            
+   135	            // Bu sipariş zaten var mı?
+   136	            const exists = [...safeOrders, ...localOrders].some(o => o.orderNo === receiptNo);
+   137	            if (!exists && !missingOrders.some(o => o.orderNo === receiptNo)) {
+   138	              const lowerName = platformName.toLowerCase();
+   139	              let platId = 'yemeksepeti';
+   140	              if (lowerName.includes('yemeksepeti')) platId = 'yemeksepeti';
+   141	              else if (lowerName.includes('getir')) platId = 'getir';
+   142	              else if (lowerName.includes('migros')) platId = 'migros';
+   143	              else if (lowerName.includes('uber')) platId = 'uber';
+   144	              else platId = lowerName.replace(/[^a-z0-9]/g, '');
+   145	
+   146	              const platformConf = safePlatforms.find(p => p.id === platId || p.key === platId || p.name.toLowerCase() === lowerName) || safePlatforms[0];
+   147	              const commRate = platformConf ? platformConf.commissionRate : 0;
+   148	              const commAmount = Number(((islem.amount * commRate) / 100).toFixed(2));
+   149	              const netAmount = Number((islem.amount - commAmount).toFixed(2));
+   150	
+   151	              missingOrders.push({
+   152	                id: `ord_recovered_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+   153	                orderNo: receiptNo,
+   154	                platformId: platId,
+   155	                platformName: platformName,
+   156	                date: islem.date.split('T')[0],
+   157	                time: '12:00',
+   158	                customerName: `${platformName} Müşterisi`,
+   159	                grossAmount: islem.amount || 0,
+   160	                commissionRate: commRate || 0,
+   161	                commissionAmount: commAmount || 0,
+   162	                netAmount: netAmount || 0,
+   163	                items: [], // Detaylı ürün bilgisi kurtarılamaz ama bakiye için yeterli
+   164	                note: `Kayıp Sipariş Kurtarıldı (Fiş No: ${receiptNo})`,
+   165	                status: 'completed',
+   166	                createdAt: islem.createdAt || now.toISOString(),
+   167	              });
+   168	            }
+   169	          }
+   170	        }
+   171	      });
+   172	
+   173	      if (missingOrders.length > 0) {
+   174	        console.log("Kayıp siparişler kurtarıldı:", missingOrders.length);
+   175	        const ws = getActiveWorkspace();
+   176	        const targetKey = `storm_online_market_orders_${ws}`;
+   177	        const existingOrdersStr = localStorage.getItem(targetKey);
+   178	        const existingOrders = existingOrdersStr ? JSON.parse(existingOrdersStr) : [];
+   179	        const updatedOrders = [...missingOrders, ...existingOrders];
+   180	        
+   181	        localStorage.setItem(targetKey, JSON.stringify(updatedOrders));
+   182	        setLocalOrders(updatedOrders);
+   183	        
+   184	        // Firestore'a da gönder
+   185	        for (const order of missingOrders) {
+   186	          try { await saveOnlineOrder(order); } catch(e) {}
+   187	        }
+   188	      }
+   189	    };
+   190	    
+   191	    if (safeIslemler.length > 0 && safePlatforms.length > 0) {
+   192	      recoverMissingOrders();
+   193	    }
+   194	  }, [safeIslemler.length, safeOrders.length, safePlatforms.length]);
+   195	
+   196	  // LocalStorage'daki ve Hızlı Satış'tan gelen siparişleri yükleme ve Firestore'a senkronize etme
+   197	  useEffect(() => {
+   198	    const loadAndSyncLocalData = async () => {
+   199	      try {
+   200	        const ws = getActiveWorkspace();
+   201	        const orderKey = `storm_online_market_orders_${ws}`;
+   202	        const rawOrders = localStorage.getItem(orderKey) || (ws === 'storm_muhasebe' ? localStorage.getItem('storm_online_market_orders') : null);
+   203	        if (rawOrders) {
+   204	          try {
+   205	            const parsedOrders: OnlineMarketOrder[] = JSON.parse(rawOrders);
+   206	            if (Array.isArray(parsedOrders) && parsedOrders.length > 0) {
+   207	              setLocalOrders(parsedOrders);
+   208	              // Firestore'da eksik olan yerel siparişleri kaydet
+   209	              for (const order of parsedOrders) {
+   210	                if (order && (order.id || order.orderNo)) {
+   211	                  const existsInFirebase = safeOrders.some(
+   212	                    (o) => o.id === order.id || (o.orderNo && o.orderNo === order.orderNo)
+   213	                  );
+   214	                  if (!existsInFirebase) {
+   215	                    await saveOnlineOrder(order, order.id);
+   216	                  }
+   217	                }
+   218	              }
+   219	            } else {
+   220	              setLocalOrders([]);
+   221	            }
+   222	          } catch (e) {
+   223	            setLocalOrders([]);
+   224	          }
+   225	        } else {
+   226	          setLocalOrders([]);
+   227	        }
+   228	
+   229	        const payoutKey = `storm_online_market_payouts_${ws}`;
+   230	        const rawPayouts = localStorage.getItem(payoutKey) || (ws === 'storm_muhasebe' ? localStorage.getItem('storm_online_market_payouts') : null);
+   231	        if (rawPayouts) {
+   232	          try {
+   233	            const parsedPayouts: OnlineMarketPayout[] = JSON.parse(rawPayouts);
+   234	            if (Array.isArray(parsedPayouts) && parsedPayouts.length > 0) {
+   235	              setLocalPayouts(parsedPayouts);
+   236	              for (const payout of parsedPayouts) {
+   237	                if (payout && (payout.id || payout.payoutNo)) {
+   238	                  const existsInFirebase = safePayouts.some(
+   239	                    (p) => p.id === payout.id || (p.payoutNo && p.payoutNo === payout.payoutNo)
+   240	                  );
+   241	                  if (!existsInFirebase) {
+   242	                    await saveOnlinePayout(payout, payout.id);
+   243	                  }
+   244	                }
+   245	              }
+   246	            } else {
+   247	              setLocalPayouts([]);
+   248	            }
+   249	          } catch (e) {
+   250	            setLocalPayouts([]);
+   251	          }
+   252	        } else {
+   253	          setLocalPayouts([]);
+   254	        }
+   255	      } catch (e) {
+   256	        console.error('Error in loadAndSyncLocalData:', e);
+   257	      }
+   258	    };
+   259	
+   260	    loadAndSyncLocalData();
+   261	
+   262	    window.addEventListener('storm_online_orders_updated', loadAndSyncLocalData);
+   263	    window.addEventListener('storage', loadAndSyncLocalData);
+   264	    return () => {
+   265	      window.removeEventListener('storm_online_orders_updated', loadAndSyncLocalData);
+   266	      window.removeEventListener('storage', loadAndSyncLocalData);
+   267	    };
+   268	  }, [safeOrders.length, safePayouts.length]);
+   269	
+   270	  // Firestore ve Local Data Birleştirme

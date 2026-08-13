@@ -78,6 +78,7 @@ function IslemlerView({
   onViewCariDetails
 }: IslemlerViewProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [filterType, setFilterType] = useState<'all' | 'sale' | 'purchase' | 'collection' | 'payment' | 'sale_return' | 'purchase_return'>('all');
   
   // PIN Verification for restricted employee actions
@@ -419,6 +420,7 @@ function IslemlerView({
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" size={16} />
           <input 
             id="search-transactions"
+            onFocus={() => setIsKeyboardOpen(true)}
             type="text"
             placeholder="Cari adı, fatura no veya açıklama ile ara..."
             value={searchTerm}

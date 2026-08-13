@@ -5,6 +5,7 @@ import { PosProductCatalog } from './PosProductCatalog';
 import { PosCartTable } from './PosCartTable';
 import { PosSplitPaymentModal } from './PosSplitPaymentModal';
 import { PosReceiptModal } from './PosReceiptModal';
+import { VirtualKeyboard } from '../VirtualKeyboard';
 import { PosNumpadModal } from './PosNumpadModal';
 import { PosParkedSalesModal } from './PosParkedSalesModal';
 import { PosPlatformSettingsModal } from './PosPlatformSettingsModal';
@@ -46,6 +47,7 @@ export const PosView: React.FC<PosViewProps> = ({
   const [cartItems, setCartItems] = useState<PosCartItem[]>([]);
   const [selectedCari, setSelectedCari] = useState<Cari | null>(null);
   const [cariSearchTerm, setCariSearchTerm] = useState<string>('');
+  const [isCariKeyboardOpen, setIsCariKeyboardOpen] = useState(false);
   const [isCariDropdownOpen, setIsCariDropdownOpen] = useState<boolean>(false);
 
   // ÜRÜN ARAMA & BARKOD
@@ -54,7 +56,7 @@ export const PosView: React.FC<PosViewProps> = ({
 
   // KDV VE İSKONTO STATE'LERİ (VARSAYILAN KDV: %0)
   const [globalTaxRate, setGlobalTaxRate] = useState<number>(0);
-  const [discountMode, setDiscountMode] = useState<'percent' | 'amount' | 'target'>('percent');
+  const [discountMode, setDiscountMode] = useState<'percent' | 'amount' | 'target' | 'markup_percent' | 'markup_amount'>('percent');
   const [discountVal, setDiscountVal] = useState<number | string>('');
   const [isDiscountNumpadOpen, setIsDiscountNumpadOpen] = useState(false);
 
@@ -982,9 +984,9 @@ export const PosView: React.FC<PosViewProps> = ({
                 <div className="flex flex-wrap items-center justify-between gap-1">
                   <span className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1" style={{ color: '#fcd34d' }}>
                     <Sparkles size={15} />
-                    İskonto:
+                    İskonto / Artırım:
                   </span>
-                  <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-700">
+                  <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-700 flex-wrap">
                     <button
                       type="button"
                       onClick={() => { setDiscountMode('percent'); setDiscountVal(''); }}
@@ -1007,6 +1009,26 @@ export const PosView: React.FC<PosViewProps> = ({
                     </button>
                     <button
                       type="button"
+                      onClick={() => { setDiscountMode('markup_percent'); setDiscountVal(''); }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer active:scale-95 touch-manipulation ${
+                        discountMode === 'markup_percent' ? 'bg-rose-500 text-white shadow' : 'text-slate-400 hover:text-white'
+                      }`}
+                      style={discountMode === 'markup_percent' ? { backgroundColor: '#f43f5e', color: '#ffffff', fontWeight: 900 } : {}}
+                    >
+                      📈 % Artırım
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setDiscountMode('markup_amount'); setDiscountVal(''); }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer active:scale-95 touch-manipulation ${
+                        discountMode === 'markup_amount' ? 'bg-rose-500 text-white shadow' : 'text-slate-400 hover:text-white'
+                      }`}
+                      style={discountMode === 'markup_amount' ? { backgroundColor: '#f43f5e', color: '#ffffff', fontWeight: 900 } : {}}
+                    >
+                      📈 ₺ Artırım
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => { setDiscountMode('target'); setDiscountVal(''); }}
                       className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer active:scale-95 touch-manipulation ${
                         discountMode === 'target' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
@@ -1018,11 +1040,11 @@ export const PosView: React.FC<PosViewProps> = ({
                   </div>
                 </div>
 
-                {/* İSKONTO GİRİŞ INPUT'U */}
+                {/* İSKONTO/ARTIRIM GİRİŞ INPUT'U */}
                 <PosNumpadModal
                   isOpen={isDiscountNumpadOpen}
                   onClose={() => setIsDiscountNumpadOpen(false)}
-                  title={discountMode === 'percent' ? 'İskonto % Oranı' : discountMode === 'amount' ? 'İskonto Tutarı (₺)' : 'Alınacak Net Tutar (₺)'}
+                  title={discountMode === 'percent' ? 'İskonto % Oranı' : discountMode === 'amount' ? 'İskonto Tutarı (₺)' : discountMode === 'markup_percent' ? 'Artırım % Oranı' : discountMode === 'markup_amount' ? 'Artırım Tutarı (₺)' : 'Alınacak Net Tutar (₺)'}
                   initialValue={discountVal}
                   onConfirm={(val) => setDiscountVal(val)}
                   allowDecimal={true}
@@ -1039,6 +1061,10 @@ export const PosView: React.FC<PosViewProps> = ({
                           ? 'İskonto % Oranı Giriniz...'
                           : discountMode === 'amount'
                           ? 'İskonto Tutarı ₺ Giriniz...'
+                          : discountMode === 'markup_percent'
+                          ? 'Artırım % Oranı Giriniz...'
+                          : discountMode === 'markup_amount'
+                          ? 'Artırım Tutarı ₺ Giriniz...'
                           : 'Alınacak Net Tutar ₺ Giriniz...'}
                       </span>
                     ) : (
@@ -1046,7 +1072,7 @@ export const PosView: React.FC<PosViewProps> = ({
                     )}
                   </button>
                   <span className="absolute right-3 text-xs font-black font-mono text-amber-400" style={{ color: '#fbbf24' }}>
-                    {discountMode === 'percent' ? '%' : '₺'}
+                    {discountMode === 'percent' || discountMode === 'markup_percent' ? '%' : '₺'}
                   </span>
                 </div>
               </div>
@@ -1065,6 +1091,12 @@ export const PosView: React.FC<PosViewProps> = ({
                   <div className="flex justify-between text-amber-300 font-bold" style={{ color: '#fcd34d' }}>
                     <span>Toplam İskonto:</span>
                     <span>-₺{summary.totalDiscount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  </div>
+                )}
+                {summary.totalDiscount < 0 && (
+                  <div className="flex justify-between text-rose-400 font-bold" style={{ color: '#fb7185' }}>
+                    <span>Toplam Artırım:</span>
+                    <span>+₺{Math.abs(summary.totalDiscount).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                 )}
 
@@ -1227,7 +1259,10 @@ export const PosView: React.FC<PosViewProps> = ({
                 <input
                   type="text"
                   value={cariSearchTerm}
-                  onFocus={() => setIsCariDropdownOpen(true)}
+                  onFocus={() => {
+                    setIsCariDropdownOpen(true);
+                    setIsCariKeyboardOpen(true);
+                  }}
                   onChange={(e) => {
                     setCariSearchTerm(e.target.value);
                     setIsCariDropdownOpen(true);
@@ -1236,6 +1271,7 @@ export const PosView: React.FC<PosViewProps> = ({
                   className="w-full px-3 py-2.5 bg-slate-950 border-2 border-slate-700 rounded-xl text-xs text-white placeholder-slate-400 font-bold focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400 transition-all shadow-inner"
                   style={{ backgroundColor: '#020617', color: '#ffffff' }}
                 />
+                
 
                 {isCariDropdownOpen && (
                   <div className="absolute left-0 right-0 top-full mt-1 z-30 bg-slate-900 border-2 border-slate-600 rounded-xl shadow-2xl max-h-48 overflow-y-auto custom-scrollbar">

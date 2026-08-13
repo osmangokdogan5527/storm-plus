@@ -365,7 +365,7 @@ export const GunlukSatisRaporuView: React.FC<GunlukSatisRaporuViewProps> = ({
             channelsMap.cash.orderCount += 1;
             channelsMap.cash.grossAmount += gross;
             channelsMap.cash.netAmount += gross;
-          } else if (islem.account === 'pos') {
+          } else if (islem.account === 'pos' && !(islem.cariId && islem.cariId.startsWith('plat_cari_'))) {
             channelsMap.pos.orderCount += 1;
             channelsMap.pos.grossAmount += gross;
             channelsMap.pos.netAmount += gross;
@@ -475,15 +475,15 @@ export const GunlukSatisRaporuView: React.FC<GunlukSatisRaporuViewProps> = ({
         if (!platformReceiptNos.has(invNo)) {
           let chName = 'Nakit Satış';
           let chKey = 'cash';
-          if (islem.account === 'pos') {
+          if (islem.cariId?.startsWith('plat_cari_')) {
+            chName = islem.cariName || 'Online Satış';
+            chKey = 'platform';
+          } else if (islem.account === 'pos') {
             chName = 'POS / Kredi Kartı';
             chKey = 'pos';
           } else if (islem.account === 'bank') {
             chName = 'Banka Havale';
             chKey = 'bank';
-          } else if (islem.cariId?.startsWith('plat_cari_')) {
-            chName = islem.cariName || 'Online Satış';
-            chKey = 'platform';
           } else if (!islem.account) {
             chName = 'Veresiye / Açık Hesap';
             chKey = 'veresiye';

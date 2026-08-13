@@ -928,12 +928,12 @@ ${friendlyError}`);
         cariName: finalCariName,
         date: saleData.date,
         amount: netAmountForTransaction,
-        account: saleData.paymentSplit.cashAmount > 0
+        account: isPlatformSale ? '' : (saleData.paymentSplit.cashAmount > 0
           ? 'cash'
           : saleData.paymentSplit.posAmount > 0
           ? 'pos'
-          : '',
-        bankAccountId: saleData.paymentSplit.posAccountId,
+          : ''),
+        bankAccountId: isPlatformSale ? undefined : saleData.paymentSplit.posAccountId,
         description: `POS Hızlı Satış Fişi No: ${saleData.receiptNo}${isPlatformSale ? ` (${saleData.paymentSplit.platformName})` : ''}`,
         items,
         createdAt: new Date().toISOString(),
@@ -956,7 +956,7 @@ ${friendlyError}`);
 
           const commRate = saleData.paymentSplit.platformCommissionRate || 0;
           const commAmount = saleData.paymentSplit.platformCommissionAmount || 0;
-          const netAmount = saleData.paymentSplit.platformNetAmount || (saleData.grandTotal - commAmount);
+          const netAmount = saleData.paymentSplit.platformNetAmount || (saleData.grandTotal - commAmount) || 0;
 
           const now = new Date();
           const dateStr = saleData.date || now.toISOString().split('T')[0];
@@ -970,28 +970,32 @@ ${friendlyError}`);
             date: dateStr,
             time: timeStr,
             customerName: `${pName} Müşterisi`,
-            grossAmount: saleData.grandTotal,
-            commissionRate: commRate,
-            commissionAmount: commAmount,
-            netAmount: netAmount,
+            grossAmount: saleData.grandTotal || 0,
+            commissionRate: commRate || 0,
+            commissionAmount: commAmount || 0,
+            netAmount: netAmount || 0,
             items: items.map((i) => ({
-              stockId: i.stockId,
-              stockName: i.stockName,
-              quantity: i.quantity,
-              unitPrice: i.price,
-              totalLine: i.total,
+              stockId: i.stockId || '',
+              stockName: i.stockName || '',
+              quantity: i.quantity || 0,
+              unitPrice: i.price || 0,
+              totalLine: i.total || 0,
             })),
             note: `Hızlı Satış Fişi No: ${saleData.receiptNo}`,
-            status: 'completed',
+            status: 'completed' as const,
+            createdAt: now.toISOString(),
           };
-
-          // Save online order directly to Firestore database
-          await saveOnlineOrder(newOnlineOrder);
 
           const ws = getActiveWorkspace();
           const targetKey = `storm_online_market_orders_${ws}`;
           const existingOrdersStr = localStorage.getItem(targetKey) || (ws === 'storm_muhasebe' ? localStorage.getItem('storm_online_market_orders') : null);
-          const existingOrders = existingOrdersStr ? JSON.parse(existingOrdersStr) : [];
+          let existingOrders = [];
+          try {
+            existingOrders = existingOrdersStr ? JSON.parse(existingOrdersStr) : [];
+            if (!Array.isArray(existingOrders)) existingOrders = [];
+          } catch (e) {
+            console.error('Failed to parse existing orders:', e);
+          }
           if (!existingOrders.some((o: any) => o.orderNo === saleData.receiptNo)) {
             const updatedOrders = [newOnlineOrder, ...existingOrders];
             localStorage.setItem(targetKey, JSON.stringify(updatedOrders));
@@ -999,6 +1003,13 @@ ${friendlyError}`);
               localStorage.setItem('storm_online_market_orders', JSON.stringify(updatedOrders));
             }
             window.dispatchEvent(new Event('storm_online_orders_updated'));
+          }
+
+          // Save online order directly to Firestore database (after local storage)
+          try {
+            await saveOnlineOrder(newOnlineOrder);
+          } catch (fbErr) {
+            console.error('Firebase saveOnlineOrder error:', fbErr);
           }
         } catch (err: any) {
           reportErrorToTelegram(err, 'App:handleCompletePosSale:onlineMarketSync');
@@ -1029,11 +1040,6 @@ ${friendlyError}`);
     syncToMainAccounting?: boolean;
   }) => {
     try {
-      if (!saleData.syncToMainAccounting) {
-        // Bağımsız modül: Ana muhasebe İşlemler & Faturalar veritabanına eklenmez
-        return true;
-      }
-
       const items = (saleData.items || []).map((item) => ({
         stockId: item.stockId || `plat_srv_${saleData.platformId}`,
         stockName: item.stockName || `${saleData.platformName} Sipariş Hizmeti`,
@@ -1093,11 +1099,6 @@ ${friendlyError}`);
     syncToMainAccounting?: boolean;
   }) => {
     try {
-      if (!payoutData.syncToMainAccounting) {
-        // Bağımsız modül: Ana muhasebe İşlemler & Faturalar veritabanına eklenmez
-        return true;
-      }
-
       const platKey = (payoutData.platformId || payoutData.platformName).toLowerCase().replace(/[^a-z0-9]/g, '');
       const platformCariId = `plat_cari_${platKey}`;
       const platformCariName = payoutData.platformName;

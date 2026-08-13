@@ -430,13 +430,14 @@ export const StormLogo = ({
   );
 };
 
-export const APP_VERSION = '1.4.0';
+export const APP_VERSION = '1.4.1';
 
 export const CHANGELOG = {
-  version: '1.4.0',
+  version: '1.4.1',
   features: [
-    "Stok Korumalı Veritabanı Sıfırlama: Sistem ayarlarındaki veritabanı sıfırlama seçeneğine, mevcut stok ve ürün listesini koruyarak sadece cari hesap, finansal hareket ve sipariş geçmişini temizleme imkanı sunan 'Stokları Silmeden Sıfırla' özelliği eklendi.",
-    "Online Marketler & Sipariş Entegrasyonu İyileştirmesi: Yemeksepeti ve diğer online platformlardan gelen siparişlerin anlık Firestore senkronizasyonu ve veritabanı eşleştirmeleri güçlendirildi."
+    "Online Market Hakediş Sistemi Entegrasyonu",
+    "Sipariş ve Tahsilat Ayrımı",
+    "Kasada Bakiye Şişmesi Çözümü (Geçmiş Kayıtlar Hotfix)"
   ],
   fixes: []
 };
@@ -689,6 +690,16 @@ export const PIN_ACCOUNTS = [
 ];
 
 export const changelogData = [
+  {
+    version: "1.4.1",
+    date: "13.08.2026",
+    changes: [
+      "Online Market (Yemeksepeti, Getir, vb.) süreçleri Hakediş Tahsilatı sistemiyle entegre edildi.",
+      "Pazar yeri siparişlerinin doğrudan POS kasasına girerek bakiyeleri şişirmesi engellendi.",
+      "Online Marketler ekranına \'Tahsilat Al\' özelliği eklendi.",
+      "Geçmiş dönem online siparişlerin POS/Nakit bakiyelerini şişirmesini engelleyen sistem düzeltmesi (hotfix) yapıldı."
+    ]
+  },
   {
     version: "1.4.0",
     date: "12.08.2026",

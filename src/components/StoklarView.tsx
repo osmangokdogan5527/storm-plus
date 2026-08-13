@@ -65,6 +65,7 @@ function StoklarView({
   onStockAdded,
 }: StoklarViewProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [filterType, setFilterType] = useState<'all' | 'critical' | 'instock' | 'outstock'>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedBrand, setSelectedBrand] = useState<string>('');
@@ -724,11 +725,12 @@ function StoklarView({
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" size={16} />
           <input 
             id="search-stock"
+            onFocus={() => setIsKeyboardOpen(true)}
             type="text"
             placeholder="Ürün adı veya stok kodu ile ara..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-11 pr-12 py-2.5 bg-white/5 border border-white/10 rounded-lg text-xs text-white placeholder-white/30 focus:outline-hidden focus:border-teal-500 focus:bg-white/[0.08] transition"
+            className="w-full pl-11 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-xs text-white placeholder-white/30 focus:outline-hidden focus:border-teal-500 focus:bg-white/[0.08] transition"
           />
           <button
             type="button"

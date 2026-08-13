@@ -333,6 +333,12 @@ export const PosReceiptModal: React.FC<PosReceiptModalProps> = ({
                   <span className="font-bold">-₺{saleSummary.totalDiscount.toFixed(2)}</span>
                 </div>
               )}
+              {activeTemplate.showTotalDiscount !== false && saleSummary.totalDiscount < 0 && (
+                <div className="flex justify-between text-black">
+                  <span>TOPLAM ARTIRIM:</span>
+                  <span className="font-bold">+₺{Math.abs(saleSummary.totalDiscount).toFixed(2)}</span>
+                </div>
+              )}
 
               {activeTemplate.showTotalVat !== false && (
                 <div className="flex justify-between text-black">

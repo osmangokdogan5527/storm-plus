@@ -201,6 +201,8 @@ export default function KasaView({ islemler, expenses, employeeTransactions = []
     });
     // 2. Commercial / Invoice transactions (islemler)
     islemler.forEach(islem => {
+      // HOTFIX: Eski online sipariş satışlarının (POS olarak kaydedilenlerin) kasada görünmesini engelle
+      if (islem.type === 'sale' && islem.cariId && islem.cariId.startsWith('plat_cari_')) return;
       const targetId = islem.bankAccountId || (islem.account === 'cash' ? 'merkez_kasa' : islem.account === 'bank' ? 'merkez_banka' : islem.account === 'pos' ? 'merkez_pos' : '');
       if (map[targetId] !== undefined) {
         if (islem.type === 'collection' || islem.type === 'sale' || islem.type === 'purchase_return') {
@@ -257,6 +259,8 @@ export default function KasaView({ islemler, expenses, employeeTransactions = []
     };
     // 1. Add islemler
     islemler.forEach(islem => {
+      // HOTFIX: Eski online sipariş satışlarının (POS olarak kaydedilenlerin) kasada görünmesini engelle
+      if (islem.type === 'sale' && islem.cariId && islem.cariId.startsWith('plat_cari_')) return;
       const acc = islem.account;
       if (acc !== 'cash' && acc !== 'bank' && acc !== 'pos') return;
       const isIncoming = islem.type === 'sale' || islem.type === 'collection' || islem.type === 'purchase_return';

@@ -916,10 +916,18 @@ export async function importAllDatabaseData(backupJson: any) {
 
 // ONLINE MARKETLER OPERATIONS
 export function subscribeOnlineOrders(callback: (orders: OnlineMarketOrder[]) => void) {
-  const q = query(collection(db, getPath(ONLINE_ORDERS_COLL)), orderBy('createdAt', 'desc'), limit(1000));
+  const q = query(collection(db, getPath(ONLINE_ORDERS_COLL)), limit(1500));
   return onSnapshot(q, (snapshot) => {
     const list: OnlineMarketOrder[] = [];
     snapshot.forEach((docSnap) => list.push({ id: docSnap.id, ...docSnap.data() } as OnlineMarketOrder));
+    
+    // Sort in client to support older documents without createdAt
+    list.sort((a, b) => {
+      const timeA = new Date(a.createdAt || a.date || 0).getTime();
+      const timeB = new Date(b.createdAt || b.date || 0).getTime();
+      return timeB - timeA;
+    });
+
     callback(list);
   }, (error) => handleFirestoreError(error, OperationType.GET, getPath(ONLINE_ORDERS_COLL)));
 }

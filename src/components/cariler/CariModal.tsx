@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { VirtualKeyboard } from '../VirtualKeyboard';
+
 import { Cari } from '../../types';
 import { X, Upload, Check, AlertCircle, Building, User, Info, FileText, Image as ImageIcon } from 'lucide-react';
 import { saveCari } from '../../firebase';
@@ -37,6 +39,14 @@ export function CariModal({
     taxNo: "",
     imageUrl: "",
   });
+  
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+  const [keyboardTarget, setKeyboardTarget] = useState<'name' | 'phone' | 'email' | 'taxOffice' | 'taxNo' | 'code'>('name');
+  
+  const handleKeyboardConfirm = (val: string) => {
+    setFormData(prev => ({ ...prev, [keyboardTarget]: val }));
+  };
+
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -223,8 +233,7 @@ export function CariModal({
                           type="file" 
                           accept="image/*" 
                           className="hidden" 
-                          onChange={handleImageUpload}
-                        />
+                          onChange={handleImageUpload} autoComplete="off" inputMode="none" />
                       </label>
                       <p className="text-[10px] text-white/40 mt-1">Önerilen: Kare, JPG/PNG.</p>
                     </div>
@@ -235,8 +244,9 @@ export function CariModal({
                   <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest mb-1.5 font-mono">
                     Cari Ünvanı / Adı Soyadı *
                   </label>
-                  <input
+                  <div className="relative"><input
                     id="form-cari-name"
+                    onFocus={() => { setKeyboardTarget('name'); setIsKeyboardOpen(true); }}
                     type="text"
                     required
                     placeholder="Örn: Ahmet Yılmaz veya ABC Ltd. Şti."
@@ -246,6 +256,7 @@ export function CariModal({
                     }
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 text-white rounded text-xs focus:outline-hidden focus:border-teal-500"
                   />
+</div>
                 </div>
 
                 <div>
@@ -292,8 +303,9 @@ export function CariModal({
                   <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest mb-1.5 font-mono">
                     Telefon No
                   </label>
-                  <input
+                  <div className="relative"><input
                     id="form-cari-phone"
+                    onFocus={() => { setKeyboardTarget('phone'); setIsKeyboardOpen(true); }}
                     type="text"
                     placeholder="Örn: 0555 123 4567"
                     value={formData.phone}
@@ -302,14 +314,16 @@ export function CariModal({
                     }
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 text-white rounded text-xs focus:outline-hidden focus:border-teal-500"
                   />
+</div>
                 </div>
 
                 <div>
                   <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest mb-1.5 font-mono">
                     E-posta Adresi
                   </label>
-                  <input
+                  <div className="relative"><input
                     id="form-cari-email"
+                    onFocus={() => { setKeyboardTarget('email'); setIsKeyboardOpen(true); }}
                     type="email"
                     placeholder="Örn: cari@eposta.com"
                     value={formData.email}
@@ -318,6 +332,7 @@ export function CariModal({
                     }
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 text-white rounded text-xs focus:outline-hidden focus:border-teal-500"
                   />
+</div>
                 </div>
 
                 <div>
@@ -404,8 +419,9 @@ export function CariModal({
                   <label className="block text-[9px] font-semibold text-white/40 uppercase tracking-widest mb-1.5 font-mono">
                     Vergi Dairesi
                   </label>
-                  <input
+                  <div className="relative"><input
                     id="form-cari-tax-office"
+                    onFocus={() => { setKeyboardTarget('taxOffice'); setIsKeyboardOpen(true); }}
                     type="text"
                     placeholder="Örn: Kadıköy V.D."
                     value={formData.taxOffice || ""}
@@ -414,6 +430,7 @@ export function CariModal({
                     }
                     className="w-full px-3 py-2 bg-white/5 border border-white/10 text-white rounded text-xs focus:outline-hidden focus:border-teal-500 font-semibold"
                   />
+</div>
                 </div>
 
                 <div className="col-span-1">
@@ -472,8 +489,13 @@ export function CariModal({
           </div>
         </div>
       )}
-
-      
+      <VirtualKeyboard
+        isOpen={isKeyboardOpen}
+        onClose={() => setIsKeyboardOpen(false)}
+        initialValue={formData[keyboardTarget as keyof typeof formData] as string || ""}
+        onConfirm={handleKeyboardConfirm}
+        title={keyboardTarget === 'name' ? 'Ünvan/Ad' : 'Giriş'}
+      />
     </>
   );
 }

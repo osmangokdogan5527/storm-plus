@@ -80,7 +80,7 @@ export interface PosTable {
   customerName?: string;
   cariId?: string;
   discountVal?: number | string;
-  discountMode?: 'percent' | 'amount' | 'target';
+  discountMode?: 'percent' | 'amount' | 'target' | 'markup_percent' | 'markup_amount';
   billPrintedAt?: string;
 }
 
