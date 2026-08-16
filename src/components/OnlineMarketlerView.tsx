@@ -1,3 +1,4 @@
+import { getBusinessDateStr } from '../utils/DateUtils';
 import React, { useState, useEffect } from 'react';
 import {
   Store,
@@ -273,7 +274,7 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
 
     const orderNo = `ONL-${Math.floor(100000 + Math.random() * 900000)}`;
     const now = new Date();
-    const dateStr = now.toISOString().split('T')[0];
+const dateStr = getBusinessDateStr();
     const timeStr = now.toTimeString().split(' ')[0].slice(0, 5);
     const custName = orderCustomerName.trim() || `${activeOrderPlatform.name} Müşterisi`;
 
@@ -345,7 +346,7 @@ export const OnlineMarketlerView: React.FC<OnlineMarketlerViewProps> = ({
 
     const payoutNo = `HAK-${Math.floor(1000 + Math.random() * 9000)}`;
     const now = new Date();
-    const dateStr = now.toISOString().split('T')[0];
+const dateStr = getBusinessDateStr();
 
     const newPayout: OnlineMarketPayout = {
       id: `pay_${Date.now()}`,

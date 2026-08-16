@@ -8,7 +8,7 @@ import { GelirGiderTab } from './raporlar/GelirGiderTab';
 import { KdvTab } from './raporlar/KdvTab';
 import { EkstreTab } from './raporlar/EkstreTab';
 
-import { getBusinessDateStr } from '../utils/dateUtils';
+import { getBusinessDateStr } from '../utils/DateUtils';
 import React, { useState, useMemo } from 'react';
 import { Cari, Stock, Transaction, Expense, EmployeeTransaction } from '../types';
 import { 

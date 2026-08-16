@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { getBusinessDateStr } from '../utils/DateUtils';
 import {
   Calendar,
   CalendarDays,
@@ -76,7 +77,7 @@ export const GunlukSatisRaporuView: React.FC<GunlukSatisRaporuViewProps> = ({
   showToast,
 }) => {
   // Bugünün YYYY-MM-DD tarihi
-  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const todayStr = useMemo(() => getBusinessDateStr(), []);
 
   // Tarih Filtresi State'leri
   const [datePreset, setDatePreset] = useState<'today' | 'yesterday' | 'this_week' | 'this_month' | 'custom'>('today');
@@ -126,7 +127,7 @@ export const GunlukSatisRaporuView: React.FC<GunlukSatisRaporuViewProps> = ({
   // Preset Değiştiğinde Tarihleri Güncelleme
   const handlePresetChange = (preset: 'today' | 'yesterday' | 'this_week' | 'this_month' | 'custom') => {
     setDatePreset(preset);
-    const now = new Date();
+    const now = new Date(new Date().getTime() - 1 * 60 * 60 * 1000);
 
     if (preset === 'today') {
       const d = now.toISOString().split('T')[0];

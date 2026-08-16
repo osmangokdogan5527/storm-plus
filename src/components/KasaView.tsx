@@ -1,6 +1,7 @@
 import { CashFlowAnalysis } from './kasa/CashFlowAnalysis';
 import { InteractiveCashLedger } from './kasa/InteractiveCashLedger';
 import { KasaModals } from './kasa/KasaModals';
+import { getBusinessDateStr } from '../utils/DateUtils';
 import React, { useState, useMemo } from 'react';
 import { Transaction, Expense, EmployeeTransaction, BankAccount, AccountTransaction } from '../types';
 import { saveBankAccount, saveAccountTransaction, deleteBankAccount } from '../firebase';
@@ -137,7 +138,7 @@ export default function KasaView({ islemler, expenses, employeeTransactions = []
         accountId: txSourceAcc,
         type: 'transfer_out',
         amount: amountNum,
-        date: new Date().toISOString().split('T')[0],
+        date: getBusinessDateStr(),
         description: txDesc || 'Hesaplar arası transfer',
         targetAccountId: txTargetAcc,
         createdAt: new Date().toISOString()
@@ -147,7 +148,7 @@ export default function KasaView({ islemler, expenses, employeeTransactions = []
         accountId: txTargetAcc,
         type: 'transfer_in',
         amount: targetAmountFinal,
-        date: new Date().toISOString().split('T')[0],
+        date: getBusinessDateStr(),
         description: txDesc || 'Hesaplar arası transfer',
         targetAccountId: txSourceAcc,
         createdAt: new Date().toISOString()
@@ -158,7 +159,7 @@ export default function KasaView({ islemler, expenses, employeeTransactions = []
         accountId: txSourceAcc,
         type: txType,
         amount: amountNum,
-        date: new Date().toISOString().split('T')[0],
+        date: getBusinessDateStr(),
         description: txDesc || (txType === 'giris' ? 'Manuel Giriş' : 'Manuel Çıkış'),
         createdAt: new Date().toISOString()
       });
@@ -368,7 +369,7 @@ export default function KasaView({ islemler, expenses, employeeTransactions = []
   }, [islemler, expenses, employeeTransactions, accountTransactions, bankAccounts]);
   // Filtered movements based on filters
   const filteredMovements = useMemo(() => {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getBusinessDateStr();
     const currentMonthPrefix = todayStr.substring(0, 7); // "YYYY-MM"
     return allMovements.filter(m => {
       // 1. Currency filter
