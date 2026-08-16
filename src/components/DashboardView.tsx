@@ -13,7 +13,9 @@ import {
   DashboardStats,
   Expense,
   EmployeeTransaction,
-  RecurringTransaction
+  RecurringTransaction,
+  BankAccount,
+  AccountTransaction
 } from "../types";
 import { getPendingRecurringItems, getTodayISO } from "../utils/recurringUtils";
 import { 
@@ -34,6 +36,8 @@ interface DashboardViewProps {
   expenses?: Expense[];
   employeeTransactions?: EmployeeTransaction[];
   recurringTransactions?: RecurringTransaction[];
+  bankAccounts?: BankAccount[];
+  accountTransactions?: AccountTransaction[];
   onNavigate: (view: any) => void;
   isOnline?: boolean;
   lastSyncTime?: Date;
@@ -106,6 +110,8 @@ export default function DashboardView({
   expenses = [],
   employeeTransactions = [],
   recurringTransactions = [],
+  bankAccounts = [],
+  accountTransactions = [],
   onNavigate,
   isOnline = false,
   lastSyncTime,
@@ -116,6 +122,8 @@ export default function DashboardView({
   const safeExpenses = Array.isArray(expenses) ? expenses : [];
   const safeEmployeeTransactions = Array.isArray(employeeTransactions) ? employeeTransactions : [];
   const safeRecurringTransactions = Array.isArray(recurringTransactions) ? recurringTransactions : [];
+  const safeBankAccounts = Array.isArray(bankAccounts) ? bankAccounts : [];
+  const safeAccountTransactions = Array.isArray(accountTransactions) ? accountTransactions : [];
   const dashboardCurrency = "TRY";
 
   const pendingRecurringItems = useMemo(() => {
@@ -203,8 +211,13 @@ export default function DashboardView({
 
     let monthlySales = 0;
     let monthlyPurchases = 0;
+    let monthlyCostOfSales = 0;
     let monthlyExpenses = 0;
     let monthlySalaries = 0;
+
+    // Build a quick stock map for COGS calculation
+    const stockMap = new Map<string, Stock>();
+    safeStoklar.forEach(s => stockMap.set(s.id, s));
 
     const now = new Date();
     const currentMonthStart = new Date(
@@ -222,8 +235,47 @@ export default function DashboardView({
       999,
     ).getTime();
 
+    const getAccountType = (bankAccountId?: string, fallbackAccount?: string) => {
+      if (bankAccountId) {
+        const acc = safeBankAccounts.find(a => a.id === bankAccountId);
+        if (acc) {
+          if (acc.type === 'kasa') return 'cash';
+          if (acc.type === 'banka') return 'bank';
+          if (acc.type === 'pos') return 'pos';
+        }
+      }
+      return fallbackAccount || 'cash';
+    };
+
+    // Add initial balances
+    safeBankAccounts.forEach(acc => {
+      if (acc.currency !== dashboardCurrency) return;
+      if (acc.type === 'kasa') cashBalance += acc.initialBalance || 0;
+      else if (acc.type === 'banka') bankBalance += acc.initialBalance || 0;
+      else if (acc.type === 'pos') posBalance += acc.initialBalance || 0;
+    });
+
+    // Add manual account transactions & transfers
+    safeAccountTransactions.forEach(tx => {
+       
+       const acc = safeBankAccounts.find(a => a.id === tx.accountId);
+       if (!acc) return;
+       const isGiris = (tx.type === 'giris' || tx.type === 'transfer_in');
+       const isCikis = (tx.type === 'cikis' || tx.type === 'transfer_out');
+       
+       if (isGiris) {
+         if (acc.type === 'kasa') cashBalance += tx.amount;
+         else if (acc.type === 'banka') bankBalance += tx.amount;
+         else if (acc.type === 'pos') posBalance += tx.amount;
+       } else if (isCikis) {
+         if (acc.type === 'kasa') cashBalance -= tx.amount;
+         else if (acc.type === 'banka') bankBalance -= tx.amount;
+         else if (acc.type === 'pos') posBalance -= tx.amount;
+       }
+    });
+
     // Process transactions matching active currency
-    islemler.forEach((islem) => {
+    safeIslemler.forEach((islem) => {
       const cur = islem.currency || "TRY";
       if (cur !== dashboardCurrency) return;
 
@@ -234,63 +286,77 @@ export default function DashboardView({
       const islemDate = new Date(islem.date).getTime();
       const isCurrentMonth =
         islemDate >= currentMonthStart && islemDate <= currentMonthEnd;
+        
+      const accType = getAccountType(islem.bankAccountId, islem.account);
 
       if (islem.type === "sale") {
         totalSales += islemAmount;
-        if (isCurrentMonth) monthlySales += islemAmount;
-        if (islem.account === "cash") cashBalance += islemAmount;
-        if (islem.account === "bank") bankBalance += islemAmount;
-        if (islem.account === "pos") posBalance += islemAmount;
+        if (isCurrentMonth) {
+          monthlySales += islemAmount;
+          // Calculate COGS
+          if (islem.items && islem.items.length > 0) {
+            islem.items.forEach(item => {
+              const st = stockMap.get(item.stockId);
+              const costRate = st ? st.purchasePrice : (item.price * 0.7);
+              monthlyCostOfSales += costRate * (item.quantity || 1);
+            });
+          } else {
+            monthlyCostOfSales += islemAmount * 0.7;
+          }
+        }
+        if (accType === "cash") cashBalance += islemAmount;
+        if (accType === "bank") bankBalance += islemAmount;
+        if (accType === "pos") posBalance += islemAmount;
       } else if (islem.type === "purchase") {
         totalPurchases += islemAmount;
         if (isCurrentMonth) monthlyPurchases += islemAmount;
-        if (islem.account === "cash") cashBalance -= islemAmount;
-        if (islem.account === "bank") bankBalance -= islemAmount;
-        if (islem.account === "pos") posBalance -= islemAmount;
+        if (accType === "cash") cashBalance -= islemAmount;
+        if (accType === "bank") bankBalance -= islemAmount;
+        if (accType === "pos") posBalance -= islemAmount;
       } else if (islem.type === "sale_return") {
         totalSales -= islemAmount;
         if (isCurrentMonth) monthlySales -= islemAmount;
-        if (islem.account === "cash") cashBalance -= islemAmount;
-        if (islem.account === "bank") bankBalance -= islemAmount;
-        if (islem.account === "pos") posBalance -= islemAmount;
+        if (accType === "cash") cashBalance -= islemAmount;
+        if (accType === "bank") bankBalance -= islemAmount;
+        if (accType === "pos") posBalance -= islemAmount;
       } else if (islem.type === "purchase_return") {
         totalPurchases -= islemAmount;
         if (isCurrentMonth) monthlyPurchases -= islemAmount;
-        if (islem.account === "cash") cashBalance += islemAmount;
-        if (islem.account === "bank") bankBalance += islemAmount;
-        if (islem.account === "pos") posBalance += islemAmount;
+        if (accType === "cash") cashBalance += islemAmount;
+        if (accType === "bank") bankBalance += islemAmount;
+        if (accType === "pos") posBalance += islemAmount;
       } else if (islem.type === "collection") {
         totalCollections += islemAmount;
-        if (islem.account === "cash") cashBalance += islemAmount;
-        if (islem.account === "bank") bankBalance += islemAmount;
-        if (islem.account === "pos") posBalance += islemAmount;
+        if (accType === "cash") cashBalance += islemAmount;
+        if (accType === "bank") bankBalance += islemAmount;
+        if (accType === "pos") posBalance += islemAmount;
       } else if (islem.type === "payment") {
         totalPayments += islemAmount;
-        if (islem.account === "cash") cashBalance -= islemAmount;
-        if (islem.account === "bank") bankBalance -= islemAmount;
-        if (islem.account === "pos") posBalance -= islemAmount;
+        if (accType === "cash") cashBalance -= islemAmount;
+        if (accType === "bank") bankBalance -= islemAmount;
+        if (accType === "pos") posBalance -= islemAmount;
       }
     });
 
     // Subtract expenses from Cash & Bank balances based on payment account and currency
     let totalExpenses = 0;
-    expenses.forEach((exp) => {
+    safeExpenses.forEach((exp) => {
       const cur = exp.currency || "TRY";
       if (cur !== dashboardCurrency) return;
 
       const amt = exp.amount || 0;
       totalExpenses += amt;
-
       const expDate = new Date(exp.date).getTime();
       if (expDate >= currentMonthStart && expDate <= currentMonthEnd) {
         monthlyExpenses += amt;
       }
 
-      if (exp.account === "cash") {
+      const accType = getAccountType(exp.bankAccountId, exp.account);
+      if (accType === "cash") {
         cashBalance -= amt;
-      } else if (exp.account === "bank") {
+      } else if (accType === "bank") {
         bankBalance -= amt;
-      } else if (exp.account === "pos") {
+      } else if (accType === "pos") {
         posBalance -= amt;
       }
     });
@@ -300,10 +366,18 @@ export default function DashboardView({
       // Basic assumption: employee transactions are in TRY since no currency field in EmployeeTransaction
       if (dashboardCurrency !== "TRY") return;
 
-      if (et.type === "payment") {
-        const etDate = new Date(et.date).getTime();
-        if (etDate >= currentMonthStart && etDate <= currentMonthEnd) {
-          monthlySalaries += et.amount;
+      const amt = et.amount || 0;
+      if (et.type === "payment" || et.type === "advance") {
+        const accType = getAccountType(et.bankAccountId, et.account);
+        if (accType === "cash") cashBalance -= amt;
+        else if (accType === "bank") bankBalance -= amt;
+        else if (accType === "pos") posBalance -= amt;
+
+        if (et.type === "payment") {
+          const etDate = new Date(et.date).getTime();
+          if (etDate >= currentMonthStart && etDate <= currentMonthEnd) {
+            monthlySalaries += amt;
+          }
         }
       }
     });
@@ -331,7 +405,7 @@ export default function DashboardView({
 
     const netProfit = totalSales - totalPurchases - totalExpenses;
     const monthlyNetProfit =
-      monthlySales - monthlyPurchases - monthlyExpenses - monthlySalaries;
+      monthlySales - monthlyCostOfSales - monthlyExpenses - monthlySalaries;
 
     return {
       totalSales,
@@ -341,6 +415,7 @@ export default function DashboardView({
       netProfit,
       monthlySales,
       monthlyPurchases,
+      monthlyCostOfSales,
       monthlyExpenses,
       monthlySalaries,
       monthlyNetProfit,

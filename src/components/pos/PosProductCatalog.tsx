@@ -800,7 +800,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             ₺{stock.salesPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
           </span>
           <span className="text-[9px] text-slate-400 block font-mono font-bold">
-            %{stock.taxRate ?? 0} KDV
+            
           </span>
         </div>
 

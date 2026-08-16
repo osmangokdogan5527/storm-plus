@@ -311,27 +311,6 @@ export function PdfPrintModal({ transaction, cariler, stoklar, onClose }: PdfPri
 
         const textScale = activeTemplate?.textSize === 'small' ? 0.85 : activeTemplate?.textSize === 'large' ? 1.15 : 1;
 
-        const kdvBreakdown = (() => {
-          if (!transaction || !transaction.items) return [];
-          const groups: Record<number, { rate: number; total: number; matrah: number; kdv: number }> = {};
-          
-          transaction.items.forEach(item => {
-            const rate = item.taxRate || 20; // default 20%
-            const total = item.total || 0;
-            const matrah = total / (1 + rate / 100);
-            const kdv = total - matrah;
-            
-            if (!groups[rate]) {
-              groups[rate] = { rate, total: 0, matrah: 0, kdv: 0 };
-            }
-            groups[rate].total += total;
-            groups[rate].matrah += matrah;
-            groups[rate].kdv += kdv;
-          });
-          
-          return Object.values(groups);
-        })();
-
         let pageWidth = '210mm';
         let pageHeight = '297mm';
         
@@ -834,25 +813,7 @@ export function PdfPrintModal({ transaction, cariler, stoklar, onClose }: PdfPri
                                 <span className="text-[11px]">{formatPrintCurrency(transaction.amount, transaction.currency || 'TRY')}</span>
                               </div>
 
-                              {/* KDV Breakdown */}
-                              {kdvBreakdown.length > 0 && (
-                                <div className="text-[8px] text-zinc-500 pt-1 space-y-0.5 border-b border-dashed border-zinc-200 pb-1">
-                                  <div className="flex justify-between font-bold text-zinc-600">
-                                    <span>KDV GRUBU</span>
-                                    <span>MATRAH</span>
-                                    <span>KDV TUTARI</span>
-                                  </div>
-                                  {kdvBreakdown.map((g, idx) => (
-                                    <div key={idx} className="flex justify-between font-mono">
-                                      <span>%{g.rate}</span>
-                                      <span>{formatPrintCurrency(g.matrah, transaction.currency || 'TRY')}</span>
-                                      <span>{formatPrintCurrency(g.kdv, transaction.currency || 'TRY')}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
                             </div>
-
                             {/* Customer Balance */}
                             {dynamicPrintVars?.showBalance && currentCariForPrint && (
                               <div className="mt-2 text-[8px] text-zinc-700 bg-zinc-50 border border-zinc-200 rounded p-1 flex justify-between font-bold font-mono">
@@ -929,7 +890,7 @@ export function PdfPrintModal({ transaction, cariler, stoklar, onClose }: PdfPri
                             printedSignatureArea,
                             activeTemplate,
                             stoklar,
-                            kdvBreakdown
+                            
                           };
                           
                           if (style === 'corporate') return <CorporateTemplate dynamicPrintVars={fullDynamicPrintVars} printSettings={printSettings} />;

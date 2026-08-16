@@ -8,6 +8,7 @@ import { GelirGiderTab } from './raporlar/GelirGiderTab';
 import { KdvTab } from './raporlar/KdvTab';
 import { EkstreTab } from './raporlar/EkstreTab';
 
+import { getBusinessDateStr } from '../utils/dateUtils';
 import React, { useState, useMemo } from 'react';
 import { Cari, Stock, Transaction, Expense, EmployeeTransaction } from '../types';
 import { 
@@ -57,7 +58,7 @@ interface RaporlarViewProps {
 }
 
 type DatePreset = 'today' | 'yesterday' | 'last7days' | 'thisMonth' | 'lastMonth' | 'thisYear' | 'custom';
-type ReportTab = 'ozet' | 'stok' | 'cari' | 'gelirgider' | 'kdvkarzarar' | 'cariekstre';
+type ReportTab = 'ozet' | 'stok' | 'cari' | 'gelirgider' | 'karzarar' | 'cariekstre';
 
 export default function RaporlarView({
   cariler,
@@ -146,14 +147,14 @@ export default function RaporlarView({
 
   // Convert foreign amounts to the selected report currency
   // Simple rate converter (in-app fallback rates, or user manual exchangeRate in records)
-  const { convertAmount, formatMoney, filteredIslemler, filteredExpenses, filteredEmployeeTransactions, selectedCari, kdvStats, cariEkstreStats, summaryStats, stockStats, cariStats, incomeExpenseStats } = useRaporlarStats({ islemler, expenses, employeeTransactions, cariler, stoklar, resolvedDates, selectedCariId, selectedCurrency, stockValuationType, stockSearch, cariSearch, cariTypeFilter });
+  const { convertAmount, formatMoney, filteredIslemler, filteredExpenses, filteredEmployeeTransactions, selectedCari, cariEkstreStats, summaryStats, stockStats, cariStats, incomeExpenseStats } = useRaporlarStats({ islemler, expenses, employeeTransactions, cariler, stoklar, resolvedDates, selectedCariId, selectedCurrency, stockValuationType, stockSearch, cariSearch, cariTypeFilter });
 
 
   // COLOR THEMES FOR CHART CELLS
   const COLORS = ['#f43f5e', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#6366f1', '#64748b'];
 
   // EXCEL DOWNLOAD IMPLEMENTATION
-  const { downloadExcel, downloadPDF, exportAllToExcel, downloadCariEkstrePDF, downloadKdvPdf } = getExportFunctions({ activeTab, summaryStats, selectedCurrency, stockStats, cariStats, filteredExpenses, kdvStats, selectedCari, resolvedDates, cariEkstreStats, formatMoney, turkishToPdf, cariler, incomeExpenseStats, stoklar, islemler, expenses });
+  const { downloadExcel, downloadPDF, exportAllToExcel, downloadCariEkstrePDF, downloadKarZararPdf } = getExportFunctions({ activeTab, summaryStats, selectedCurrency, stockStats, cariStats, filteredExpenses, selectedCari, resolvedDates, cariEkstreStats, formatMoney, turkishToPdf, cariler, incomeExpenseStats, stoklar, islemler, expenses });
 
   return (
     <div 
@@ -322,15 +323,15 @@ export default function RaporlarView({
           Gelir-Gider & Masraflar
         </button>
         <button
-          onClick={() => setActiveTab('kdvkarzarar')}
+          onClick={() => setActiveTab('karzarar')}
           className={`px-5 py-3 text-xs font-semibold border-b-2 transition flex items-center gap-2 shrink-0 ${
-            activeTab === 'kdvkarzarar'
+            activeTab === 'karzarar'
               ? 'border-teal-400 text-teal-400'
               : 'border-transparent text-zinc-400 hover:text-white'
           }`}
         >
           <Percent size={14} />
-          KDV ve Kâr-Zarar Raporu
+          Kâr-Zarar Raporu
         </button>
         <button
           onClick={() => setActiveTab('cariekstre')}
@@ -390,12 +391,11 @@ export default function RaporlarView({
       )}
 
       {/* KDV VE KAR-ZARAR RAPORU TAB CONTENT */}
-      {activeTab === 'kdvkarzarar' && (
+      {activeTab === 'karzarar' && (
         <KdvTab 
-          kdvStats={kdvStats}
           summaryStats={summaryStats}
           formatMoney={formatMoney}
-          downloadKdvPdf={downloadKdvPdf}
+          downloadKarZararPdf={downloadKarZararPdf}
         />
       )}
 

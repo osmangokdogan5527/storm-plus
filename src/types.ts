@@ -40,7 +40,6 @@ export interface Stock {
   unit: "Adet" | "KG" | "Litre" | "Metre" | "Kutu" | "Hizmet";
   purchasePrice: number;
   salesPrice: number;
-  taxRate: number; // e.g., 0, 1, 10, 20 (%)
   quantity: number;
   minQuantity: number;
   barcode?: string; // Optional barcode support
@@ -56,8 +55,7 @@ export interface InvoiceItem {
   quantity: number;
   unit: string;
   price: number; // unit price (excluding tax)
-  taxRate: number; // percentage (e.g. 20)
-  total: number; // including tax (quantity * price * (1 + taxRate/100))
+  total: number; 
 }
 
 export interface Transaction {
@@ -86,6 +84,7 @@ export interface DashboardStats {
   netProfit: number;
   monthlySales: number;
   monthlyPurchases: number;
+  monthlyCostOfSales: number;
   monthlyExpenses: number;
   monthlySalaries: number;
   monthlyNetProfit: number;

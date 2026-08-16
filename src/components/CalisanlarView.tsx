@@ -1,4 +1,5 @@
 import { CalisanlarModals } from './calisanlar/CalisanlarModals';
+import { getBusinessDateStr } from '../utils/dateUtils';
 import React, { useState, useMemo, useEffect } from "react";
 import { Employee, EmployeeTransaction } from "../types";
 import {
@@ -27,22 +28,12 @@ import {
 interface CalisanlarViewProps {
   employees: Employee[];
   transactions: EmployeeTransaction[];
-  aiPrefilledData?: {
-    islem: 'expense' | 'sale' | 'purchase' | 'collection' | 'payment' | 'employee_payment';
-    cariAdi?: string;
-    urunAdi?: string;
-    miktar?: number;
-    fiyat?: number;
-    kdv?: number;
-  } | null;
-  onClearAiPrefilledData?: () => void;
+      
 }
 export default function CalisanlarView({
   employees,
   transactions,
-  aiPrefilledData,
-  onClearAiPrefilledData
-}: CalisanlarViewProps) {
+    }: CalisanlarViewProps) {
   const [activeTab, setActiveTab] = useState<"employees" | "transactions">(
     "employees",
   );
@@ -55,7 +46,7 @@ export default function CalisanlarView({
   const [editingTx, setEditingTx] = useState<EmployeeTransaction | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
-    null,
+    
   );
   // Form Employee state
   const [empFormData, setEmpFormData] = useState({
@@ -80,46 +71,6 @@ export default function CalisanlarView({
   });
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  useEffect(() => {
-    if (aiPrefilledData && aiPrefilledData.islem === 'employee_payment') {
-      setActiveTab('transactions');
-      setEditingTx(null);
-      setFormError('');
-      let empId = '';
-      if (aiPrefilledData.cariAdi || aiPrefilledData.urunAdi) {
-        const query = (aiPrefilledData.cariAdi || aiPrefilledData.urunAdi || '').toLocaleLowerCase('tr-TR').trim();
-        let matchedEmp = employees.find(e => e.name.toLocaleLowerCase('tr-TR').includes(query));
-        if (!matchedEmp) {
-          const words = query.split(' ').filter(w => w.length > 2);
-          if (words.length > 0) {
-            matchedEmp = employees.find(e => words.some(w => e.name.toLocaleLowerCase('tr-TR').includes(w)));
-          }
-        }
-        if (matchedEmp) empId = matchedEmp.id;
-      }
-      let txType = 'advance' as "accrual" | "payment" | "advance";
-      if (aiPrefilledData.cariAdi?.toLowerCase().includes('maaş') || aiPrefilledData.urunAdi?.toLowerCase().includes('maaş')) {
-        txType = 'payment';
-      }
-      setTxFormData({
-        employeeId: empId,
-        type: txType,
-        amount: aiPrefilledData.fiyat || 0,
-        currency: 'TRY',
-        date: new Date().toISOString().split("T")[0],
-        account: 'cash',
-        description: 'Storm AI tarafından dolduruldu.',
-        selectedPortfolioCekId: "",
-        newCekDueDate: "",
-        newCekBank: "",
-      });
-      setIsTxModalOpen(true);
-      if (onClearAiPrefilledData) {
-        onClearAiPrefilledData();
-      }
-    }
-  }, [aiPrefilledData, employees]);
-  // Calculate Balances for each employee
   // Balance = Accruals - Payments - Advances
   const employeeBalances = useMemo(() => {
     const balances = {} as Record<

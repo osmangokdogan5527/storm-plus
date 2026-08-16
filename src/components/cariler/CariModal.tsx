@@ -11,18 +11,15 @@ export interface CariModalProps {
   onClose: () => void;
   editingCari: Cari | null;
   cariler: Cari[];
-  aiPrefilledData?: any;
-  onClearAiPrefilledData?: () => void;
-}
+    }
 
 export function CariModal({
   isOpen,
   onClose,
   editingCari,
   cariler = [],
-  aiPrefilledData,
-  onClearAiPrefilledData
-}: CariModalProps) {
+  
+  }: CariModalProps) {
   const safeCariler = Array.isArray(cariler) ? cariler : [];
 
   const [formData, setFormData] = useState({
@@ -67,7 +64,7 @@ export function CariModal({
           taxNo: editingCari.taxNo || "",
           imageUrl: editingCari.imageUrl || "",
         });
-      } else if (!aiPrefilledData) {
+      } else {
         setFormData({
           name: "",
           code: `CAR-${String(safeCariler.length + 1).padStart(4, "0")}`,
@@ -85,7 +82,7 @@ export function CariModal({
       }
       setFormError("");
     }
-  }, [isOpen, editingCari, safeCariler.length, aiPrefilledData]);
+  }, [isOpen, editingCari, safeCariler.length]);
 
 
 

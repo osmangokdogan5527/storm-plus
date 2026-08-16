@@ -68,7 +68,6 @@ export function ClassicTemplate({ dynamicPrintVars, printSettings }: any) {
                                         <th className="py-1.5 px-2 border-r border-zinc-400 text-center w-16">MİKTAR</th>
                                         {activeTemplate?.showUnitPrice !== false && <th className="py-1.5 px-2 border-r border-zinc-400 text-right w-20">FİYAT</th>}
                                         {activeTemplate?.showDiscountRate && <th className="py-1.5 px-2 border-r border-zinc-400 text-center w-12">İND.</th>}
-                                        {activeTemplate?.showVatRate && <th className="py-1.5 px-2 border-r border-zinc-400 text-center w-12">KDV</th>}
                                         <th className="py-1.5 px-2 text-right w-24">TUTAR</th>
                                       </tr>
                                     </thead>
@@ -97,7 +96,7 @@ export function ClassicTemplate({ dynamicPrintVars, printSettings }: any) {
                                               <td className="py-1.5 px-2 border-r border-zinc-400 text-right">{formatPrintCurrency(item.price, transaction.currency || 'TRY')}</td>
                                             )}
                                             {activeTemplate?.showDiscountRate && <td className="py-1.5 px-2 border-r border-zinc-400 text-center">%0</td>}
-                                            {activeTemplate?.showVatRate && <td className="py-1.5 px-2 border-r border-zinc-400 text-center">%{item.taxRate || 20}</td>}
+                                            
                                             <td className="py-1.5 px-2 text-right">{formatPrintCurrency(item.total, transaction.currency || 'TRY')}</td>
                                           </tr>
                                         ))
@@ -133,14 +132,7 @@ export function ClassicTemplate({ dynamicPrintVars, printSettings }: any) {
                                       <p className="mt-2">MUTABAKAT AMACIYLA DÜZENLENMİŞTİR. FİRMAMIZ KAYITLARI ESAS ALINMALIDIR.</p>
                                     </div>
                                     <div className="col-span-4 border border-zinc-400 rounded p-2 text-[9px] space-y-1 bg-zinc-50">
-                                      <div className="flex justify-between">
-                                        <span>MATRAH:</span>
-                                        <span>{formatPrintCurrency(transaction.amount / 1.2, transaction.currency || 'TRY')}</span>
-                                      </div>
-                                      <div className="flex justify-between border-b border-zinc-300 pb-1">
-                                        <span>KDV (%20):</span>
-                                        <span>{formatPrintCurrency(transaction.amount - (transaction.amount / 1.2), transaction.currency || 'TRY')}</span>
-                                      </div>
+                                      
                                       <div className="flex justify-between font-bold text-zinc-950">
                                         <span>GENEL TOPLAM:</span>
                                         <span>{formatPrintCurrency(transaction.amount, transaction.currency || 'TRY')}</span>

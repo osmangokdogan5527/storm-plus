@@ -1,3 +1,4 @@
+import { getBusinessDateStr } from "./utils/dateUtils";
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAppSettings } from './hooks/useAppSettings';
 import { useAppData } from './hooks/useAppData';
@@ -166,9 +167,7 @@ export default function App() {
     sidebarPatternColor, setSidebarPatternColor,
     hiddenTabs, setHiddenTabs, toggleTabVisibility,
     tabOrder, setTabOrder, moveTab,
-    geminiApiKey, setGeminiApiKey,
-    isAiEnabled, setIsAiEnabled,
-    autoBackupEnabled, setAutoBackupEnabled
+            autoBackupEnabled, setAutoBackupEnabled
   } = useAppSettings(appSettings);
   
 
@@ -418,156 +417,37 @@ const isSecurityLoaded = React.useRef(false);
     }
     setActiveTab(tabId as any);
   }, [isSecurityActive, userRole, sensitiveTabs]);
-  const { shortcuts, setShortcuts } = useAppShortcuts(handleNavigate, setPendingIslemModal, setPendingAddCari, setPendingAddStock, shortcutSettings);
-  const [aiPrefilledData, setAiPrefilledData] = useState<{
-    islem: 'sale' | 'purchase' | 'collection' | 'payment' | 'expense' | 'employee_payment' | 'sale_return' | 'purchase_return' | 'add_customer' | 'add_supplier' | 'add_product' | string;
-    cariAdi?: string;
-    urunAdi?: string;
-    miktar?: number;
-    fiyat?: number;
-    kdv?: number;
-    code?: string;
-    barcode?: string;
-    unit?: string;
-    purchasePrice?: number;
-    salesPrice?: number;
-    minQuantity?: number;
-    phone?: string;
-    email?: string;
-    address?: string;
-    bakiye?: number;
-    currency?: string;
-    taxOffice?: string;
-    taxNo?: string;
-  } | null>(null);
+  
+  const [companyName, setCompanyName] = useState<string>('Storm Yazılım');
+  const [companyPhone, setCompanyPhone] = useState<string>('');
+  const [companyAddress, setCompanyAddress] = useState<string>('');
+  const [logoType, setLogoType] = useState<'text' | 'image'>('text');
+  const [logoImageUrl, setLogoImageUrl] = useState<string>('');
+  const [printSettingsSuccess, setPrintSettingsSuccess] = useState<boolean>(false);
+  const handleSavePrintSettings = async () => {};
 
-  const {
-    companyName, setCompanyName,
-    companyAddress, setCompanyAddress,
-    companyPhone, setCompanyPhone,
-    logoType, setLogoType,
-    logoImageUrl, setLogoImageUrl,
-    printSettingsSuccess, handleSavePrintSettings
-  } = usePrintSettings(printSettings);
-
-
-  useEffect(() => {
-    let pxVal = 14;
-    if (typeof appFontSize === 'number') {
-      pxVal = appFontSize;
-    } else if (typeof appFontSize === 'string') {
-      if (appFontSize === 'xsmall') pxVal = 12;
-      else if (appFontSize === 'small') pxVal = 13;
-      else if (appFontSize === 'medium') pxVal = 14;
-      else if (appFontSize === 'large') pxVal = 16;
-      else pxVal = parseInt(appFontSize, 10) || 14;
-    }
-    const clamped = Math.min(18, Math.max(6, pxVal));
-    document.documentElement.style.setProperty('--app-font-size', `${clamped}px`);
-  }, [appFontSize]);
-
-
-
-  // Web Simulator Splash Screen State
-  const [isWebSplashLoading, setIsWebSplashLoading] = useState(true);
-  const [webSplashProgress, setWebSplashProgress] = useState(0);
-  const [webSplashMessage, setWebSplashMessage] = useState('Başlatılıyor...');
-
-  useEffect(() => {
-    // Only simulate splash screen if we are not running inside Electron
-    // In Electron, the native splash window handles this before React even loads.
-    const isElectron = navigator.userAgent.toLowerCase().includes('electron');
-    if (isElectron) {
-      setIsWebSplashLoading(false);
-      return;
-    }
-
-    let progress = 0;
-    setWebSplashMessage('Sürüm kontrolü yapılıyor...');
-    
-    const interval = setInterval(() => {
-      progress += Math.floor(Math.random() * 15) + 5;
-      if (progress > 100) progress = 100;
-      setWebSplashProgress(progress);
-      
-      if (progress === 10) setWebSplashMessage('Sunucuyla bağlantı kuruluyor...');
-      if (progress === 30) setWebSplashMessage('Yeni bir güncelleme aranıyor...');
-      if (progress === 60) setWebSplashMessage('Güncellemeler denetleniyor...');
-      if (progress >= 100) {
-        setWebSplashMessage('Uygulama başlatılıyor...');
-        clearInterval(interval);
-        setTimeout(() => setIsWebSplashLoading(false), 600);
-      }
-    }, 150);
-    
-    return () => clearInterval(interval);
-  }, []);
-
-  // Update notification state
   const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded'>('idle');
   const [updatePercent, setUpdatePercent] = useState<number>(0);
-  const [_updateError, setUpdateError] = useState<string | null>(null);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [availableUpdateVersion, setAvailableUpdateVersion] = useState<string>('');
+  const [showChangelog, setShowChangelog] = useState<boolean>(false);
+  const handleCloseChangelog = () => setShowChangelog(false);
   const [showUpdateModal, setShowUpdateModal] = useState<boolean>(false);
-  const [availableUpdateVersion, _setAvailableUpdateVersion] = useState<string>('');
+  
+  const { shortcuts, setShortcuts } = useAppShortcuts(handleNavigate, setPendingIslemModal, setPendingAddCari, setPendingAddStock, shortcutSettings);
 
-  // Changelog state
-  const [showChangelog, setShowChangelog] = useState(false);
-
+  // Updates Effect
   useEffect(() => {
-    const savedVersion = localStorage.getItem('app_version');
-    if (savedVersion !== APP_VERSION) {
-      setShowChangelog(true);
-    }
-  }, []);
-
-  const handleCloseChangelog = () => {
-    localStorage.setItem('app_version', APP_VERSION);
-    setShowChangelog(false);
-  };
-
-  // Automatic backup reminder check on mount
-  useEffect(() => {
-    const frequency = localStorage.getItem('storm_backup_frequency') || 'weekly';
-    if (frequency === 'disabled') return;
-
-    const lastBackupTime = localStorage.getItem('storm_last_backup_time');
-    if (!lastBackupTime) {
-      // First time using the app, set last backup to now so we count from here.
-      localStorage.setItem('storm_last_backup_time', Date.now().toString());
-      return;
-    }
-
-    const lastBackup = parseInt(lastBackupTime);
-    const diffMs = Date.now() - lastBackup;
-    
-    let limitMs = 7 * 24 * 60 * 60 * 1000; // default weekly
-    if (frequency === 'daily') {
-      limitMs = 24 * 60 * 60 * 1000;
-    } else if (frequency === 'monthly') {
-      limitMs = 30 * 24 * 60 * 60 * 1000;
-    }
-
-    if (diffMs > limitMs) {
-      // Trigger backup wizard with a gentle delay
-      const timer = setTimeout(() => {
-        setIsBackupWizardOpen(true);
-        showToast("Veri Sağlığı & Güvenlik Hatırlatıcısı: Son yedeklemeniz üzerinden uzun süre geçti. Lütfen verilerinizi yedekleyin.", "info");
-      }, 3500);
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
-  // Listen for auto update events
-  useEffect(() => {
-    let cleanupProgress: (() => void) | undefined;
-    let cleanupDownloaded: (() => void) | undefined;
-    let cleanupError: (() => void) | undefined;
-
+    let cleanupProgress: any = null;
+    let cleanupDownloaded: any = null;
+    let cleanupError: any = null;
     if (window.electronAPI) {
-      if ((window.electronAPI as any).onDownloadProgress) {
-        cleanupProgress = (window.electronAPI as any).onDownloadProgress((percent: number) => {
-          setUpdatePercent(percent);
+      if ((window.electronAPI as any).onUpdateProgress) {
+        cleanupProgress = (window.electronAPI as any).onUpdateProgress((progressObj: any) => {
           setUpdateStatus('downloading');
+          if (progressObj && progressObj.percent !== undefined) {
+             console.log("Update progress:", progressObj.percent);
+          }
         });
       }
       if (window.electronAPI.onUpdateDownloaded) {
@@ -749,11 +629,7 @@ ${friendlyError}`);
       setResetModalOpen={setResetModalOpen}
       setResetExcludeStocks={setResetExcludeStocks}
       onOpenBackupWizard={() => setIsBackupWizardOpen(true)}
-      geminiApiKey={geminiApiKey}
-      setGeminiApiKey={setGeminiApiKey}
-      isAiEnabled={isAiEnabled}
-      setIsAiEnabled={setIsAiEnabled}
-      isSecurityActive={isSecurityActive}
+                              isSecurityActive={isSecurityActive}
       setIsSecurityActive={setIsSecurityActive}
       userRole={userRole}
       setUserRole={setUserRole}
@@ -889,7 +765,6 @@ ${friendlyError}`);
         quantity: item.quantity,
         unit: item.unit,
         price: item.unitPrice,
-        taxRate: item.taxRate,
         total: item.totalLine,
       }));
 
@@ -959,7 +834,7 @@ ${friendlyError}`);
           const netAmount = saleData.paymentSplit.platformNetAmount || (saleData.grandTotal - commAmount) || 0;
 
           const now = new Date();
-          const dateStr = saleData.date || now.toISOString().split('T')[0];
+          const dateStr = saleData.date || getBusinessDateStr();
           const timeStr = now.toTimeString().split(' ')[0].slice(0, 5);
 
           const newOnlineOrder = {
@@ -1046,7 +921,6 @@ ${friendlyError}`);
         quantity: item.quantity || 1,
         unit: 'Adet',
         price: item.unitPrice || saleData.grossTotal,
-        taxRate: 0,
         total: item.totalLine || saleData.grossTotal,
       }));
 
@@ -1070,7 +944,6 @@ ${friendlyError}`);
           quantity: 1,
           unit: 'Adet',
           price: saleData.netAmount,
-          taxRate: 0,
           total: saleData.netAmount,
         }],
         createdAt: new Date().toISOString(),
@@ -1231,7 +1104,7 @@ ${friendlyError}`);
           />
         </div>
         <div className={activeTab === 'dashboard' ? 'block animate-fade-in' : 'hidden'}>
-          {renderWorkspaceView('dashboard', <DashboardView cariler={cariler} stoklar={stoklar} islemler={islemler} expenses={expenses} employeeTransactions={employeeTransactions} recurringTransactions={recurringTransactions} onNavigate={handleNavigate} isOnline={isOnline} lastSyncTime={lastSyncTime} />)}
+          {renderWorkspaceView('dashboard', <DashboardView cariler={cariler} stoklar={stoklar} islemler={islemler} expenses={expenses} employeeTransactions={employeeTransactions} recurringTransactions={recurringTransactions} bankAccounts={bankAccounts} accountTransactions={accountTransactions} onNavigate={handleNavigate} isOnline={isOnline} lastSyncTime={lastSyncTime} />)}
         </div>
         <div className={activeTab === 'pos' ? 'block animate-fade-in' : 'hidden'}>
           {renderWorkspaceView('pos', <PosView
@@ -1273,9 +1146,7 @@ ${friendlyError}`);
               setPendingCariId(cariId);
               setActiveTab('islemler');
             }}
-            aiPrefilledData={aiPrefilledData}
-            onClearAiPrefilledData={() => setAiPrefilledData(null)}
-            pendingAddCari={pendingAddCari}
+                                    pendingAddCari={pendingAddCari}
             onCariAdded={() => setPendingAddCari(false)}
             selectedCariIdForDetails={selectedCariIdForDetails}
             onSelectCariForDetails={setSelectedCariIdForDetails}
@@ -1286,9 +1157,7 @@ ${friendlyError}`);
             stoklar={stoklar} 
             islemler={islemler}
             cariler={cariler}
-            aiPrefilledData={aiPrefilledData}
-            onClearAiPrefilledData={() => setAiPrefilledData(null)}
-            userRole={userRole}
+                                    userRole={userRole}
             actionPermissions={actionPermissions}
             escalationPin={escalationPin}
             isSecurityActive={isSecurityActive}
@@ -1308,9 +1177,7 @@ ${friendlyError}`);
               setPendingIslemModal(null);
               setPendingCariId(null);
             }}
-            aiPrefilledData={aiPrefilledData}
-            onClearAiPrefilledData={() => setAiPrefilledData(null)}
-            userRole={userRole}
+                                    userRole={userRole}
             actionPermissions={actionPermissions}
             escalationPin={escalationPin}
             isSecurityActive={isSecurityActive}
@@ -1321,10 +1188,10 @@ ${friendlyError}`);
           />)}
         </div>
         <div className={activeTab === 'masraflar' ? 'block animate-fade-in' : 'hidden'}>
-          {renderWorkspaceView('masraflar', <MasraflarView expenses={expenses} recurringTransactions={recurringTransactions} bankAccounts={bankAccounts} cariler={cariler} aiPrefilledData={aiPrefilledData} onClearAiPrefilledData={() => setAiPrefilledData(null)} />)}
+          {renderWorkspaceView('masraflar', <MasraflarView expenses={expenses} recurringTransactions={recurringTransactions} bankAccounts={bankAccounts} cariler={cariler}   />)}
         </div>
         <div className={activeTab === 'calisanlar' ? 'block animate-fade-in' : 'hidden'}>
-          {renderWorkspaceView('calisanlar', <CalisanlarView employees={employees} transactions={employeeTransactions} aiPrefilledData={aiPrefilledData} onClearAiPrefilledData={() => setAiPrefilledData(null)} />)}
+          {renderWorkspaceView('calisanlar', <CalisanlarView employees={employees} transactions={employeeTransactions}   />)}
         </div>
         <div className={activeTab === 'kasa' ? 'block animate-fade-in' : 'hidden'}>
           {renderWorkspaceView('kasa', <KasaView islemler={islemler} expenses={expenses} employeeTransactions={employeeTransactions} bankAccounts={bankAccounts} accountTransactions={accountTransactions} />)}
@@ -1399,10 +1266,7 @@ ${friendlyError}`);
         user={user}
         zoomImage={zoomImage}
         setZoomImage={setZoomImage}
-        geminiApiKey={geminiApiKey}
-        isAiEnabled={isAiEnabled}
-        setActiveTab={setActiveTab}
-        setAiPrefilledData={setAiPrefilledData}
+                        setActiveTab={setActiveTab}
         setFeedbackList={setFeedbackList}
         financialData={{ cariler, stoklar, islemler, expenses, bankAccounts }}
         userRole={userRole}

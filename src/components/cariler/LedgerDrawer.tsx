@@ -239,8 +239,7 @@ export function LedgerDrawer({
         return;
       }
       const price = parseFloat(quickTxUnitPrice) || 0;
-      const taxRateValue = selectedStock.taxRate || 0;
-      const itemTotal = qty * price * (1 + taxRateValue / 100);
+            const itemTotal = qty * price ;
 
       items = [{
         stockId: selectedStock.id,
@@ -248,7 +247,6 @@ export function LedgerDrawer({
         quantity: qty,
         unit: selectedStock.unit || "Adet",
         price: price,
-        taxRate: taxRateValue,
         total: itemTotal
       }];
     }

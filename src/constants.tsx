@@ -430,14 +430,12 @@ export const StormLogo = ({
   );
 };
 
-export const APP_VERSION = '1.4.1';
+export const APP_VERSION = '1.4.2';
 
 export const CHANGELOG = {
-  version: '1.4.1',
+  version: '1.4.2',
   features: [
-    "Online Market Hakediş Sistemi Entegrasyonu",
-    "Sipariş ve Tahsilat Ayrımı",
-    "Kasada Bakiye Şişmesi Çözümü (Geçmiş Kayıtlar Hotfix)"
+    "Sürüm 1.4.2 için geliştirmeler başladı."
   ],
   fixes: []
 };
@@ -690,6 +688,13 @@ export const PIN_ACCOUNTS = [
 ];
 
 export const changelogData = [
+  {
+    version: "1.4.2",
+    date: "16.08.2026",
+    changes: [
+      "Sürüm 1.4.2 hazırlıkları başladı, güncellemeler ve geliştirmeler bu sürüme eklenecek."
+    ]
+  },
   {
     version: "1.4.1",
     date: "13.08.2026",

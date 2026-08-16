@@ -22,9 +22,7 @@ export function useAppSettings(cloudSettings?: any) {
       if (cloudSettings.sidebarPatternColor) setSidebarPatternColor(cloudSettings.sidebarPatternColor);
       if (cloudSettings.hiddenTabs) setHiddenTabs(cloudSettings.hiddenTabs);
       if (cloudSettings.tabOrder) setTabOrder(cloudSettings.tabOrder);
-      if (cloudSettings.geminiApiKey) setGeminiApiKey(cloudSettings.geminiApiKey);
-      if (cloudSettings.isAiEnabled !== undefined) setIsAiEnabled(cloudSettings.isAiEnabled);
-      if (cloudSettings.autoBackupEnabled !== undefined) setAutoBackupEnabled(cloudSettings.autoBackupEnabled);
+                  if (cloudSettings.autoBackupEnabled !== undefined) setAutoBackupEnabled(cloudSettings.autoBackupEnabled);
     }
   }, [cloudSettings]);
 
@@ -164,13 +162,8 @@ export function useAppSettings(cloudSettings?: any) {
     }
   };
 
-  const [geminiApiKey, setGeminiApiKey] = useState<string>(() => {
-    return localStorage.getItem('storm_muhasebe_gemini_api_key') || '';
-  });
-
-  const [isAiEnabled, setIsAiEnabled] = useState<boolean>(() => {
-    return localStorage.getItem('storm_muhasebe_ai_enabled') !== 'false';
-  });
+  
+  
 
   const [autoBackupEnabled, setAutoBackupEnabled] = useState<boolean>(() => {
     return localStorage.getItem('storm_auto_backup_enabled') !== 'false';
@@ -195,9 +188,7 @@ export function useAppSettings(cloudSettings?: any) {
         sidebarPattern,
         sidebarPatternOpacity,
         sidebarPatternColor,
-        geminiApiKey,
-        isAiEnabled,
-        autoBackupEnabled
+                        autoBackupEnabled
       });
       localStorage.setItem('kolay_hesap_accent_theme', activeTheme);
       localStorage.setItem('storm_muhasebe_design_style', designStyle);
@@ -207,14 +198,12 @@ export function useAppSettings(cloudSettings?: any) {
       localStorage.setItem('storm_muhasebe_sidebar_pattern', sidebarPattern);
       localStorage.setItem('storm_muhasebe_sidebar_pattern_opacity', sidebarPatternOpacity.toString());
       localStorage.setItem('storm_muhasebe_sidebar_pattern_color', sidebarPatternColor);
-      localStorage.setItem('storm_muhasebe_gemini_api_key', geminiApiKey);
-      localStorage.setItem('storm_muhasebe_ai_enabled', isAiEnabled.toString());
-      localStorage.setItem('storm_auto_backup_enabled', autoBackupEnabled.toString());
+                  localStorage.setItem('storm_auto_backup_enabled', autoBackupEnabled.toString());
     }
   }, [
     activeTheme, designStyle, activeLogoTheme, appFontSize, sidebarBg,
     sidebarPattern, sidebarPatternOpacity, sidebarPatternColor,
-    geminiApiKey, isAiEnabled, autoBackupEnabled
+    autoBackupEnabled
   ]);
 
   return {
@@ -228,8 +217,7 @@ export function useAppSettings(cloudSettings?: any) {
     sidebarPatternColor, setSidebarPatternColor,
     hiddenTabs, setHiddenTabs, toggleTabVisibility,
     tabOrder, setTabOrder, moveTab,
-    geminiApiKey, setGeminiApiKey,
-    isAiEnabled, setIsAiEnabled,
-    autoBackupEnabled, setAutoBackupEnabled
+    
+        autoBackupEnabled, setAutoBackupEnabled
   };
 }

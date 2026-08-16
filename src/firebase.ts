@@ -180,6 +180,7 @@ export interface FirestoreErrorInfo {
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
     authInfo: {
@@ -196,11 +197,10 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     operationType,
     path
   };
-    throw error;
-  console.warn('Firestore Error (Çevrimdışı olabilir): ', JSON.stringify(errInfo));
-  // Not throwing to prevent app crash on snapshot errors
+  throw error;
 }
 
+// Real-time Subscriptions
 // Real-time Subscriptions
 export function subscribeCariler(callback: (cariler: Cari[]) => void) {
   const q = query(collection(db, getPath(CARILER_COLL)), orderBy('name', 'asc'), limit(500));
@@ -272,7 +272,7 @@ export async function saveCari(cari: Omit<Cari, 'id'>, id?: string) {
     return newId;
   } catch (error) {
     handleFirestoreError(error, id ? OperationType.UPDATE : OperationType.CREATE, `${getPath(CARILER_COLL)}/${id || 'new'}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -281,7 +281,7 @@ export async function deleteCari(id: string) {
     await deleteDoc(doc(db, getPath(CARILER_COLL), id));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, `${getPath(CARILER_COLL)}/${id}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -298,7 +298,7 @@ export async function saveStock(stock: Omit<Stock, 'id'>, id?: string) {
     return newId;
   } catch (error) {
     handleFirestoreError(error, id ? OperationType.UPDATE : OperationType.CREATE, `${STOKLAR_COLL}/${id || 'new'}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -307,7 +307,7 @@ export async function deleteStock(id: string) {
     await deleteDoc(doc(db, getPath(STOKLAR_COLL), id));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, `${getPath(STOKLAR_COLL)}/${id}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -443,7 +443,7 @@ export async function createTransaction(islemData: Omit<Transaction, 'id'>) {
     return islemId;
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, getPath(ISLEMLER_COLL));
-    throw error;
+  throw error;
   }
 }
 
@@ -532,7 +532,7 @@ export async function removeTransaction(islem: Transaction) {
     await batch.commit();
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, `${getPath(ISLEMLER_COLL)}/${islem.id}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -576,7 +576,7 @@ export async function saveExpense(expense: Omit<Expense, 'id'>, id?: string) {
     return newId;
   } catch (error) {
     handleFirestoreError(error, id ? OperationType.UPDATE : OperationType.CREATE, `${getPath(GIDERLER_COLL)}/${id || 'new'}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -585,7 +585,7 @@ export async function deleteExpense(id: string) {
     await deleteDoc(doc(db, getPath(GIDERLER_COLL), id));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, `${getPath(GIDERLER_COLL)}/${id}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -615,7 +615,7 @@ export async function saveRecurringTransaction(item: Omit<RecurringTransaction, 
     return newId;
   } catch (error) {
     handleFirestoreError(error, id ? OperationType.UPDATE : OperationType.CREATE, `${getPath(TEKRARLAYAN_COLL)}/${id || 'new'}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -624,7 +624,7 @@ export async function deleteRecurringTransaction(id: string) {
     await deleteDoc(doc(db, getPath(TEKRARLAYAN_COLL), id));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, `${getPath(TEKRARLAYAN_COLL)}/${id}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -654,7 +654,7 @@ export async function saveEmployee(employee: Omit<Employee, 'id'>, id?: string) 
     return newId;
   } catch (error) {
     handleFirestoreError(error, id ? OperationType.UPDATE : OperationType.CREATE, `${getPath(CALISANLAR_COLL)}/${id || 'new'}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -663,7 +663,7 @@ export async function deleteEmployee(id: string) {
     await deleteDoc(doc(db, getPath(CALISANLAR_COLL), id));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, `${getPath(CALISANLAR_COLL)}/${id}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -733,7 +733,7 @@ export async function saveEmployeeTransaction(transaction: Omit<EmployeeTransact
     return newId;
   } catch (error) {
     handleFirestoreError(error, id ? OperationType.UPDATE : OperationType.CREATE, `${getPath(CALISAN_ISLEMLER_COLL)}/${id || 'new'}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -745,7 +745,7 @@ export async function deleteEmployeeTransaction(id: string) {
     await deleteDoc(expenseDocRef).catch(() => {});
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, `${getPath(CALISAN_ISLEMLER_COLL)}/${id}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -768,7 +768,7 @@ export async function saveBankAccount(account: any, id?: string) {
     return newId;
   } catch (error) {
     handleFirestoreError(error, id ? OperationType.UPDATE : OperationType.CREATE, `${getPath(HESAPLAR_COLL)}/${id || 'new'}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -777,7 +777,7 @@ export async function deleteBankAccount(id: string) {
     await deleteDoc(doc(db, getPath(HESAPLAR_COLL), id));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, `${getPath(HESAPLAR_COLL)}/${id}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -799,7 +799,7 @@ export async function saveAccountTransaction(transaction: any, id?: string) {
     return newId;
   } catch (error) {
     handleFirestoreError(error, id ? OperationType.UPDATE : OperationType.CREATE, `${getPath(HESAP_ISLEMLER_COLL)}/${id || 'new'}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -860,7 +860,7 @@ export async function clearAllDatabaseData(options?: { excludeStocks?: boolean }
     }
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, 'all_collections');
-    throw error;
+  throw error;
   }
 }
 
@@ -908,7 +908,7 @@ export async function importAllDatabaseData(backupJson: any) {
     }
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, 'import_collections');
-    throw error;
+  throw error;
   }
 }
 
@@ -941,7 +941,7 @@ export async function saveOnlineOrder(order: any, id?: string) {
     return newId;
   } catch (error) {
     handleFirestoreError(error, id ? OperationType.UPDATE : OperationType.CREATE, `${getPath(ONLINE_ORDERS_COLL)}/${id || 'new'}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -950,7 +950,7 @@ export async function deleteOnlineOrder(id: string) {
     await deleteDoc(doc(db, getPath(ONLINE_ORDERS_COLL), id));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, `${getPath(ONLINE_ORDERS_COLL)}/${id}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -972,7 +972,7 @@ export async function saveOnlinePayout(payout: any, id?: string) {
     return newId;
   } catch (error) {
     handleFirestoreError(error, id ? OperationType.UPDATE : OperationType.CREATE, `${getPath(ONLINE_PAYOUTS_COLL)}/${id || 'new'}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -981,7 +981,7 @@ export async function deleteOnlinePayout(id: string) {
     await deleteDoc(doc(db, getPath(ONLINE_PAYOUTS_COLL), id));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, `${getPath(ONLINE_PAYOUTS_COLL)}/${id}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -1003,7 +1003,7 @@ export async function savePosPlatform(platform: any, id?: string) {
     return newId;
   } catch (error) {
     handleFirestoreError(error, id ? OperationType.UPDATE : OperationType.CREATE, `${getPath(POS_PLATFORMS_COLL)}/${id || 'new'}`);
-    throw error;
+  throw error;
   }
 }
 
@@ -1026,6 +1026,6 @@ export async function saveSettings(docId: string, data: any) {
     await setDoc(docRef, cleanUndefined(data), { merge: true });
   } catch (error) {
     handleFirestoreError(error, OperationType.UPDATE, `${getPath(SETTINGS_COLL)}/${docId}`);
-    throw error;
+  throw error;
   }
 }

@@ -1,3 +1,4 @@
+import { getBusinessDateStr } from '../utils/dateUtils';
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { VirtualTableBody } from './VirtualTableBody';
 import { Transaction, Cari, Stock, InvoiceItem, BankAccount } from '../types';
@@ -37,15 +38,7 @@ interface IslemlerViewProps {
   pendingIslemModal?: 'sale' | 'purchase' | 'collection' | 'payment' | null;
   pendingCariId?: string | null;
   onClearPendingIslemModal?: () => void;
-  aiPrefilledData?: {
-    islem: 'sale' | 'purchase' | 'collection' | 'payment';
-    cariAdi?: string;
-    urunAdi?: string;
-    miktar?: number;
-    fiyat?: number;
-    kdv?: number;
-  } | null;
-  onClearAiPrefilledData?: () => void;
+      
   userRole?: 'admin' | 'employee';
   actionPermissions?: {
     delete_sale: boolean;
@@ -69,9 +62,7 @@ function IslemlerView({
   pendingIslemModal,
   pendingCariId,
   onClearPendingIslemModal,
-  aiPrefilledData,
-  onClearAiPrefilledData,
-  userRole = 'employee',
+      userRole = 'employee',
   actionPermissions = { delete_sale: false, delete_payment: false, delete_stock: false, decrease_stock: false, edit_sale: false, edit_payment: false, edit_stock: false },
   escalationPin = '1923',
   isSecurityActive = false,
@@ -104,8 +95,8 @@ function IslemlerView({
   defaultStartDate.setMonth(defaultStartDate.getMonth() - 1);
   
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ 
-    start: defaultStartDate.toISOString().split('T')[0], 
-    end: defaultEndDate.toISOString().split('T')[0] 
+    start: getBusinessDateStr(defaultStartDate), 
+    end: getBusinessDateStr(defaultEndDate) 
   });
   
   // Print PDF Receipt states
@@ -144,23 +135,7 @@ function IslemlerView({
   }, [islemler, searchTerm, filterType, dateRange]);
 
   // Open modal if triggered by parent component (e.g. sidebar shortcut or Cari list quick action)
-  useEffect(() => {
-    if (pendingIslemModal) {
-      handleOpenModal(pendingIslemModal, pendingCariId || undefined);
-      if (onClearPendingIslemModal) {
-        onClearPendingIslemModal();
-      }
-    }
-  }, [pendingIslemModal, pendingCariId]);
-
-  // Open modal with AI prefilled data
-  useEffect(() => {
-    if (aiPrefilledData) {
-      setModalType(aiPrefilledData.islem);
-      setEditingTransaction(null);
-      setIsModalOpen(true);
-    }
-  }, [aiPrefilledData]);
+  
 
   // Open modal with default settings
   const handleOpenModal = useCallback((type: 'sale' | 'purchase' | 'collection' | 'payment' | 'sale_return' | 'purchase_return', preselectedCariId?: string) => {
@@ -709,8 +684,7 @@ function IslemlerView({
         cariler={cariler}
         stoklar={stoklar}
         bankAccounts={bankAccounts}
-        aiPrefilledData={aiPrefilledData}
-        onClearAiData={onClearPendingIslemModal}
+                onClearAiData={onClearPendingIslemModal}
       />
       {/* PDF Print Preview & Settings Modal */}
       {selectedPrintTransaction && (

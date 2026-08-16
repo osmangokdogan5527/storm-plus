@@ -176,8 +176,10 @@ export function useAppData(user: FirebaseUser | null) {
           for (const acc of missingDefaults) {
             await saveBankAccount(acc, acc.id);
           }
-        } catch (e) {
-          // ignore
+        } catch (e: any) {
+          import('../utils/telegramLogger').then(({ reportErrorToTelegram }) => {
+            reportErrorToTelegram(e instanceof Error ? e : new Error(String(e)), 'useAppData_SeedBankAccounts');
+          });
         } finally {
           isSeeding = false;
         }

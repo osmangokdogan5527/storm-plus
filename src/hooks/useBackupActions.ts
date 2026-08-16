@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { reportErrorToTelegram } from '../utils/telegramLogger';
 
 export function useBackupActions(
   showToast: (text: string, type?: 'success' | 'error' | 'info') => void,
@@ -19,9 +20,11 @@ export function useBackupActions(
       if (result.success) {
         showToast("Yedekleme başarıyla tamamlandı.", "success");
       } else {
+        reportErrorToTelegram(new Error(result.error), 'useBackupActions_ManualBackup_FailResult');
         showToast(`Yedekleme başarısız oldu: ${result.error}`, "error");
       }
-    } catch (err) {
+    } catch (err: any) {
+      reportErrorToTelegram(err instanceof Error ? err : new Error(String(err)), 'useBackupActions_ManualBackup');
       showToast("Yedekleme sırasında bir hata oluştu.", "error");
     } finally {
       setIsBackupLoading(false);
@@ -48,9 +51,11 @@ export function useBackupActions(
       } else if (result.canceled) {
         // Canceled, do nothing
       } else {
+        reportErrorToTelegram(new Error(result.error), 'useBackupActions_Restore_FailResult');
         showToast(`Yedekleme geri yüklenemedi: ${result.error}`, "error");
       }
-    } catch (err) {
+    } catch (err: any) {
+      reportErrorToTelegram(err instanceof Error ? err : new Error(String(err)), 'useBackupActions_Restore');
       showToast("Yedekleme geri yüklenirken bir hata oluştu.", "error");
     } finally {
       setIsBackupLoading(false);
@@ -69,9 +74,11 @@ export function useBackupActions(
     try {
       const result = await (window as any).electronAPI.openAutoBackupFolder();
       if (!result.success) {
+        reportErrorToTelegram(new Error(result.error), 'useBackupActions_OpenFolder_FailResult');
         showToast(`Klasör açılamadı: ${result.error}`, "error");
       }
-    } catch (err) {
+    } catch (err: any) {
+      reportErrorToTelegram(err instanceof Error ? err : new Error(String(err)), 'useBackupActions_OpenFolder');
       showToast("Klasör açılırken bir hata oluştu.", "error");
     }
   };

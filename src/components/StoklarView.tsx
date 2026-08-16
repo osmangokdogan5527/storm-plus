@@ -33,9 +33,7 @@ interface StoklarViewProps {
   stoklar?: Stock[];
   islemler?: Transaction[];
   cariler?: Cari[];
-  aiPrefilledData?: any;
-  onClearAiPrefilledData?: () => void;
-  userRole?: 'admin' | 'employee';
+      userRole?: 'admin' | 'employee';
   actionPermissions?: {
     delete_sale: boolean;
     delete_payment: boolean;
@@ -55,9 +53,7 @@ function StoklarView({
   stoklar = [],
   islemler = [],
   cariler: _cariler = [],
-  aiPrefilledData,
-  onClearAiPrefilledData,
-  userRole = 'employee',
+      userRole = 'employee',
   actionPermissions = { delete_sale: false, delete_payment: false, delete_stock: false, decrease_stock: false, edit_sale: false, edit_payment: false, edit_stock: false },
   escalationPin = '1923',
   isSecurityActive = false,
@@ -72,6 +68,59 @@ function StoklarView({
   
   const [selectedStockForDetails, setSelectedStockForDetails] = useState<Stock | null>(null);
   const [expandedCariId, setExpandedCariId] = useState<string | null>(null);
+
+  const invStats = useMemo(() => {
+    let totalStockValue = 0;
+    let totalQuantity = 0;
+    let criticalItemsCount = 0;
+    let totalItems = 0;
+
+    (stoklar || []).forEach(s => {
+      totalStockValue += (s.purchasePrice || 0) * (s.quantity || 0);
+      totalQuantity += (s.quantity || 0);
+      if ((s.quantity || 0) <= (s.minQuantity || 5)) {
+        criticalItemsCount++;
+      }
+      totalItems++;
+    });
+
+    return { totalStockValue, totalQuantity, criticalItemsCount, totalItems };
+  }, [stoklar]);
+
+  const categories = useMemo(() => {
+    const cats = new Set<string>();
+    (stoklar || []).forEach(s => {
+      if (s.category) cats.add(s.category);
+    });
+    return Array.from(cats).sort();
+  }, [stoklar]);
+
+  const brands = useMemo(() => {
+    const br = new Set<string>();
+    (stoklar || []).forEach(s => {
+      if (s.brand) br.add(s.brand);
+    });
+    return Array.from(br).sort();
+  }, [stoklar]);
+
+  const filteredStoklar = useMemo(() => {
+    return (stoklar || []).filter(s => {
+      const matchSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          s.code.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          (s.barcode && s.barcode.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      let matchType = true;
+      if (filterType === 'critical') matchType = (s.quantity || 0) <= (s.minQuantity || 5);
+      else if (filterType === 'instock') matchType = (s.quantity || 0) > 0;
+      else if (filterType === 'outstock') matchType = (s.quantity || 0) === 0;
+
+      const matchCategory = selectedCategory === '' || s.category === selectedCategory;
+      const matchBrand = selectedBrand === '' || s.brand === selectedBrand;
+
+      return matchSearch && matchType && matchCategory && matchBrand;
+    });
+  }, [stoklar, searchTerm, filterType, selectedCategory, selectedBrand]);
+
 
   // Calculate who got how many of this stock
   const salesDetails = useMemo(() => {
@@ -173,137 +222,7 @@ function StoklarView({
   const [isQrPrinting, setIsQrPrinting] = useState(false);
 
   // Generate QR Code base64 data URL dynamically
-  useEffect(() => {
-    if (qrStock) {
-      let textToEncode = '';
-      if (qrContentMode === 'all') {
-        textToEncode = `Ürün: ${qrStock.name}\nKod: ${qrStock.code}\nBarkod: ${qrStock.barcode || '-'}\nFiyat: ${qrStock.salesPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL\nKDV: %${qrStock.taxRate}`;
-      } else if (qrContentMode === 'barcode') {
-        textToEncode = qrStock.barcode || qrStock.code;
-      } else {
-        textToEncode = qrCustomText || `https://storm.onmuhasebe.app/urun/${qrStock.id}`;
-      }
-
-      QRCode.toDataURL(textToEncode, {
-        width: 350,
-        margin: 1,
-        color: {
-          dark: '#000000',
-          light: '#ffffff',
-        },
-      })
-      .then(url => {
-        setQrCodeDataUrl(url);
-      })
-      .catch(err => {
-        console.error('QR Kod oluşturma hatası:', err);
-      });
-    }
-  }, [qrStock, qrContentMode, qrCustomText]);
-
-  // Handle physical barcode scanner input globally in StoklarView
-  useEffect(() => {
-    const handleHardwareScan = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      const code = (customEvent.detail.code || '').trim();
-      if (!code) return;
-
-      if (!isModalOpen) {
-        setSearchTerm(code);
-      }
-
-      // Electronic beep audio confirmation
-      try {
-        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.12);
-      } catch (soundErr) {
-        console.warn('Scan sound play failed', soundErr);
-      }
-    };
-
-    window.addEventListener('global-hardware-barcode-scan', handleHardwareScan);
-    return () => {
-      window.removeEventListener('global-hardware-barcode-scan', handleHardwareScan);
-    };
-  }, [isModalOpen]);
   
-  // Form state
-
-
-  // Categories list extracted from stoklar
-  const categories = useMemo(() => {
-    const list = stoklar.map(s => s.category?.trim()).filter(Boolean) as string[];
-    return Array.from(new Set(list)).sort();
-  }, [stoklar]);
-
-  // Brands list extracted from stoklar
-  const brands = useMemo(() => {
-    const list = stoklar.map(s => s.brand?.trim()).filter(Boolean) as string[];
-    return Array.from(new Set(list)).sort();
-  }, [stoklar]);
-
-  // Filter and search Stock items
-  const filteredStoklar = useMemo(() => {
-    return stoklar.filter(stok => {
-      const matchSearch = 
-        stok.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        stok.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (stok.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (stok.brand || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (stok.barcode || '').toLowerCase().includes(searchTerm.toLowerCase());
-
-      if (!matchSearch) return false;
-
-      if (selectedCategory && stok.category !== selectedCategory) {
-        return false;
-      }
-
-      if (selectedBrand && stok.brand !== selectedBrand) {
-        return false;
-      }
-
-      switch (filterType) {
-        case 'critical':
-          return stok.quantity <= stok.minQuantity;
-        case 'instock':
-          return stok.quantity > 0;
-        case 'outstock':
-          return stok.quantity <= 0;
-        default:
-          return true;
-      }
-    });
-  }, [stoklar, searchTerm, filterType, selectedCategory, selectedBrand]);
-
-  // General Inventory Stats
-  const invStats = useMemo(() => {
-    let totalItems = (stoklar || []).length;
-    let criticalItemsCount = (stoklar || []).filter(s => s.quantity <= s.minQuantity).length;
-    let totalStockValue = (stoklar || []).reduce((sum, s) => sum + (s.quantity * s.purchasePrice), 0);
-    let totalQuantity = (stoklar || []).reduce((sum, s) => sum + s.quantity, 0);
-
-    return {
-      totalItems,
-      criticalItemsCount,
-      totalStockValue,
-      totalQuantity
-    };
-  }, [stoklar]);
-
-  // Open modal with AI prefilled data
-  useEffect(() => {
-    if (aiPrefilledData && aiPrefilledData.islem === "add_product") {
-      setEditingStock(null);
-      setIsModalOpen(true);
-    }
-  }, [aiPrefilledData]);
 
   // Open modal automatically when pendingAddStock is triggered
   useEffect(() => {
@@ -403,7 +322,7 @@ function StoklarView({
           {formatCurrency(stok.salesPrice)}
         </td>
         <td className="p-4 text-center text-xs font-semibold text-white/40 font-mono">
-          %{stok.taxRate}
+          
         </td>
         <td className="p-4 text-right">
           <div className={`font-bold text-sm ${
@@ -885,7 +804,7 @@ function StoklarView({
                       <div className="grid grid-cols-2 gap-2 mt-3 text-xs border-t border-white/5 pt-2 text-white/50 font-sans">
                         <div>Alış Fiyatı: <strong className="text-white/80 font-semibold tabular-nums">{formatCurrency(stok.purchasePrice)}</strong></div>
                         <div>Satış Fiyatı: <strong className="text-teal-400 font-semibold tabular-nums">{formatCurrency(stok.salesPrice)}</strong></div>
-                        <div>KDV Oranı: <strong className="text-white/70 font-semibold">%{stok.taxRate}</strong></div>
+                        
                         <div>Toplam Değer: <strong className="text-teal-400 font-bold tabular-nums">{formatCurrency(stockValue)}</strong></div>
                       </div>
                     </div>
@@ -946,9 +865,7 @@ function StoklarView({
         editingStock={editingStock}
         stoklar={stoklar}
         checkPermissionAndExecute={checkPermissionAndExecute}
-        aiPrefilledData={aiPrefilledData}
-        onClearAiPrefilledData={onClearAiPrefilledData}
-      />
+                      />
       
 {/* Print Barcode Modal */}
       <PrintBarcodeModal

@@ -64,7 +64,7 @@ export function ElegantTemplate({ dynamicPrintVars, printSettings }: any) {
                                       <th className="py-2.5 px-1 text-center w-20">Miktar</th>
                                       {activeTemplate?.showUnitPrice !== false && <th className="py-2.5 px-1 text-right w-24">Birim Fiyat</th>}
                                       {activeTemplate?.showDiscountRate && <th className="py-2.5 px-1 text-center w-14">İndirim</th>}
-                                      {activeTemplate?.showVatRate && <th className="py-2.5 px-1 text-center w-14">KDV</th>}
+                                      
                                       <th className="py-2.5 px-1 text-right w-28 font-serif text-zinc-950">Net Tutar</th>
                                     </tr>
                                   </thead>
@@ -98,9 +98,7 @@ export function ElegantTemplate({ dynamicPrintVars, printSettings }: any) {
                                           {activeTemplate?.showDiscountRate && (
                                             <td className="py-3 px-1 text-zinc-400 text-center font-mono">%0</td>
                                           )}
-                                          {activeTemplate?.showVatRate && (
-                                            <td className="py-3 px-1 text-zinc-400 text-center font-mono">%{item.taxRate || 20}</td>
-                                          )}
+                                          
                                           <td className="py-3 px-1 font-bold text-zinc-900 text-right font-serif">
                                             {formatPrintCurrency(item.total, transaction.currency || 'TRY')}
                                           </td>

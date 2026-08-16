@@ -139,10 +139,10 @@ export const StatsGridWidget = React.memo<StatsGridWidgetProps>(({
                             </strong>
                           </div>
                           <div className="flex justify-between">
-                            <span>Bu Ayki Alış/Gider:</span>
+                            <span>Bu Ayki Maliyet/Gider:</span>
                             <strong className="text-red-400/80 font-semibold tabular-nums">
                               {formatCurrency(
-                                stats.monthlyPurchases +
+                                stats.monthlyCostOfSales +
                                   stats.monthlyExpenses +
                                   stats.monthlySalaries,
                               )}

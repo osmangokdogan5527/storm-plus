@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { reportErrorToTelegram } from '../utils/telegramLogger';
 
 interface Props {
   children: ReactNode;
@@ -21,12 +22,11 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   private handleGlobalError = (event: ErrorEvent) => {
-    // Prevent default handling so it doesn't just print to console (optional, maybe don't prevent if we want to see it in console too)
-    this.reportToTelegram(event.error || new Error(event.message));
+    reportErrorToTelegram(event.error || new Error(event.message), 'ErrorBoundary_GlobalError');
   };
 
   private handleGlobalPromiseRejection = (event: PromiseRejectionEvent) => {
-    this.reportToTelegram(event.reason instanceof Error ? event.reason : new Error(String(event.reason)));
+    reportErrorToTelegram(event.reason instanceof Error ? event.reason : new Error(String(event.reason)), 'ErrorBoundary_PromiseRejection');
   };
 
   public componentDidMount() {
@@ -39,48 +39,19 @@ export class ErrorBoundary extends Component<Props, State> {
     window.removeEventListener('unhandledrejection', this.handleGlobalPromiseRejection);
   }
 
-  private reportToTelegram(error: Error, errorInfo?: ErrorInfo) {
-    const stackTrace = errorInfo?.componentStack || error.stack || '';
-    
-    let activeUserStr: string | null = null;
-    let activeUser = 'Sistem/Giriş Ekranı';
-    
-    // 1. Local Error Logging
-    try {
-      activeUserStr = localStorage.getItem('storm_muhasebe_active_user');
-      activeUser = activeUserStr ? JSON.parse(activeUserStr).displayName : 'Sistem/Giriş Ekranı';
-      
-      const newLog = {
-        id: Date.now().toString(),
-        date: new Date().toLocaleString('tr-TR'),
-        user: activeUser,
-        message: error.message || 'Bilinmeyen Hata',
-        stack: stackTrace
-      };
-      
-      const existingLogsStr = localStorage.getItem('storm_error_logs');
-      const existingLogs = existingLogsStr ? JSON.parse(existingLogsStr) : [];
-      existingLogs.unshift(newLog); // Add to beginning
-      
-      // Keep only last 100 logs to prevent localStorage bloat
-      if (existingLogs.length > 100) existingLogs.pop();
-      
-      localStorage.setItem('storm_error_logs', JSON.stringify(existingLogs));
-    } catch (e) {
-      console.error('Local error logging failed:', e);
-    }
-
-    // 2. Logging completed locally
-  }
-
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
-    this.reportToTelegram(error, errorInfo);
+    // Add component stack to error object for the logger
+    if (errorInfo.componentStack) {
+      error.stack = `${error.stack || ''}\n\nComponent Stack:\n${errorInfo.componentStack}`;
+    }
+    reportErrorToTelegram(error, 'ErrorBoundary_ReactRender');
   }
 
   private handleReload = () => {
     window.location.reload();
   };
+
 
   public render() {
     if (this.state.hasError) {

@@ -1,3 +1,4 @@
+import { getBusinessDateStr, getBusinessTimeStr } from "../../utils/dateUtils";
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Stock, Cari, BankAccount, Transaction } from '../../types';
 import { PosCartItem, PosPaymentSplit, PosParkedSale, PosSaleSummary, PosPlatformConfig, DEFAULT_POS_PLATFORMS, PosTable, DEFAULT_RESTAURANT_TABLES } from '../../types/pos';
@@ -222,8 +223,7 @@ export const PosView: React.FC<PosViewProps> = ({
   const summary = calculateCartSummary(
     cartItems,
     typeof discountVal === 'number' ? discountVal : Number(discountVal) || 0,
-    discountMode,
-    globalTaxRate
+    discountMode
   );
 
   // KUR VE DÖVİZLİ TUTAR HESAPLAMASI
@@ -262,7 +262,6 @@ export const PosView: React.FC<PosViewProps> = ({
             stockName: stock.name,
             unit: stock.unit || 'Adet',
             unitPrice,
-            taxRate: (stock.taxRate !== undefined && stock.taxRate !== null) ? stock.taxRate : 0,
             quantity: 1,
             discountRate: 0,
             discountAmount,
@@ -536,7 +535,7 @@ export const PosView: React.FC<PosViewProps> = ({
       setIsProcessing(true);
       const receiptNo = generateReceiptNo();
       const now = new Date();
-      const date = now.toISOString().slice(0, 10);
+      const date = getBusinessDateStr();
       const time = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
 
       const defaultPlatCariId = paymentSplit.platformName
@@ -555,7 +554,7 @@ export const PosView: React.FC<PosViewProps> = ({
         paymentSplit,
         grandTotal: summary.grandTotal,
         subtotal: summary.subtotalAfterLineDiscounts,
-        totalTax: summary.totalTax,
+        totalTax: 0,
         totalDiscount: summary.totalDiscount,
         date,
       });
@@ -572,7 +571,7 @@ export const PosView: React.FC<PosViewProps> = ({
           cariName,
           subtotal: summary.subtotalAfterLineDiscounts,
           totalDiscount: summary.totalDiscount,
-          totalTax: summary.totalTax,
+          totalTax: 0,
           grandTotal: summary.grandTotal,
         };
 
@@ -630,7 +629,7 @@ export const PosView: React.FC<PosViewProps> = ({
 
     try {
       const now = new Date();
-      const dateStr = now.toISOString().split('T')[0];
+      const dateStr = getBusinessDateStr();
       const timeStr = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
       const receiptNo = generateReceiptNo();
 
@@ -648,7 +647,6 @@ export const PosView: React.FC<PosViewProps> = ({
             stockName: `${data.platformName} Siparişi (${data.note || 'Online Sipariş'})`,
             unit: 'Adet',
             unitPrice: data.amount,
-            taxRate: globalTaxRate,
             quantity: 1,
             discountRate: 0,
             discountAmount: 0,
@@ -734,7 +732,20 @@ export const PosView: React.FC<PosViewProps> = ({
   );
 
   return (
-    <div className="pos-terminal-wrapper flex flex-col min-h-[calc(100vh-4rem)] h-auto overflow-y-auto gap-3.5 animate-fade-in p-1.5 bg-slate-900 rounded-2xl pb-10" style={{ backgroundColor: '#0f172a' }}>
+    <div className="pos-terminal-wrapper flex flex-col min-h-[calc(100vh-4rem)] h-auto gap-3.5 animate-fade-in p-1.5 bg-slate-900 rounded-2xl pb-10" style={{ backgroundColor: '#0f172a' }}>
+      
+      {/* MOBİL İÇİN SABİT YAPIŞKAN FİYAT GÖSTERGESİ (SADECE MOBİLDE GÖRÜNÜR) */}
+      <div className="md:hidden fixed bottom-20 left-4 right-4 z-50 bg-slate-900 border-2 border-teal-500/80 rounded-2xl p-3.5 shadow-[0_0_30px_rgba(45,212,191,0.5)] flex items-center justify-between pointer-events-none">
+         <span className="text-xs font-black text-teal-400 uppercase tracking-widest">TOPLAM ÖDENECEK:</span>
+         <div className="flex flex-col items-end"><span className="text-white font-black text-2xl font-mono leading-none">
+            ₺{summary.grandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+         </span>
+         {selectedCurrency !== 'TRY' && (
+            <span className="text-amber-400 font-bold text-xs mt-1">
+               {currencySymbol}{convertedTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} {selectedCurrency}
+            </span>
+)}</div>
+      </div>
       {/* ÜST TERMİNAL BİLGİ & KISAYOL BAR */}
       <div className="p-3.5 bg-slate-900 border-2 border-slate-700 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 shrink-0" style={{ backgroundColor: '#0f172a' }}>
         <div className="flex items-center gap-3">
@@ -952,35 +963,10 @@ export const PosView: React.FC<PosViewProps> = ({
           {/* KASA GÖSTERGESİ VE ÖDEME PANELİ (GÖSTERGE SOL PANEL ALTINA ALINDI) */}
           <div className="p-4 bg-slate-900 rounded-2xl border-2 border-slate-700 shadow-2xl space-y-3.5 shrink-0" style={{ backgroundColor: '#0f172a' }}>
             
-            {/* KDV ORANI, İSKONTO VE PARA BİRİMİ PANELİ */}
+            {/* İSKONTO VE PARA BİRİMİ PANELİ */}
             <div className="p-3.5 bg-slate-900 rounded-2xl border-2 border-slate-700 grid grid-cols-1 md:grid-cols-12 gap-3.5 items-center" style={{ backgroundColor: '#0f172a' }}>
-              {/* 1. KDV SEÇİMİ (VARSAYILAN %0) */}
-              <div className="md:col-span-3 space-y-1.5">
-                <span className="text-xs font-black text-slate-300 uppercase tracking-wider flex items-center gap-1.5" style={{ color: '#cbd5e1' }}>
-                  <Percent size={14} className="text-teal-400" style={{ color: '#2dd4bf' }} />
-                  KDV Oranı:
-                </span>
-                <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-700">
-                  {[0, 1, 10, 20].map((rate) => (
-                    <button
-                      key={rate}
-                      type="button"
-                      onClick={() => setGlobalTaxRate(rate)}
-                      className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-mono font-black transition-all cursor-pointer text-center active:scale-95 touch-manipulation ${
-                        globalTaxRate === rate
-                          ? 'bg-teal-500 text-slate-950 shadow-md scale-105'
-                          : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                      }`}
-                      style={globalTaxRate === rate ? { backgroundColor: '#2dd4bf', color: '#020617', fontWeight: 900 } : {}}
-                    >
-                      %{rate}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* 2. İSKONTO SEÇİMİ (% YÜZDE, ₺ İSKONTO, 🎯 NET ALINACAK TUTAR) */}
-              <div className="md:col-span-9 space-y-1.5">
+              <div className="md:col-span-12 space-y-1.5">
                 <div className="flex flex-wrap items-center justify-between gap-1">
                   <span className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1" style={{ color: '#fcd34d' }}>
                     <Sparkles size={15} />
@@ -1078,58 +1064,25 @@ export const PosView: React.FC<PosViewProps> = ({
               </div>
 
             </div>
-              {/* HESAPLAMA ÖZETİ & EKRAN GÖSTERGESİ (2 KOLONLU DÜZEN) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center border-y border-slate-800 py-3.5">
-              {/* KALEM DETAYLARI */}
-              <div className="space-y-1.5 text-xs font-mono">
-                <div className="flex justify-between text-slate-300 font-bold">
-                  <span>Ara Toplam:</span>
-                  <span className="text-white font-black" style={{ color: '#ffffff' }}>₺{summary.rawTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </div>
-
-                {summary.totalDiscount > 0 && (
-                  <div className="flex justify-between text-amber-300 font-bold" style={{ color: '#fcd34d' }}>
-                    <span>Toplam İskonto:</span>
-                    <span>-₺{summary.totalDiscount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  </div>
-                )}
-                {summary.totalDiscount < 0 && (
-                  <div className="flex justify-between text-rose-400 font-bold" style={{ color: '#fb7185' }}>
-                    <span>Toplam Artırım:</span>
-                    <span>+₺{Math.abs(summary.totalDiscount).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  </div>
-                )}
-
-                <div className="flex justify-between text-slate-300 font-bold">
-                  <span>KDV Matrahı (%{globalTaxRate}):</span>
-                  <span className="text-white font-black" style={{ color: '#ffffff' }}>₺{summary.taxBase.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </div>
-
-                {globalTaxRate > 0 && (
-                  <div className="flex justify-between text-slate-400 font-bold">
-                    <span>KDV Tutarı (%{globalTaxRate}):</span>
-                    <span className="text-slate-200">₺{summary.totalTax.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  </div>
-                )}
+              {/* HESAPLAMA ÖZETİ (SADELEŞTİRİLMİŞ) */}
+            <div className="flex flex-col gap-1.5 border-y border-slate-800 py-3.5 text-xs font-mono">
+              <div className="flex justify-between text-slate-300 font-bold">
+                <span>Ara Toplam:</span>
+                <span className="text-white font-black" style={{ color: '#ffffff' }}>₺{summary.rawTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
-
-              {/* ANA GENEL TOPLAM GÖSTERGESİ */}
-              <div className="bg-slate-900 p-3.5 rounded-2xl border-2 border-teal-500/50 flex flex-col justify-center items-end shadow-inner" style={{ backgroundColor: '#0f172a' }}>
-                <span className="text-xs font-black text-slate-400 uppercase tracking-widest">
-                  GENEL TOPLAM (TUTAR)
-                </span>
-                <span className="text-teal-300 font-black text-3xl sm:text-4xl font-mono tracking-tight" style={{ color: '#2dd4bf' }}>
-                  ₺{summary.grandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-
-                {selectedCurrency !== 'TRY' && (
-                  <div className="text-amber-300 font-mono text-base font-black pt-1 border-t border-slate-800 w-full text-right" style={{ color: '#fcd34d' }}>
-                    Ödenecek: {currencySymbol}{convertedTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {selectedCurrency}
-                  </div>
-                )}
-              </div>
+              {summary.totalDiscount > 0 && (
+                <div className="flex justify-between text-amber-300 font-bold" style={{ color: '#fcd34d' }}>
+                  <span>Toplam İskonto:</span>
+                  <span>-₺{summary.totalDiscount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+              )}
+              {summary.totalDiscount < 0 && (
+                <div className="flex justify-between text-rose-400 font-bold" style={{ color: '#fb7185' }}>
+                  <span>Toplam Artırım:</span>
+                  <span>+₺{Math.abs(summary.totalDiscount).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+              )}
             </div>
-
             {/* HIZLI AKSİYON ÖDEME & ONLINE SİPARİŞ BÖLÜMÜ (AŞAĞIDA BİRLİKTE) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 pt-1">
               {/* HIZLI AKSİYON ÖDEME BUTONLARI */}
@@ -1216,7 +1169,23 @@ export const PosView: React.FC<PosViewProps> = ({
         </div>
 
         {/* SAĞ PANEL: SEPET & MÜŞTERİ SEÇİMİ (GENİŞ SEPET TABLOSU) */}
-        <div className="md:col-span-5 xl:col-span-4 flex flex-col gap-3.5 min-h-0">
+        <div className="md:col-span-5 xl:col-span-4 flex flex-col gap-3.5 min-h-0 relative">
+          
+          {/* SABİT ANA GENEL TOPLAM GÖSTERGESİ (SAĞ ÜST) */}
+          <div className="sticky top-4 z-10 bg-slate-900 p-4 rounded-2xl border-2 border-teal-500/50 flex flex-col justify-center items-end shadow-2xl shrink-0" style={{ backgroundColor: '#0f172a' }}>
+            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">
+              ÖDENECEK TUTAR
+            </span>
+            <span className="text-teal-300 font-black text-4xl sm:text-5xl font-mono tracking-tight leading-none mt-1" style={{ color: '#2dd4bf' }}>
+              ₺{summary.grandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+            {selectedCurrency !== 'TRY' && (
+              <div className="text-amber-300 font-mono text-lg font-black pt-2 mt-2 border-t border-slate-800 w-full text-right" style={{ color: '#fcd34d' }}>
+                {currencySymbol}{convertedTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {selectedCurrency}
+              </div>
+            )}
+          </div>
+
           {/* 1. MÜŞTERİ / CARİ SEÇİMİ */}
           <div className="p-3.5 bg-slate-900 rounded-2xl border-2 border-slate-700 relative shrink-0 shadow-xl" style={{ backgroundColor: '#0f172a' }}>
             <div className="flex items-center justify-between gap-2 mb-2">

@@ -1,3 +1,4 @@
+import { getBusinessDateStr } from './dateUtils';
 import { Stock } from '../types';
 import { PosCartItem, PosPaymentSplit } from '../types/pos';
 import { reportErrorToTelegram } from './telegramLogger';
@@ -47,7 +48,7 @@ export function calculateLineTotal(unitPrice: number, quantity: number, discount
  */
 export function generateReceiptNo(): string {
   const now = new Date();
-  const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+  const dateStr = getBusinessDateStr().replace(/-/g, '');
   const randomSuffix = Math.floor(1000 + Math.random() * 9000);
   return `POS-${dateStr}-${randomSuffix}`;
 }
@@ -58,8 +59,7 @@ export function generateReceiptNo(): string {
 export function calculateCartSummary(
   items: PosCartItem[],
   generalDiscountVal: number = 0,
-  discountMode: 'percent' | 'amount' | 'target' | 'markup_percent' | 'markup_amount' = 'percent',
-  globalTaxRate: number = 0
+  discountMode: 'percent' | 'amount' | 'target' | 'markup_percent' | 'markup_amount' = 'percent'
 ) {
   try {
     let rawTotal = 0;
@@ -73,7 +73,6 @@ export function calculateCartSummary(
 
     const subtotalAfterLineDiscounts = Math.max(0, rawTotal - totalLineDiscount);
 
-    // Genel İskonto Hesaplama
     let generalDiscountAmount = 0;
     const val = typeof generalDiscountVal === 'number' ? generalDiscountVal : Number(generalDiscountVal) || 0;
 
@@ -83,7 +82,6 @@ export function calculateCartSummary(
     } else if (discountMode === 'amount') {
       generalDiscountAmount = Math.min(subtotalAfterLineDiscounts, Math.max(0, val));
     } else if (discountMode === 'target') {
-      // Alınması Gereken Tutar (Net Ödenecek)
       const target = Math.max(0, val);
       if (target > 0 && target < subtotalAfterLineDiscounts) {
         generalDiscountAmount = subtotalAfterLineDiscounts - target;
@@ -100,22 +98,12 @@ export function calculateCartSummary(
     const grandTotal = Math.max(0, subtotalAfterLineDiscounts - generalDiscountAmount);
     const totalDiscount = totalLineDiscount + generalDiscountAmount;
 
-    // KDV Hesaplama (Varsayılan %0 KDV)
-    let totalTax = 0;
-    if (globalTaxRate > 0) {
-      totalTax = grandTotal - grandTotal / (1 + globalTaxRate / 100);
-    }
-
-    const taxBase = grandTotal - totalTax;
-
     return {
       rawTotal,
       totalLineDiscount,
       generalDiscountAmount,
       totalDiscount,
       subtotalAfterLineDiscounts,
-      taxBase: Number(taxBase.toFixed(2)),
-      totalTax: Number(totalTax.toFixed(2)),
       grandTotal: Number(grandTotal.toFixed(2)),
     };
   } catch (err: any) {
@@ -126,8 +114,6 @@ export function calculateCartSummary(
       generalDiscountAmount: 0,
       totalDiscount: 0,
       subtotalAfterLineDiscounts: 0,
-      taxBase: 0,
-      totalTax: 0,
       grandTotal: 0,
     };
   }

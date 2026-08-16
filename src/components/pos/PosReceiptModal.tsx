@@ -307,7 +307,7 @@ export const PosReceiptModal: React.FC<PosReceiptModalProps> = ({
                       <div className="text-[10px] font-bold text-black pl-2 flex justify-between">
                         <span>
                           {item.quantity} ADET x ₺{item.unitPrice.toFixed(2)}
-                          {activeTemplate.showItemVat !== false ? ` (%${item.taxRate} KDV)` : ''}
+                          
                         </span>
                       </div>
                     </div>

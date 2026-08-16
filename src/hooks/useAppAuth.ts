@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { auth, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, User as FirebaseUser, setActiveUser } from '../firebase';
 import { PIN_ACCOUNTS } from '../constants';
 import { logUserActivity } from '../utils/userLogger';
+import { reportErrorToTelegram } from '../utils/telegramLogger';
 
 export function useAppAuth(
   showToast: (text: string | null, type?: 'success' | 'error' | 'info') => void,
@@ -22,7 +23,8 @@ export function useAppAuth(
         // Do NOT auto-login, require PIN entry every time.
         setActiveUser(null);
         setUser(null); 
-      } catch (e) {
+      } catch (e: any) {
+        reportErrorToTelegram(e instanceof Error ? e : new Error(String(e)), 'useAppAuth_ParseLocalUser');
         localStorage.removeItem('storm_muhasebe_active_user');
         setActiveUser(null);
       }
@@ -53,9 +55,11 @@ export function useAppAuth(
           await updateProfile(userCredential.user, { displayName: account.name });
         } catch (createErr: any) {
           console.error("Otomatik hesap kaydı başarısız oldu:", createErr);
+          reportErrorToTelegram(createErr instanceof Error ? createErr : new Error(String(createErr)), 'useAppAuth_CreateAccount');
           showToast(`Kullanıcı kaydı oluşturulamadı: ${createErr.message || createErr}`, 'error');
         }
       } else {
+        reportErrorToTelegram(err instanceof Error ? err : new Error(String(err)), 'useAppAuth_SignIn');
         showToast(`Giriş hatası: ${err.message || err}`, 'error');
       }
     }
@@ -63,7 +67,11 @@ export function useAppAuth(
 
   const handleSignOut = async () => {
     if (user) {
-      logUserActivity(user.uid, user.displayName || 'Bilinmeyen Kullanıcı', 'logout');
+      try {
+        logUserActivity(user.uid, user.displayName || 'Bilinmeyen Kullanıcı', 'logout');
+      } catch (e: any) {
+        reportErrorToTelegram(e instanceof Error ? e : new Error(String(e)), 'useAppAuth_LogActivity');
+      }
     }
     try {
       await signOut(auth);
@@ -71,7 +79,8 @@ export function useAppAuth(
       setUser(null);
       setUserRole('employee');
       setActiveTab('dashboard');
-    } catch (e) {
+    } catch (e: any) {
+      reportErrorToTelegram(e instanceof Error ? e : new Error(String(e)), 'useAppAuth_SignOut');
       showToast("Çıkış yapılırken bir hata oluştu.", "error");
     }
   };

@@ -72,7 +72,7 @@ export function DefaultTemplate({ dynamicPrintVars, printSettings, }: any) {
                                     <th className="py-2.5 px-3 font-bold text-zinc-800">Ürün / Hizmet</th>
                                     <th className="py-2.5 px-3 font-bold text-zinc-800 text-center w-24">Miktar</th>
                                     {activeTemplate?.showUnitPrice !== false && <th className="py-2.5 px-3 font-bold text-zinc-800 text-right w-32">Birim Fiyat</th>}
-                                    {activeTemplate?.showDiscountRate && <th className="py-2.5 px-3 font-bold text-zinc-800 text-center w-24">KDV</th>}
+                                    
                                     <th className="py-2.5 px-3 font-bold text-zinc-800 text-right w-36">Toplam</th>
                                   </tr>
                                 </thead>
@@ -105,7 +105,7 @@ export function DefaultTemplate({ dynamicPrintVars, printSettings, }: any) {
                                         )}
                                         {activeTemplate?.showVatRate && (
                                           <td className="py-2.5 px-3 text-zinc-500 text-center font-mono">
-                                            %{item.taxRate || 20}
+                                            
                                           </td>
                                         )}
                                         <td className="py-2.5 px-3 font-bold text-zinc-900 text-right font-mono">

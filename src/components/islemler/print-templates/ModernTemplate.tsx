@@ -77,7 +77,6 @@ export function ModernTemplate({ dynamicPrintVars, printSettings }: any) {
                                       <th className="py-2.5 px-1 text-center w-20">MİKTAR</th>
                                       {activeTemplate?.showUnitPrice !== false && <th className="py-2.5 px-1 text-right w-24">BİRİM FİYAT</th>}
                                       {activeTemplate?.showDiscountRate && <th className="py-2.5 px-1 text-center w-14">İNDİRİM</th>}
-                                      {activeTemplate?.showVatRate && <th className="py-2.5 px-1 text-center w-14">KDV</th>}
                                       <th className="py-2.5 px-1 text-right w-28 text-zinc-900">TOPLAM</th>
                                     </tr>
                                   </thead>
@@ -114,9 +113,7 @@ export function ModernTemplate({ dynamicPrintVars, printSettings }: any) {
                                           {activeTemplate?.showDiscountRate && (
                                             <td className="py-3 px-1 text-zinc-500 text-center font-mono">%0</td>
                                           )}
-                                          {activeTemplate?.showVatRate && (
-                                            <td className="py-3 px-1 text-zinc-400 text-center font-mono">%{item.taxRate || 20}</td>
-                                          )}
+                                          
                                           <td className="py-3 px-1 font-extrabold text-zinc-950 text-right font-mono">
                                             {formatPrintCurrency(item.total, transaction.currency || 'TRY')}
                                           </td>
@@ -169,14 +166,7 @@ export function ModernTemplate({ dynamicPrintVars, printSettings }: any) {
                                       <span className="font-sans uppercase text-[8px] tracking-wider text-zinc-400">ÖDENECEK TOPLAM TUTAR</span>
                                       <span style={{ color: transactionTypeTheme.primary }}>{formatPrintCurrency(transaction.amount, transaction.currency || 'TRY')}</span>
                                     </div>
-                                    <div className="flex justify-between text-[8px] text-zinc-400">
-                                      <span>MATRAH:</span>
-                                      <span>{formatPrintCurrency(transaction.amount / 1.2, transaction.currency || 'TRY')}</span>
-                                    </div>
-                                    <div className="flex justify-between text-[8px] text-zinc-400">
-                                      <span>VERGİLER TOPLAMI:</span>
-                                      <span>{formatPrintCurrency(transaction.amount - (transaction.amount / 1.2), transaction.currency || 'TRY')}</span>
-                                    </div>
+                                    
                                   </div>
                                 </div>
 

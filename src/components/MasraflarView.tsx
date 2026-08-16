@@ -1,3 +1,4 @@
+import { getBusinessDateStr } from '../utils/dateUtils';
 import React, { useState, useMemo, useEffect } from "react";
 import { VirtualKeyboard } from "./VirtualKeyboard";
 import { Expense, RecurringTransaction, BankAccount, Cari } from '../types';
@@ -32,15 +33,7 @@ interface MasraflarViewProps {
   recurringTransactions?: RecurringTransaction[];
   bankAccounts?: BankAccount[];
   cariler?: Cari[];
-  aiPrefilledData?: {
-    islem: 'expense' | 'sale' | 'purchase' | 'collection' | 'payment' | 'employee_payment';
-    cariAdi?: string;
-    urunAdi?: string;
-    miktar?: number;
-    fiyat?: number;
-    kdv?: number;
-  } | null;
-  onClearAiPrefilledData?: () => void;
+      
 }
 
 const CATEGORY_ICONS: Record<Expense['category'], React.ComponentType<any>> = {
@@ -77,9 +70,7 @@ export default function MasraflarView({
   expenses, 
   recurringTransactions = [],
   bankAccounts = [],
-  cariler = [],
-  aiPrefilledData, 
-  onClearAiPrefilledData 
+  cariler = []
 }: MasraflarViewProps) {
   const [activeSubTab, setActiveSubTab] = useState<'expenses' | 'recurring'>('expenses');
   const [searchTerm, setSearchTerm] = useState('');
@@ -102,7 +93,7 @@ export default function MasraflarView({
     category: 'Elektrik' as Expense['category'],
     amount: 0,
     currency: 'TRY' as 'TRY',
-    date: new Date().toISOString().split('T')[0],
+    date: getBusinessDateStr(),
     account: 'cash' as 'cash' | 'bank' | 'pos',
     description: ''
   });
@@ -110,40 +101,7 @@ export default function MasraflarView({
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (aiPrefilledData && aiPrefilledData.islem === 'expense') {
-      setEditingExpense(null);
-      setFormError('');
-      
-      // Determine category roughly based on title
-      let cat = 'Diğer' as Expense['category'];
-      const titleLower = (aiPrefilledData.urunAdi || aiPrefilledData.cariAdi || '').toLowerCase();
-      if (titleLower.includes('su')) cat = 'Su';
-      else if (titleLower.includes('elektrik')) cat = 'Elektrik';
-      else if (titleLower.includes('internet') || titleLower.includes('telefon')) cat = 'İnternet/Telefon';
-      else if (titleLower.includes('kira')) cat = 'Kira';
-      else if (titleLower.includes('maaş') || titleLower.includes('personel')) cat = 'Personel Maaş/Avans';
-      else if (titleLower.includes('yemek')) cat = 'Yemek/Mutfak';
-      else if (titleLower.includes('ulaşım') || titleLower.includes('yakıt')) cat = 'Ulaşım/Yakıt';
-      else if (titleLower.includes('vergi') || titleLower.includes('sgk')) cat = 'Vergi/SGK';
-
-      setFormData({
-        title: aiPrefilledData.urunAdi || aiPrefilledData.cariAdi || 'AI Otomatik Masraf',
-        category: cat,
-        amount: aiPrefilledData.fiyat || 0,
-        currency: 'TRY',
-        date: new Date().toISOString().split('T')[0],
-        account: 'cash',
-        description: 'Storm AI tarafından dolduruldu.'
-      });
-      
-      setIsModalOpen(true);
-      
-      if (onClearAiPrefilledData) {
-        onClearAiPrefilledData();
-      }
-    }
-  }, [aiPrefilledData]);
+  
 
   // Filter and search
   const filteredExpenses = useMemo(() => {
@@ -199,7 +157,7 @@ export default function MasraflarView({
       category: 'Elektrik',
       amount: 0,
       currency: 'TRY',
-      date: new Date().toISOString().split('T')[0],
+      date: getBusinessDateStr(),
       account: 'cash',
       description: ''
     });

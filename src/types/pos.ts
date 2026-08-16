@@ -7,7 +7,6 @@ export interface PosCartItem {
   stockName: string;
   unit: string;
   unitPrice: number; // Birim Satış Fiyatı (KDV Dahil)
-  taxRate: number; // KDV Oranı (%)
   quantity: number; // Miktar
   discountRate: number; // Satır İskonto Yüzdesi (%)
   discountAmount: number; // Satır İskonto Tutarı (₺)

@@ -2,7 +2,7 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 
 export const getExportFunctions = (deps: any) => {
-  const { activeTab, summaryStats, selectedCurrency, stockStats, cariStats, filteredExpenses, kdvStats, selectedCari, resolvedDates, cariEkstreStats, formatMoney, turkishToPdf, cariler, incomeExpenseStats, stoklar, islemler, expenses } = deps;
+  const { activeTab, summaryStats, selectedCurrency, stockStats, cariStats, filteredExpenses, selectedCari, resolvedDates, cariEkstreStats, formatMoney, turkishToPdf, cariler, incomeExpenseStats, stoklar, islemler, expenses } = deps;
 
     const downloadExcel = () => {
       const workbook = XLSX.utils.book_new();
@@ -67,29 +67,8 @@ export const getExportFunctions = (deps: any) => {
         const ws = XLSX.utils.json_to_sheet(expenseData);
         XLSX.utils.book_append_sheet(workbook, ws, 'Gider-Masraf Listesi');
       }
-      else if (activeTab === 'kdvkarzarar') {
+      else if (activeTab === 'karzarar') {
         const kdvData = [
-          { 'Rapor Kalemi': 'Satışlar KDV %20 Matrah', 'Tutar': kdvStats.salesBase20 },
-          { 'Rapor Kalemi': 'Satışlar KDV %20 Tutar', 'Tutar': kdvStats.salesKdv20 },
-          { 'Rapor Kalemi': 'Satışlar KDV %10 Matrah', 'Tutar': kdvStats.salesBase10 },
-          { 'Rapor Kalemi': 'Satışlar KDV %10 Tutar', 'Tutar': kdvStats.salesKdv10 },
-          { 'Rapor Kalemi': 'Satışlar KDV %1 Matrah', 'Tutar': kdvStats.salesBase1 },
-          { 'Rapor Kalemi': 'Satışlar KDV %1 Tutar', 'Tutar': kdvStats.salesKdv1 },
-          { 'Rapor Kalemi': 'Satışlar Diğer KDV Matrah', 'Tutar': kdvStats.salesBaseOther },
-          { 'Rapor Kalemi': 'Satışlar Diğer KDV Tutar', 'Tutar': kdvStats.salesKdvOther },
-          { 'Rapor Kalemi': 'TOPLAM HESAPLANAN KDV', 'Tutar': kdvStats.salesKdvTotal },
-          { 'Rapor Kalemi': 'Alışlar KDV %20 Matrah', 'Tutar': kdvStats.purchaseBase20 },
-          { 'Rapor Kalemi': 'Alışlar KDV %20 Tutar', 'Tutar': kdvStats.purchaseKdv20 },
-          { 'Rapor Kalemi': 'Alışlar KDV %10 Matrah', 'Tutar': kdvStats.purchaseBase10 },
-          { 'Rapor Kalemi': 'Alışlar KDV %10 Tutar', 'Tutar': kdvStats.purchaseKdv10 },
-          { 'Rapor Kalemi': 'Alışlar KDV %1 Matrah', 'Tutar': kdvStats.purchaseBase1 },
-          { 'Rapor Kalemi': 'Alışlar KDV %1 Tutar', 'Tutar': kdvStats.purchaseKdv1 },
-          { 'Rapor Kalemi': 'Alışlar Diğer KDV Matrah', 'Tutar': kdvStats.purchaseBaseOther },
-          { 'Rapor Kalemi': 'Alışlar Diğer KDV Tutar', 'Tutar': kdvStats.purchaseKdvOther },
-          { 'Rapor Kalemi': 'TOPLAM INDIRILECEK KDV', 'Tutar': kdvStats.purchaseKdvTotal },
-          { 'Rapor Kalemi': 'NET KDV FARKI (Ödenecek / Devreden)', 'Tutar': kdvStats.netKdvDifference },
-          { 'Rapor Kalemi': 'NET ODENECEK KDV', 'Tutar': kdvStats.payableKdv },
-          { 'Rapor Kalemi': 'NET DEVREDEN KDV', 'Tutar': kdvStats.devredenKdv }
         ];
         const ws = XLSX.utils.json_to_sheet(kdvData);
         XLSX.utils.book_append_sheet(workbook, ws, 'KDV Ozeti');
@@ -120,8 +99,8 @@ export const getExportFunctions = (deps: any) => {
   
     // PDF DOWNLOAD IMPLEMENTATION (CLEAN & PURE CLIENT-SIDE WITHOUT LIBS ERRORS)
     const downloadPDF = () => {
-      if (activeTab === 'kdvkarzarar') {
-        downloadKdvPdf();
+      if (activeTab === 'karzarar') {
+        downloadKarZararPdf();
         return;
       }
       if (activeTab === 'cariekstre') {
@@ -425,9 +404,8 @@ export const getExportFunctions = (deps: any) => {
         'Marka / Üretici': s.brand || '',
         'Miktar': s.quantity || 0,
         'Birim': s.unit || 'Adet',
-        'Alış Fiyatı (KDV Hariç)': s.purchasePrice || 0,
-        'Satış Fiyatı (KDV Hariç)': s.salesPrice || 0,
-        'KDV Oranı (%)': s.taxRate || 0,
+        'Alış Fiyatı ': s.purchasePrice || 0,
+        'Satış Fiyatı ': s.salesPrice || 0,
         'Kritik Seviye': s.minQuantity || 0
       }));
       const wsStoklar = XLSX.utils.json_to_sheet(stoklarData);
@@ -435,7 +413,7 @@ export const getExportFunctions = (deps: any) => {
   
       // 3. Islemler (Faturalar) Sheet
       const islemlerData = islemler.map(i => {
-        const itemsDetail = i.items?.map(it => `${it.quantity} ${it.unit} x ${it.price} (${it.taxRate}% KDV)`).join(' | ') || '';
+        const itemsDetail = i.items?.map(it => `${it.quantity} ${it.unit} x ${it.price} `).join(' | ') || '';
         return {
           'Fatura / İşlem No': i.invoiceNo || '-',
           'Tarih': i.date || '',
@@ -601,7 +579,7 @@ export const getExportFunctions = (deps: any) => {
       doc.save(`Ekstre_${selectedCari.name.replace(/\s+/g, '_')}_${resolvedDates.start}_${resolvedDates.end}.pdf`);
     };
   
-    const downloadKdvPdf = () => {
+    const downloadKarZararPdf = () => {
       const doc = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -619,11 +597,11 @@ export const getExportFunctions = (deps: any) => {
       doc.setTextColor(255, 255, 255);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
-      doc.text(turkishToPdf('STORM ON MUHASEBE - KDV VE KAR-ZARAR RAPORU'), 15, 15.5);
+      doc.text(turkishToPdf('STORM ON MUHASEBE - KAR-ZARAR RAPORU'), 15, 15.5);
   
       doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
       doc.setFontSize(14);
-      doc.text(turkishToPdf('KDV VE DETAYLI KAR-ZARAR RAPORU'), 10, 26);
+      doc.text(turkishToPdf('DETAYLI KAR-ZARAR RAPORU'), 10, 26);
   
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
@@ -638,84 +616,16 @@ export const getExportFunctions = (deps: any) => {
       // SECTION 1: KDV RAPORU
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(11);
-      doc.text(turkishToPdf('1. KDV OZET TABLOSU'), 10, y);
       y += 5;
   
-      const kdvRows = [
-        ['Satışlar Hesaplanan KDV (%20)', formatMoney(kdvStats.salesKdv20)],
-        ['Satışlar Hesaplanan KDV (%10)', formatMoney(kdvStats.salesKdv10)],
-        ['Satışlar Hesaplanan KDV (%1)', formatMoney(kdvStats.salesKdv1)],
-        ['Satışlar Hesaplanan KDV (Diğer)', formatMoney(kdvStats.salesKdvOther)],
-        ['TOPLAM HESAPLANAN KDV', formatMoney(kdvStats.salesKdvTotal)],
-        ['Alışlar İndirilecek KDV (%20)', formatMoney(kdvStats.purchaseKdv20)],
-        ['Alışlar İndirilecek KDV (%10)', formatMoney(kdvStats.purchaseKdv10)],
-        ['Alışlar İndirilecek KDV (%1)', formatMoney(kdvStats.purchaseKdv1)],
-        ['Alışlar İndirilecek KDV (Diğer)', formatMoney(kdvStats.purchaseKdvOther)],
-        ['TOPLAM INDIRILECEK KDV', formatMoney(kdvStats.purchaseKdvTotal)],
-      ];
-  
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8.5);
-      doc.setFillColor(lightGray[0], lightGray[1], lightGray[2]);
-      doc.rect(10, y, 190, 7, 'F');
-      doc.text(turkishToPdf('KDV Kalemi'), 15, y + 4.5);
-      doc.text(turkishToPdf('Tutar (' + selectedCurrency + ')'), 150, y + 4.5);
-      y += 7;
-  
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-  
-      kdvRows.forEach((row, idx) => {
-        if (idx % 2 === 0) {
-          doc.setFillColor(248, 250, 252);
-          doc.rect(10, y, 190, 6.5, 'F');
-        }
-  
-        const isHighlight = row[0].includes('TOPLAM');
-        if (isHighlight) {
-          doc.setFont('helvetica', 'bold');
-        } else {
-          doc.setFont('helvetica', 'normal');
-        }
-  
-        doc.text(turkishToPdf(row[0]), 15, y + 4.5);
-        doc.text(turkishToPdf(row[1]), 150, y + 4.5);
-        y += 6.5;
-      });
-  
-      y += 2;
-      doc.setFillColor(241, 245, 249);
-      doc.rect(10, y, 190, 9, 'F');
-      doc.setDrawColor(200, 200, 200);
-      doc.rect(10, y, 190, 9, 'S');
-  
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9);
-      if (kdvStats.netKdvDifference > 0) {
-        doc.setTextColor(220, 38, 38);
-        doc.text(turkishToPdf(`NET ODENECEK KDV: ${formatMoney(kdvStats.payableKdv)}`), 15, y + 6);
-      } else {
-        doc.setTextColor(5, 150, 105);
-        doc.text(turkishToPdf(`SONRAKI DONEME DEVREDEN KDV: ${formatMoney(kdvStats.devredenKdv)}`), 15, y + 6);
-      }
-  
-      doc.setTextColor(darkGray[0], darkGray[1], darkGray[2]);
-      y += 15;
-  
-      // SECTION 2: KAR-ZARAR ANALIZI
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
-      doc.text(turkishToPdf('2. DETAYLI KAR-ZARAR TABLOSU (KDV HARIC)'), 10, y);
-      y += 5;
-  
-      const salesExVat = summaryStats.sales - kdvStats.salesKdvTotal;
-      const costExVat = summaryStats.costOfSales - kdvStats.purchaseKdvTotal;
+      const salesExVat = summaryStats.sales;
+      const costExVat = summaryStats.costOfSales;
       const grossProfitExVat = salesExVat - costExVat;
       const netProfitExVat = grossProfitExVat - summaryStats.totalExpenses - summaryStats.employeeSalaries;
   
       const plRows = [
-        ['Brüt Satış Gelirleri (KDV Hariç)', formatMoney(salesExVat)],
-        ['Satılan Malın Maliyeti (SMM) (KDV Hariç)', formatMoney(costExVat)],
+        ['Brüt Satış Gelirleri ', formatMoney(salesExVat)],
+        ['Satılan Malın Maliyeti (SMM) ', formatMoney(costExVat)],
         ['BRUT FAALIYET KARI / ZARARI', formatMoney(grossProfitExVat)],
         ['Genel Yönetim ve Faaliyet Giderleri (-)', formatMoney(summaryStats.totalExpenses)],
         ['Personel ve İşçilik Giderleri (-)', formatMoney(summaryStats.employeeSalaries)],
@@ -769,5 +679,5 @@ export const getExportFunctions = (deps: any) => {
     };
   
   
-  return { downloadExcel, downloadPDF, exportAllToExcel, downloadCariEkstrePDF, downloadKdvPdf };
+  return { downloadExcel, downloadPDF, exportAllToExcel, downloadCariEkstrePDF, downloadKarZararPdf };
 }

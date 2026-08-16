@@ -36,9 +36,7 @@ interface CarilerViewProps {
     type: "sale" | "purchase" | "collection" | "payment",
     cariId: string,
   ) => void;
-  aiPrefilledData?: any;
-  onClearAiPrefilledData?: () => void;
-  pendingAddCari?: boolean;
+      pendingAddCari?: boolean;
   onCariAdded?: () => void;
   selectedCariIdForDetails?: string | null;
   onSelectCariForDetails?: (cariId: string | null) => void;
@@ -50,9 +48,7 @@ function CarilerView({
   stoklar = [],
   bankAccounts = [],
   onQuickTransaction,
-  aiPrefilledData,
-  onClearAiPrefilledData,
-  pendingAddCari,
+      pendingAddCari,
   onCariAdded,
   selectedCariIdForDetails,
   onSelectCariForDetails,
@@ -141,20 +137,7 @@ function CarilerView({
     });
   }, [cariler, searchTerm, filterType]);
 
-  // Open modal with AI prefilled data
-  useEffect(() => {
-    if (aiPrefilledData) {
-      const type = aiPrefilledData.islem;
-      if (type === 'add_customer' || type === 'add_supplier') {
-        setEditingCari(null);
-        setIsModalOpen(true);
-        
-        if (onClearAiPrefilledData) {
-          onClearAiPrefilledData();
-        }
-      }
-    }
-  }, [aiPrefilledData, safeCariler.length, onClearAiPrefilledData]);
+  
 
   // Open modal automatically when pendingAddCari is triggered
   useEffect(() => {
@@ -838,9 +821,7 @@ function CarilerView({
         onClose={() => setIsModalOpen(false)}
         editingCari={editingCari}
         cariler={cariler}
-        aiPrefilledData={aiPrefilledData}
-        onClearAiPrefilledData={onClearAiPrefilledData}
-      />
+                      />
 
       {/* Cari Hesap Ekstresi (Ledger Drawer / Sheet) */}
       {selectedCariForDetails && currentCari && (

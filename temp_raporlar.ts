@@ -81,7 +81,129 @@ export const useRaporlarStats = (deps: any) => {
     }, [safeCariler, selectedCariId]);
   
     // KDV Calculations
-        // Cari Ekstre Calculations
+    const kdvStats = useMemo(() => {
+      let salesKdvTotal = 0;
+      let purchaseKdvTotal = 0;
+      
+      // Breakdowns
+      let salesKdv20 = 0;
+      let salesKdv10 = 0;
+      let salesKdv1 = 0;
+      let salesKdvOther = 0;
+  
+      let purchaseKdv20 = 0;
+      let purchaseKdv10 = 0;
+      let purchaseKdv1 = 0;
+      let purchaseKdvOther = 0;
+  
+      // We also track base (KDV Matrahı)
+      let salesBase20 = 0;
+      let salesBase10 = 0;
+      let salesBase1 = 0;
+      let salesBaseOther = 0;
+  
+      let purchaseBase20 = 0;
+      let purchaseBase10 = 0;
+      let purchaseBase1 = 0;
+      let purchaseBaseOther = 0;
+  
+      filteredIslemler.forEach(islem => {
+        const isSale = islem.type === 'sale' || islem.type === 'sale_return';
+        const isPurchase = islem.type === 'purchase' || islem.type === 'purchase_return';
+        
+        if (!isSale && !isPurchase) return;
+  
+        const sign = (islem.type === 'sale_return' || islem.type === 'purchase_return') ? -1 : 1;
+        const rateMultiplier = sign;
+  
+        if (islem.items && islem.items.length > 0) {
+          islem.items.forEach(item => {
+            const qty = item.quantity || 1;
+            const taxRate = item.taxRate || 0;
+            const convertedExTaxAmount = convertAmount(item.price * qty, islem.currency, islem.exchangeRate) * rateMultiplier;
+            const convertedKdvAmount = convertedExTaxAmount * (taxRate / 100);
+  
+            if (isSale) {
+              salesKdvTotal += convertedKdvAmount;
+              if (taxRate === 20) {
+                salesKdv20 += convertedKdvAmount;
+                salesBase20 += convertedExTaxAmount;
+              } else if (taxRate === 10) {
+                salesKdv10 += convertedKdvAmount;
+                salesBase10 += convertedExTaxAmount;
+              } else if (taxRate === 1) {
+                salesKdv1 += convertedKdvAmount;
+                salesBase1 += convertedExTaxAmount;
+              } else {
+                salesKdvOther += convertedKdvAmount;
+                salesBaseOther += convertedExTaxAmount;
+              }
+            } else {
+              purchaseKdvTotal += convertedKdvAmount;
+              if (taxRate === 20) {
+                purchaseKdv20 += convertedKdvAmount;
+                purchaseBase20 += convertedExTaxAmount;
+              } else if (taxRate === 10) {
+                purchaseKdv10 += convertedKdvAmount;
+                purchaseBase10 += convertedExTaxAmount;
+              } else if (taxRate === 1) {
+                purchaseKdv1 += convertedKdvAmount;
+                purchaseBase1 += convertedExTaxAmount;
+              } else {
+                purchaseKdvOther += convertedKdvAmount;
+                purchaseBaseOther += convertedExTaxAmount;
+              }
+            }
+          });
+        } else {
+          // Fallback for transactions without items: assume 20% KDV is included in the total amount
+          const totalAmt = convertAmount(islem.amount, islem.currency, islem.exchangeRate) * rateMultiplier;
+          const taxRate = 20; // fallback standard rate
+          const convertedKdvAmount = totalAmt * (taxRate / (100 + taxRate)); // 20/120 of total
+          const convertedExTaxAmount = totalAmt - convertedKdvAmount;
+  
+          if (isSale) {
+            salesKdvTotal += convertedKdvAmount;
+            salesKdv20 += convertedKdvAmount;
+            salesBase20 += convertedExTaxAmount;
+          } else {
+            purchaseKdvTotal += convertedKdvAmount;
+            purchaseKdv20 += convertedKdvAmount;
+            purchaseBase20 += convertedExTaxAmount;
+          }
+        }
+      });
+  
+      const netKdvDifference = salesKdvTotal - purchaseKdvTotal;
+      const payableKdv = netKdvDifference > 0 ? netKdvDifference : 0;
+      const devredenKdv = netKdvDifference < 0 ? Math.abs(netKdvDifference) : 0;
+  
+      return {
+        salesKdvTotal,
+        purchaseKdvTotal,
+        salesKdv20,
+        salesKdv10,
+        salesKdv1,
+        salesKdvOther,
+        purchaseKdv20,
+        purchaseKdv10,
+        purchaseKdv1,
+        purchaseKdvOther,
+        salesBase20,
+        salesBase10,
+        salesBase1,
+        salesBaseOther,
+        purchaseBase20,
+        purchaseBase10,
+        purchaseBase1,
+        purchaseBaseOther,
+        payableKdv,
+        devredenKdv,
+        netKdvDifference
+      };
+    }, [filteredIslemler, selectedCurrency]);
+  
+    // Cari Ekstre Calculations
     const cariEkstreStats = useMemo(() => {
       if (!selectedCariId || !selectedCari) {
         return { priorBalance: 0, periodTransactions: [], finalBalance: 0, allTransactions: [] };
@@ -166,65 +288,51 @@ export const useRaporlarStats = (deps: any) => {
       let payments = 0;
       let totalExpenses = 0;
       let employeeSalaries = 0;
-
+  
+      // Map stocks to code/id for quick lookup
       const stockMap = new Map<string, Stock>();
-      safeStoklar.forEach(s => stockMap.set(s.id, s));
-
+      stoklar.forEach(s => stockMap.set(s.id, s));
+  
+      // Process transactions within date range
       filteredIslemler.forEach(islem => {
         const amt = convertAmount(islem.amount, islem.currency, islem.exchangeRate);
         
         if (islem.type === 'sale') {
           sales += amt;
+          // Estimate Cost of Goods Sold (SMM)
           if (islem.items && islem.items.length > 0) {
             islem.items.forEach(item => {
               const st = stockMap.get(item.stockId);
-              if (st) {
-                 costOfSales += convertAmount(st.purchasePrice * (item.quantity || 1), 'TRY', 1);
-              } else {
-                 costOfSales += convertAmount(item.price * 0.7 * (item.quantity || 1), islem.currency, islem.exchangeRate);
-              }
+              const costRate = st ? st.purchasePrice : (item.price * 0.7); // 70% of sales price as fallback cost
+              costOfSales += convertAmount(costRate * (item.quantity || 1), islem.currency, islem.exchangeRate);
             });
           } else {
-            costOfSales += amt * 0.7; 
-          }
-        } else if (islem.type === 'sale_return') {
-          sales -= amt;
-          if (islem.items && islem.items.length > 0) {
-            islem.items.forEach(item => {
-              const st = stockMap.get(item.stockId);
-              if (st) {
-                 costOfSales -= convertAmount(st.purchasePrice * (item.quantity || 1), 'TRY', 1);
-              } else {
-                 costOfSales -= convertAmount(item.price * 0.7 * (item.quantity || 1), islem.currency, islem.exchangeRate);
-              }
-            });
-          } else {
-            costOfSales -= amt * 0.7; 
+            costOfSales += amt * 0.7; // Fallback 70% if items details missing
           }
         } else if (islem.type === 'purchase') {
           purchases += amt;
-        } else if (islem.type === 'purchase_return') {
-          purchases -= amt;
         } else if (islem.type === 'collection') {
           collections += amt;
         } else if (islem.type === 'payment') {
           payments += amt;
         }
       });
-
+  
+      // Process general expenses
       filteredExpenses.forEach(exp => {
         totalExpenses += convertAmount(exp.amount, exp.currency);
       });
-
+  
+      // Process employee salaries (accruals / hak ediş represents cost)
       filteredEmployeeTransactions.forEach(et => {
         if (et.type === 'accrual') {
           employeeSalaries += convertAmount(et.amount, et.currency);
         }
       });
-
+  
       const grossProfit = sales - costOfSales;
       const netProfit = grossProfit - totalExpenses - employeeSalaries;
-
+  
       return {
         sales,
         costOfSales,
@@ -236,7 +344,7 @@ export const useRaporlarStats = (deps: any) => {
         employeeSalaries,
         netProfit
       };
-    }, [filteredIslemler, safeStoklar, filteredExpenses, filteredEmployeeTransactions, selectedCurrency]);
+    }, [filteredIslemler, stoklar, filteredExpenses, filteredEmployeeTransactions, selectedCurrency]);
   
     // 3. COMPUTATIONS - STOK ANALYSIS
     const stockStats = useMemo(() => {
@@ -353,8 +461,6 @@ export const useRaporlarStats = (deps: any) => {
           const amt = convertAmount(islem.amount, islem.currency, islem.exchangeRate);
           if (islem.type === 'sale') {
             dateTrendMap[islem.date].sales += amt;
-          } else if (islem.type === 'sale_return') {
-            dateTrendMap[islem.date].sales -= amt;
           } else if (islem.type === 'collection') {
             dateTrendMap[islem.date].collections += amt;
           }
@@ -378,5 +484,5 @@ export const useRaporlarStats = (deps: any) => {
       };
     }, [filteredExpenses, filteredIslemler, resolvedDates, selectedCurrency]);
   
-  return { convertAmount, formatMoney, filteredIslemler, filteredExpenses, filteredEmployeeTransactions, selectedCari, cariEkstreStats, summaryStats, stockStats, cariStats, incomeExpenseStats };
+  return { convertAmount, formatMoney, filteredIslemler, filteredExpenses, filteredEmployeeTransactions, selectedCari, kdvStats, cariEkstreStats, summaryStats, stockStats, cariStats, incomeExpenseStats };
 }
