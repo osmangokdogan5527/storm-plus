@@ -1,0 +1,775 @@
+import { getBusinessDateStr } from '../utils/DateUtils';
+import React, { useState, useMemo, useEffect } from "react";
+import { VirtualKeyboard } from "./VirtualKeyboard";
+import { Expense, RecurringTransaction, BankAccount, Cari } from '../types';
+import { saveExpense, deleteExpense } from '../firebase';
+import { getPendingRecurringItems, getTodayISO } from '../utils/recurringUtils';
+import TekrarlayanManager from './tekrarlayan/TekrarlayanManager';
+import { 
+  Plus, 
+  Search, 
+  Wallet, 
+  Edit2, 
+  Trash2, 
+  X, 
+  TrendingDown, 
+  FileText, 
+  Zap, 
+  Droplets, 
+  Flame, 
+  Home, 
+  Users, 
+  Utensils, 
+  Car, 
+  HelpCircle,
+  Phone,
+  Clock,
+  AlertCircle,
+  Receipt
+} from 'lucide-react';
+
+interface MasraflarViewProps {
+  expenses: Expense[];
+  recurringTransactions?: RecurringTransaction[];
+  bankAccounts?: BankAccount[];
+  cariler?: Cari[];
+      
+}
+
+const CATEGORY_ICONS: Record<Expense['category'], React.ComponentType<any>> = {
+  'Elektrik': Zap,
+  'Su': Droplets,
+  'Doğalgaz': Flame,
+  'Kira': Home,
+  'Muhasebe Gideri': FileText,
+  'Maaş/Personel': Users,
+  'Yemek/Mutfak': Utensils,
+  'Ulaşım/Yakıt': Car,
+  'İnternet/Telefon': Phone,
+  'Personel Maaş/Avans': Users,
+  'Vergi/SGK': FileText,
+  'Diğer': HelpCircle
+};
+
+const CATEGORY_COLORS: Record<Expense['category'], string> = {
+  'Elektrik': 'bg-amber-50 text-amber-600 border-amber-200/50',
+  'Su': 'bg-sky-50 text-sky-600 border-sky-200/50',
+  'Doğalgaz': 'bg-orange-50 text-orange-600 border-orange-200/50',
+  'Kira': 'bg-emerald-50 text-emerald-600 border-emerald-200/50',
+  'Muhasebe Gideri': 'bg-indigo-50 text-indigo-600 border-indigo-200/50',
+  'Maaş/Personel': 'bg-purple-50 text-purple-600 border-purple-200/50',
+  'Yemek/Mutfak': 'bg-rose-50 text-rose-600 border-rose-200/50',
+  'Ulaşım/Yakıt': 'bg-cyan-50 text-cyan-600 border-cyan-200/50',
+  'İnternet/Telefon': 'bg-blue-50 text-blue-600 border-blue-200/50',
+  'Personel Maaş/Avans': 'bg-purple-50 text-purple-600 border-purple-200/50',
+  'Vergi/SGK': 'bg-red-50 text-red-600 border-red-200/50',
+  'Diğer': 'bg-slate-50 text-slate-600 border-slate-200/50'
+};
+
+export default function MasraflarView({ 
+  expenses, 
+  recurringTransactions = [],
+  bankAccounts = [],
+  cariler = []
+}: MasraflarViewProps) {
+  const [activeSubTab, setActiveSubTab] = useState<'expenses' | 'recurring'>('expenses');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const selectedCurrency = "TRY";
+  const [categoryPeriod, setCategoryPeriod] = useState<'all' | 'month' | 'year'>('all');
+
+  const pendingRecurringCount = useMemo(() => {
+    return getPendingRecurringItems(recurringTransactions, getTodayISO()).length;
+  }, [recurringTransactions]);
+  
+  // Modals state
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    title: '',
+    category: 'Elektrik' as Expense['category'],
+    amount: 0,
+    currency: 'TRY' as 'TRY',
+    date: getBusinessDateStr(),
+    account: 'cash' as 'cash' | 'bank' | 'pos',
+    description: ''
+  });
+  
+  const [formError, setFormError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  
+
+  // Filter and search
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter(exp => {
+      const matchSearch = 
+        exp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (exp.description && exp.description.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      const matchCategory = filterCategory === 'all' || exp.category === filterCategory;
+
+      return matchSearch && matchCategory;
+    });
+  }, [expenses, searchTerm, filterCategory]);
+
+  // Totals calculations
+  const totalStats = useMemo(() => {
+    const totalsByCurrency = { TRY: 0 };
+    const categoryTotals = {} as Record<Expense['category'], number>;
+
+    const now = new Date();
+    const currentYear = now.getFullYear().toString();
+    const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+    expenses.forEach(exp => {
+      totalsByCurrency[exp.currency] = (totalsByCurrency[exp.currency] || 0) + exp.amount;
+      
+      // Calculate active currency category breakdown filtered by period
+      if (exp.currency === selectedCurrency) {
+        let matchPeriod = true;
+        if (categoryPeriod === 'month') {
+          matchPeriod = exp.date ? exp.date.startsWith(currentMonthStr) : false;
+        } else if (categoryPeriod === 'year') {
+          matchPeriod = exp.date ? exp.date.startsWith(currentYear) : false;
+        }
+
+        if (matchPeriod) {
+          categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + exp.amount;
+        }
+      }
+    });
+
+    return {
+      totalsByCurrency,
+      categoryTotals,
+      totalCount: expenses.length
+    };
+  }, [expenses, selectedCurrency, categoryPeriod]);
+
+  const handleOpenCreateModal = () => {
+    setEditingExpense(null);
+    setFormData({
+      title: '',
+      category: 'Elektrik',
+      amount: 0,
+      currency: 'TRY',
+      date: getBusinessDateStr(),
+      account: 'cash',
+      description: ''
+    });
+    setFormError('');
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (expense: Expense) => {
+    setEditingExpense(expense);
+    setFormData({
+      title: expense.title,
+      category: expense.category,
+      amount: expense.amount,
+      currency: expense.currency,
+      date: expense.date,
+      account: expense.account,
+      description: expense.description || ''
+    });
+    setFormError('');
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    if (!window.confirm('Bu masraf kaydını silmek istediğinize emin misiniz?')) return;
+    try {
+      await deleteExpense(id);
+    } catch (err: any) {
+      alert('Masraf silinirken hata oluştu: ' + err.message);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title.trim()) {
+      setFormError('Lütfen masraf başlığı girin.');
+      return;
+    }
+    if (formData.amount <= 0) {
+      setFormError('Lütfen geçerli bir tutar girin.');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setFormError('');
+      
+      const payload = {
+        title: formData.title.trim(),
+        category: formData.category,
+        amount: Number(formData.amount),
+        currency: formData.currency,
+        date: formData.date,
+        account: formData.account,
+        description: formData.description.trim(),
+        createdAt: editingExpense ? editingExpense.createdAt : new Date().toISOString()
+      };
+
+      await saveExpense(payload, editingExpense?.id);
+      setIsModalOpen(false);
+    } catch (err: any) {
+      setFormError(err.message || 'Kayıt sırasında hata oluştu.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const formatCurrency = (amount: number, currency: string) => {
+    const symbol = currency === 'TRY' ? '₺' : currency === 'USD' ? '$' : '€';
+    return `${symbol}${amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header and Title */}
+      <div className="flex flex-col md:flex-row flex-wrap justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 id="masraflar-heading" className="text-xl font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">Gider ve Masraf Takibi</h1>
+          <p className="text-xs text-slate-500 dark:text-zinc-400 font-mono mt-1 uppercase tracking-widest">
+            İŞLETME GİDERLERİ • FATURALAR • DÜZENLİ ÖDEMELER & ABONELİKLER
+          </p>
+        </div>
+
+        {/* Sub-Tab Navigation Bar */}
+        <div className="flex items-center gap-2 bg-slate-100 dark:bg-zinc-800 p-1 rounded-2xl border border-slate-200 dark:border-zinc-700">
+          <button
+            onClick={() => setActiveSubTab('expenses')}
+            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2 ${
+              activeSubTab === 'expenses'
+                ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-white shadow-sm'
+                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Receipt className="w-4 h-4" />
+            <span>Gider Kayıtları</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('recurring')}
+            className={`px-4 py-2 text-xs font-bold rounded-xl transition-all flex items-center gap-2 relative ${
+              activeSubTab === 'recurring'
+                ? 'bg-[var(--accent-600)] text-white shadow-sm'
+                : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Clock className="w-4 h-4" />
+            <span>Tekrarlayan İşlemler</span>
+            {pendingRecurringCount > 0 && (
+              <span className={`px-2 py-0.5 text-[10px] font-black rounded-full ${
+                activeSubTab === 'recurring'
+                  ? 'bg-white text-[var(--accent-700)]'
+                  : 'bg-[var(--accent-600)] text-white animate-pulse'
+              }`}>
+                {pendingRecurringCount} ONAY BEKLEYEN
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Conditional Subtab Views */}
+      {activeSubTab === 'recurring' ? (
+        <TekrarlayanManager
+          recurringTransactions={recurringTransactions}
+          bankAccounts={bankAccounts}
+          cariler={cariler}
+        />
+      ) : (
+        <>
+          {/* Pending Recurring Items Banner if any */}
+          {pendingRecurringCount > 0 && (
+            <div className="p-4 bg-gradient-to-r from-[var(--accent-500)]/15 via-[var(--accent-500)]/10 to-[var(--accent-500)]/5 border border-[var(--accent-500)]/30 rounded-2xl flex items-center justify-between gap-4 animate-fade-in shadow-xs">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="p-2.5 bg-[var(--accent-600)] text-white rounded-xl shadow-sm animate-bounce">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                    {pendingRecurringCount} Adet Tekrarlayan Gider / Abonellik Onay Bekliyor
+                  </h4>
+                  <p className="text-xs text-slate-600 dark:text-zinc-400 mt-0.5">
+                    Günü gelen kira, fatura veya maaş ödemelerini inceleyip tutar düzeltmesi ile gidere işleyebilirsiniz.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveSubTab('recurring')}
+                className="px-4 py-2 text-xs font-bold text-white bg-[var(--accent-600)] hover:bg-[var(--accent-700)] active:scale-[0.98] rounded-xl shadow-sm transition-all shrink-0 flex items-center gap-1.5"
+              >
+                Onay Ekranına Git →
+              </button>
+            </div>
+          )}
+
+          {/* Action and Summary Header for Expense Table */}
+          <div className="flex justify-end">
+            <button
+              id="add-expense-btn"
+              onClick={handleOpenCreateModal}
+              className="flex items-center gap-2 bg-[var(--accent-600)] hover:bg-[var(--accent-700)] text-white px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider shadow-md hover:shadow-lg transition cursor-pointer active:scale-98"
+            >
+              <Plus size={16} />
+              <span>Yeni Masraf Ekle</span>
+            </button>
+          </div>
+
+      {/* Summary Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-[#ffffff] p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-100">
+            <TrendingDown size={20} />
+          </div>
+          <div>
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Toplam Masraf (TL)</span>
+            <h4 className="text-xl font-bold text-slate-900 mt-1">
+              {formatCurrency(totalStats.totalsByCurrency.TRY || 0, 'TRY')}
+            </h4>
+          </div>
+        </div>
+
+        
+
+        
+
+        <div className="bg-[#ffffff] p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0 border border-teal-100">
+            <Wallet size={20} />
+          </div>
+          <div>
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Kayıtlı Fatura/Gider</span>
+            <h4 className="text-xl font-bold text-slate-900 mt-1">
+              {totalStats.totalCount} Adet
+            </h4>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Layout with List and Category Breakdown */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Expenses Table/List (2 Columns wide) */}
+        <div className="lg:col-span-2 bg-[#ffffff] p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          {/* Filters & Search */}
+          <div className="flex flex-col md:flex-row flex-wrap justify-between gap-3">
+            <div className="relative flex-1">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                <Search size={16} />
+              </span>
+              <input
+                id="expense-search"
+                onFocus={() => setIsKeyboardOpen(true)}
+                type="text"
+                placeholder="Masraf adı veya açıklama ara..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 focus:border-rose-500 focus:ring-rose-500 rounded-xl pl-9 pr-4 py-2 text-xs font-medium text-slate-900"
+              />
+              
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              <select
+                id="category-filter"
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="bg-slate-50 border border-slate-200 focus:border-rose-500 focus:ring-rose-500 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 cursor-pointer"
+              >
+                <option value="all">Tüm Kategoriler</option>
+                <option value="Elektrik">Elektrik</option>
+                <option value="Su">Su</option>
+                <option value="Doğalgaz">Doğalgaz</option>
+                <option value="Kira">Kira</option>
+                <option value="Muhasebe Gideri">Muhasebe</option>
+                <option value="Maaş/Personel">Maaş/Personel</option>
+                <option value="Yemek/Mutfak">Yemek/Mutfak</option>
+                <option value="Ulaşım/Yakıt">Ulaşım/Yakıt</option>
+                <option value="Diğer">Diğer</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Table Container */}
+          <div className="overflow-x-auto rounded-xl border border-slate-100">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-100">
+                  <th className="py-3.5 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tarih</th>
+                  <th className="py-3.5 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Açıklama / Başlık</th>
+                  <th className="py-3.5 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kategori</th>
+                  <th className="py-3.5 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ödeme Yeri</th>
+                  <th className="py-3.5 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Tutar</th>
+                  <th className="py-3.5 px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">İşlem</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs">
+                {filteredExpenses.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-12 text-center text-slate-400 font-medium">
+                      Eşleşen masraf kaydı bulunamadı.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredExpenses.map((exp) => {
+                    const CatIcon = CATEGORY_ICONS[exp.category] || HelpCircle;
+                    const catColorClass = CATEGORY_COLORS[exp.category] || 'bg-slate-50 text-slate-600 border-slate-100';
+                    
+                    return (
+                      <tr key={exp.id} className="hover:bg-slate-50/50 transition">
+                        <td className="py-4 px-4 whitespace-nowrap text-slate-500 font-mono">
+                          {exp.date}
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="font-bold text-slate-800">{exp.title}</div>
+                          {exp.description && (
+                            <div className="text-[10px] text-slate-400 mt-0.5 max-w-xs truncate">{exp.description}</div>
+                          )}
+                        </td>
+                        <td className="py-4 px-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${catColorClass}`}>
+                            <CatIcon size={11} />
+                            {exp.category}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                            exp.account === 'cash' 
+                              ? 'bg-amber-100/50 text-amber-800' 
+                              : exp.account === 'pos'
+                              ? 'bg-purple-100/50 text-purple-800'
+                              : 'bg-teal-100/50 text-teal-800'
+                          }`}>
+                            {exp.account === 'cash' ? 'Kasa' : exp.account === 'pos' ? 'POS' : 'Banka'}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4 whitespace-nowrap text-right font-extrabold text-slate-900">
+                          {formatCurrency(exp.amount, exp.currency)}
+                        </td>
+                        <td className="py-4 px-4 whitespace-nowrap text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              onClick={() => handleOpenEditModal(exp)}
+                              className="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition cursor-pointer"
+                              title="Düzenle"
+                            >
+                              <Edit2 size={13} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteExpense(exp.id)}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                              title="Sil"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Category breakdown sidebar card (1 Column wide) */}
+        <div className="bg-[#ffffff] p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-6">
+          <div>
+            <div className="flex justify-between items-center pb-4 border-b border-slate-100">
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Kategori Analizi</h3>
+              
+              
+            </div>
+
+            {/* Time Period Filter Options */}
+            <div className="flex items-center justify-between mt-3 bg-slate-100 p-1 rounded-xl border border-slate-200/60">
+              <button
+                type="button"
+                onClick={() => setCategoryPeriod('all')}
+                className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition text-center cursor-pointer ${
+                  categoryPeriod === 'all'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                Tümü
+              </button>
+              <button
+                type="button"
+                onClick={() => setCategoryPeriod('month')}
+                className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition text-center cursor-pointer ${
+                  categoryPeriod === 'month'
+                    ? 'bg-[var(--accent-600)] text-white shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                Bu Ay
+              </button>
+              <button
+                type="button"
+                onClick={() => setCategoryPeriod('year')}
+                className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition text-center cursor-pointer ${
+                  categoryPeriod === 'year'
+                    ? 'bg-[var(--accent-600)] text-white shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                Bu Yıl
+              </button>
+            </div>
+
+            <p className="text-[10px] text-slate-500 font-semibold mt-3 mb-4 uppercase tracking-wider">
+              {selectedCurrency} ({categoryPeriod === 'month' ? 'BU AY' : categoryPeriod === 'year' ? 'BU YIL' : 'TÜM ZAMANLAR'}) BAZINDA KATEGORİ DAĞILIMI:
+            </p>
+
+            <div className="space-y-4">
+              {(Object.keys(CATEGORY_ICONS) as Expense['category'][]).map(cat => {
+                const amount = totalStats.categoryTotals[cat] || 0;
+                const totalActive = (Object.values(totalStats.categoryTotals) as number[]).reduce((a, b) => a + b, 0);
+                const percent = totalActive > 0 ? (amount / totalActive) * 100 : 0;
+                
+                const CatIcon = CATEGORY_ICONS[cat] || HelpCircle;
+                const colors = CATEGORY_COLORS[cat] || 'text-slate-600 bg-slate-50';
+
+                return (
+                  <div key={cat} className="space-y-1">
+                    <div className="flex justify-between items-center text-xs">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`w-6 h-6 rounded-lg flex items-center justify-center ${colors.split(' ')[0]} ${colors.split(' ')[1]} border border-black/5`}>
+                          <CatIcon size={12} />
+                        </span>
+                        <span className="font-bold text-slate-700">{cat}</span>
+                      </div>
+                      <span className="font-mono font-extrabold text-slate-900">
+                        {formatCurrency(amount, selectedCurrency)}
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full ${
+                          cat === 'Elektrik' ? 'bg-amber-500' :
+                          cat === 'Su' ? 'bg-sky-500' :
+                          cat === 'Doğalgaz' ? 'bg-orange-500' :
+                          cat === 'Kira' ? 'bg-emerald-500' :
+                          cat === 'Muhasebe Gideri' ? 'bg-indigo-500' :
+                          cat === 'Maaş/Personel' ? 'bg-purple-500' :
+                          cat === 'Yemek/Mutfak' ? 'bg-rose-500' :
+                          cat === 'Ulaşım/Yakıt' ? 'bg-cyan-500' :
+                          'bg-slate-500'
+                        }`}
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-[10px] font-mono uppercase text-slate-400">
+            <span>Seçilen Para Birimi Gideri</span>
+            <span className="font-extrabold text-slate-800">
+              {formatCurrency((Object.values(totalStats.categoryTotals) as number[]).reduce((a, b) => a + b, 0), selectedCurrency)}
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      {/* CREATE & EDIT EXPENSE MODAL */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="bg-[#ffffff] rounded-2xl max-w-lg w-full border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-[var(--accent-500)]/10 text-[var(--accent-600)] flex items-center justify-center">
+                  <TrendingDown size={16} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                    {editingExpense ? 'Gider Kaydını Düzenle' : 'Yeni Gider / Masraf Ekle'}
+                  </h3>
+                  <p className="text-[9px] text-slate-400 uppercase tracking-widest font-mono mt-0.5">
+                    STORM MUHASEBE MASRAF FORMU
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-4 flex-1">
+              {formError && (
+                <div className="p-3 bg-red-50 text-red-600 rounded-lg border border-red-100 text-xs font-bold">
+                  {formError}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Title */}
+                <div className="md:col-span-2">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    Gider Başlığı / Açıklaması *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Örn: Haziran Elektrik Faturası, Temmuz Ofis Kirası"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    className="w-full border border-slate-200 focus:border-[var(--accent-500)] focus:ring-[var(--accent-500)] rounded-lg p-2.5 text-xs text-slate-900 bg-slate-50 outline-none"
+                  />
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    Masraf Kategorisi *
+                  </label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value as Expense['category'] })}
+                    className="w-full border border-slate-200 focus:border-[var(--accent-500)] focus:ring-[var(--accent-500)] rounded-lg p-2.5 text-xs text-slate-900 bg-slate-50 cursor-pointer outline-none"
+                  >
+                    <option value="Elektrik">Elektrik</option>
+                    <option value="Su">Su</option>
+                    <option value="Doğalgaz">Doğalgaz</option>
+                    <option value="Kira">Kira</option>
+                    <option value="Muhasebe Gideri">Muhasebe</option>
+                    <option value="Maaş/Personel">Maaş/Personel</option>
+                    <option value="Yemek/Mutfak">Yemek/Mutfak</option>
+                    <option value="Ulaşım/Yakıt">Ulaşım/Yakıt</option>
+                    <option value="Diğer">Diğer</option>
+                  </select>
+                </div>
+
+                {/* Date */}
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    Gider Tarihi *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={formData.date}
+                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    className="w-full border border-slate-200 focus:border-[var(--accent-500)] focus:ring-[var(--accent-500)] rounded-lg p-2.5 text-xs text-slate-900 bg-slate-50 font-mono outline-none"
+                  />
+                </div>
+
+                {/* Amount */}
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    Tutar *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    step="0.01"
+                    min="0.01"
+                    placeholder="0.00"
+                    value={formData.amount || ''}
+                    onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
+                    className="w-full border border-slate-200 focus:border-[var(--accent-500)] focus:ring-[var(--accent-500)] rounded-lg p-2.5 text-xs text-slate-900 bg-slate-50 font-mono outline-none"
+                  />
+                </div>
+
+                {/* Currency */}
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    Para Birimi *
+                  </label>
+                  <select
+                    value={formData.currency}
+                    onChange={(e) => setFormData({ ...formData, currency: e.target.value as 'TRY' })}
+                    className="w-full border border-slate-200 focus:border-[var(--accent-500)] focus:ring-[var(--accent-500)] rounded-lg p-2.5 text-xs text-slate-900 bg-slate-50 cursor-pointer outline-none"
+                  >
+                    <option value="TRY">₺ TRY</option>
+                    
+                    
+                  </select>
+                </div>
+
+                {/* Account (Payment Method) */}
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    Ödeme Kaynağı *
+                  </label>
+                  <select
+                    value={formData.account}
+                    onChange={(e) => setFormData({ ...formData, account: e.target.value as 'cash' | 'bank' | 'pos' })}
+                    className="w-full border border-slate-200 focus:border-[var(--accent-500)] focus:ring-[var(--accent-500)] rounded-lg p-2.5 text-xs text-slate-900 bg-slate-50 cursor-pointer outline-none"
+                  >
+                    <option value="cash">Kasa (Nakit)</option>
+                    <option value="bank">Banka (Havale/EFT)</option>
+                    <option value="pos">POS (Kredi Kartı)</option>
+                  </select>
+                </div>
+
+                {/* Description */}
+                <div className="md:col-span-2">
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                    Detaylı Açıklama / Notlar
+                  </label>
+                  <textarea
+                    placeholder="Masrafa dair ek notlar, fatura numarası vb. bilgileri buraya girebilirsiniz."
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={3}
+                    className="w-full border border-slate-200 focus:border-[var(--accent-500)] focus:ring-[var(--accent-500)] rounded-lg p-2.5 text-xs text-slate-900 bg-slate-50 outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Actions Footer */}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  disabled={isSubmitting}
+                  className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 uppercase tracking-wider rounded-lg hover:bg-slate-50 transition cursor-pointer"
+                >
+                  Vazgeç
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-5 py-2 text-xs font-bold text-white uppercase tracking-wider bg-[var(--accent-600)] hover:bg-[var(--accent-700)] rounded-lg shadow-md hover:shadow-lg transition cursor-pointer flex items-center gap-2"
+                >
+                  {isSubmitting ? 'Kaydediliyor...' : editingExpense ? 'Değişiklikleri Kaydet' : 'Masrafı Kaydet'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+        </>
+      )}
+
+      <VirtualKeyboard
+        isOpen={isKeyboardOpen}
+        onClose={() => setIsKeyboardOpen(false)}
+        initialValue={searchTerm}
+        onConfirm={setSearchTerm}
+        title="Masraf Arama"
+        placeholder="Arama metni girin..."
+      />
+    </div>
+  );
+}

@@ -1,0 +1,269 @@
+declare global {
+  interface Window {
+    electronAPI?: {
+      onUpdateAvailable: (callback: () => void) => () => void;
+      onUpdateDownloaded: (callback: () => void) => () => void;
+      restartApp: () => void;
+      downloadUpdate?: () => void;
+      setAutoBackup?: (enabled: boolean) => void;
+      createManualBackup?: () => Promise<{success: boolean, path?: string, error?: string, canceled?: boolean}>;
+      restoreFromBackup?: () => Promise<{success: boolean, error?: string, canceled?: boolean}>;
+      openAutoBackupFolder?: () => Promise<{success: boolean, error?: string}>;
+      onDownloadProgress?: (callback: (percent: number) => void) => () => void;
+    };
+  }
+}
+
+export interface Cari {
+  id: string;
+  name: string;
+  code: string;
+  type: "customer" | "supplier" | "both";
+  phone: string;
+  email: string;
+  address: string;
+  balance: number; // positive = customer owes us, negative = we owe supplier
+  openingBalance: number;
+  createdAt: string;
+  isActive?: boolean;
+  currency?: "TRY";
+  taxOffice?: string;
+  taxNo?: string;
+  imageUrl?: string; // Profil/Logo resmi
+  notes?: string;
+}
+
+export interface Stock {
+  id: string;
+  name: string;
+  code: string;
+  unit: "Adet" | "KG" | "Litre" | "Metre" | "Kutu" | "Hizmet";
+  purchasePrice: number;
+  salesPrice: number;
+  quantity: number;
+  minQuantity: number;
+  barcode?: string; // Optional barcode support
+  imageUrl?: string; // Product image
+  category?: string; // Product category
+  brand?: string; // Product brand
+  createdAt: string;
+}
+
+export interface InvoiceItem {
+  stockId: string;
+  stockName: string;
+  quantity: number;
+  unit: string;
+  price: number; // unit price (excluding tax)
+  total: number; 
+}
+
+export interface Transaction {
+  id: string;
+  invoiceNo?: string; // Optional, only for sales/purchases
+  type: "sale" | "purchase" | "collection" | "payment" | "sale_return" | "purchase_return";
+  cariId: string;
+  cariName: string;
+  date: string; // YYYY-MM-DD
+  amount: number; // grand total or receipt amount
+  account: "cash" | "bank" | "pos" | ""; // Kasa, Banka, POS, or empty for unpaid/partially paid
+  bankAccountId?: string; // Links to the specific bank account if account is "cash" or "bank"
+  description: string;
+  items?: InvoiceItem[]; // only populated for sale / purchase
+  createdAt: string;
+  currency?: "TRY";
+  exchangeRate?: number; // Manual exchange rate for multi-currency transactions
+  convertedAmount?: number; // Amount after applying exchange rate to modify Cari's native balance
+}
+
+export interface DashboardStats {
+  totalSales: number;
+  totalPurchases: number;
+  totalCollections: number;
+  totalPayments: number;
+  netProfit: number;
+  monthlySales: number;
+  monthlyPurchases: number;
+  monthlyCostOfSales: number;
+  monthlyExpenses: number;
+  monthlySalaries: number;
+  monthlyNetProfit: number;
+  totalReceivables: number; // ne kadar alacağımız var (positive cari balances sum)
+  totalPayables: number; // ne kadar borcumuz var (negative cari balances sum)
+  cashBalance: number;
+  bankBalance: number;
+  posBalance: number;
+  stockValue: number; // calculated as sum of (quantity * purchasePrice)
+}
+
+export interface Expense {
+  id: string;
+  title: string;
+  category:
+    | "Elektrik"
+    | "Su"
+    | "Doğalgaz"
+    | "Kira"
+    | "Muhasebe Gideri"
+    | "Maaş/Personel"
+    | "Yemek/Mutfak"
+    | "Ulaşım/Yakıt"
+    | "İnternet/Telefon"
+    | "Personel Maaş/Avans"
+    | "Vergi/SGK"
+    | "Diğer";
+  amount: number;
+  date: string; // YYYY-MM-DD
+  account: "cash" | "bank" | "pos"; // Kasa / Banka / POS
+  bankAccountId?: string;
+  description?: string;
+  currency: "TRY";
+  createdAt: string;
+}
+
+export interface Employee {
+  id: string;
+  name: string;
+  role: string;
+  phone?: string;
+  email?: string;
+  hireDate: string;
+  baseSalary: number;
+  currency: "TRY";
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface EmployeeTransaction {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  type: "accrual" | "payment" | "advance"; // Hak ediş, Ödeme, Avans
+  amount: number;
+  currency: "TRY";
+  date: string;
+  account: "cash" | "bank" | "pos" | "cek_portfoy" | "cek_firma" | ""; // Ödeme kaynağı (hak ediş için boş kalabilir)
+  bankAccountId?: string;
+  description?: string;
+  createdAt: string;
+}
+
+export interface BankAccount {
+  id: string;
+  name: string;
+  type: "kasa" | "banka" | "pos";
+  currency: "TRY";
+  initialBalance: number;
+  createdAt: string;
+}
+
+export interface AccountTransaction {
+  id: string;
+  accountId: string;
+  type: "giris" | "cikis" | "transfer_out" | "transfer_in";
+  amount: number;
+  date: string;
+  description: string;
+  targetAccountId?: string;
+  createdAt: string;
+}
+
+export interface KeyboardShortcut {
+  id: string;
+  name: string;
+  category: string;
+  key: string;
+  altKey: boolean;
+  ctrlKey: boolean;
+  shiftKey: boolean;
+}
+
+export interface RecurringTransaction {
+  id: string;
+  title: string; // e.g., "Ofis Kirası", "Mali Müşavir Ücreti", "Türk Telekom Fiber"
+  type: "expense" | "income"; // Gider / Gelir
+  category: Expense['category'];
+  amount: number;
+  currency: "TRY";
+  account: "cash" | "bank" | "pos";
+  bankAccountId?: string;
+  cariId?: string;
+  cariName?: string;
+  frequency: "monthly" | "weekly" | "yearly"; // Periyot
+  dayOfMonth: number; // 1-31
+  startDate: string; // YYYY-MM-DD
+  endDate?: string; // YYYY-MM-DD
+  lastProcessedDate?: string; // YYYY-MM-DD
+  nextDueDate: string; // YYYY-MM-DD
+  autoApprove?: boolean; // false = onay bekler, true = otomatik onay
+  status: "active" | "paused"; // Aktif / Durduruldu
+  description?: string;
+  createdAt: string;
+}
+
+export interface AppWindow {
+  id: string;
+  title: string;
+  icon?: string;
+  component: string;
+  isMinimized: boolean;
+  isMaximized: boolean;
+  position: { x: number; y: number };
+  size: { width: number; height: number };
+  zIndex: number;
+  data?: any;
+}
+
+export interface SystemSettings {
+  theme: 'light' | 'dark' | 'system';
+  wallpaper: string;
+  accentColor: string;
+  autoBackup: boolean;
+  soundEnabled: boolean;
+}
+
+export interface SystemNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  timestamp: string;
+  read: boolean;
+}
+
+export interface VirtualFile {
+  id: string;
+  name: string;
+  path: string;
+  type: 'file' | 'folder';
+  fileType?: string;
+  size?: number;
+  updatedAt?: string;
+  lastModified?: string | number | Date;
+  content?: string;
+  parentId?: string | null;
+  children?: VirtualFile[];
+}
+
+export interface SystemProcess {
+  id: string;
+  name: string;
+  cpu: number;
+  memory: number;
+  status: 'running' | 'sleeping' | 'stopped';
+}
+
+export interface ZipFileInfo {
+  name: string;
+  path?: string;
+  size: number;
+  compressedSize?: number;
+  isDir: boolean;
+  type?: string;
+  content?: string;
+  date: string | Date;
+}
+
+
+
+
