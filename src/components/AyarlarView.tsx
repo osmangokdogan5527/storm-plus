@@ -1,6 +1,5 @@
 import { ShortcutsSettings } from './settings/ShortcutsSettings';
 import { PermissionsSettings } from './settings/PermissionsSettings';
-import { AiSettings } from './settings/AiSettings';
 import { ProfileSettings } from './settings/ProfileSettings';
 import { GeneralSettings } from './settings/GeneralSettings';
 import React, { useState } from 'react';
@@ -398,50 +397,7 @@ export default function AyarlarView({
 
         {/* Settings Sub-Tabs */}
         <div className="flex border-b border-slate-200 gap-1.5 scrollbar-thin overflow-x-auto pb-px">
-          <button
-            onClick={() => setSettingsSubTab('general')}
-            className={`flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 cursor-pointer ${
-              settingsSubTab === 'general'
-                ? 'border-teal-600 text-teal-600 font-extrabold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <Palette size={15} />
-            <span>Arayüz & Menü</span>
-          </button>
-          <button
-            onClick={() => setSettingsSubTab('profile')}
-            className={`hidden md:flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 cursor-pointer ${
-              settingsSubTab === 'profile'
-                ? 'border-teal-600 text-teal-600 font-extrabold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <User size={15} />
-            <span>Profil & Güvenlik</span>
-          </button>
-          <button
-            onClick={() => setSettingsSubTab('template-designer')}
-            className={`hidden md:flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 cursor-pointer ${
-              settingsSubTab === 'template-designer'
-                ? 'border-teal-600 text-teal-600 font-extrabold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <Printer size={15} />
-            <span>Fiş Tasarımı</span>
-          </button>
-          <button
-            onClick={() => setSettingsSubTab('ai')}
-            className={`flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 cursor-pointer ${
-              settingsSubTab === 'ai'
-                ? 'border-teal-600 text-teal-600 font-extrabold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <Bot size={15} />
-            <span>Yapay Zeka (AI)</span>
-          </button>
+          
           {(!isSecurityActive || userRole === 'admin') && (
             <button
               onClick={() => setSettingsSubTab('permissions')}
@@ -546,15 +502,7 @@ export default function AyarlarView({
           </div>
         )}
 
-        {settingsSubTab === 'ai' && (
-          <AiSettings
-            geminiApiKey={geminiApiKey}
-            setGeminiApiKey={setGeminiApiKey}
-            setAiInfoModalOpen={setAiInfoModalOpen}
-            isAiEnabled={isAiEnabled}
-            setIsAiEnabled={setIsAiEnabled}
-          />
-        )}
+        
         {settingsSubTab === 'permissions' && (
           <PermissionsSettings
             showToast={showToast}

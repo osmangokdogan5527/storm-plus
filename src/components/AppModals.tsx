@@ -1,7 +1,6 @@
 import React from 'react';
 import { RotateCcw, CloudLightning, Check, MessageSquare, ImageIcon, ShieldCheck, X, Download, ShieldAlert, Info, Package } from 'lucide-react';
 import { StormLogo, } from '../constants';
-import AiAssistant from "./AiAssistant";
 
 interface AppModalsProps {
   resetModalOpen: boolean;
@@ -595,41 +594,7 @@ export const AppModals: React.FC<AppModalsProps> = ({
         </div>
       )}
 
-      {/* AI Assistant Chat UI */}
-      {user && isAiEnabled && (
-        <AiAssistant 
-          apiKey={geminiApiKey} 
-          userRole={userRole}
-          isSecurityActive={isSecurityActive}
-          sensitiveTabs={sensitiveTabs}
-          actionPermissions={actionPermissions}
-          onNavigateToSettings={() => {
-            handleNavigate('ayarlar');
-          }}
-          financialData={financialData}
-          onCommandParsed={(commandData) => {
-            let targetTab = 'islemler';
-            if (commandData.islem === 'expense') {
-              targetTab = 'masraflar';
-            } else if (commandData.islem === 'employee_payment') {
-              targetTab = 'calisanlar';
-            } else if (commandData.islem === 'add_customer' || commandData.islem === 'add_supplier') {
-              targetTab = 'cariler';
-            } else if (commandData.islem === 'add_product') {
-              targetTab = 'stoklar';
-            }
-
-            if (isSecurityActive && userRole === 'employee' && sensitiveTabs.includes(targetTab)) {
-              handleNavigate(targetTab);
-              return;
-            }
-
-            setAiPrefilledData(commandData);
-            setFeedbackList(commandData);
-            setActiveTab(targetTab);
-          }}
-        />
-      )}
+      
 
       {/* ADMIN PRIVILEGE ESCALATION MODAL */}
       {isAdminPinModalOpen && (
