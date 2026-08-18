@@ -732,7 +732,7 @@ export const PosView: React.FC<PosViewProps> = ({
   );
 
   return (
-    <div className="pos-terminal-wrapper flex flex-col min-h-[calc(100vh-4rem)] h-auto gap-3.5 animate-fade-in p-1.5 bg-slate-900 rounded-2xl pb-10" style={{ backgroundColor: '#0f172a' }}>
+    <div className="pos-terminal-wrapper flex flex-col h-full min-h-[calc(100vh-5rem)] gap-3.5 animate-fade-in p-1.5 bg-slate-900 rounded-2xl pb-4" style={{ backgroundColor: '#0f172a' }}>
       
       {/* MOBİL İÇİN SABİT YAPIŞKAN FİYAT GÖSTERGESİ (SADECE MOBİLDE GÖRÜNÜR) */}
       <div className="md:hidden fixed bottom-20 left-4 right-4 z-50 bg-slate-900 border-2 border-teal-500/80 rounded-2xl p-3.5 shadow-[0_0_30px_rgba(45,212,191,0.5)] flex items-center justify-between pointer-events-none">
@@ -756,7 +756,7 @@ export const PosView: React.FC<PosViewProps> = ({
             <h2 className="text-sm font-black text-white flex items-center gap-2">
               <span>HIZLI SATIŞ TERMİNALİ</span>
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-teal-600 text-white border border-teal-400 font-black shadow-sm">
-                v1.8.1 POS Engine
+                1.4.3 POS Engine
               </span>
             </h2>
             <p className="text-[11px] text-slate-300 font-medium">
@@ -885,7 +885,7 @@ export const PosView: React.FC<PosViewProps> = ({
 
       {/* AKTİF MASA BİLGİ ŞERİDİ */}
       {activeTable && (
-        <div className="p-3 bg-gradient-to-r from-amber-500/20 via-slate-900 to-amber-500/10 border-2 border-amber-500/50 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-xl">
+        <div className="p-3 bg-gradient-to-r from-amber-500/20 via-slate-900 to-amber-500/10 border-2 border-amber-500/50 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-xl shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-amber-500 text-slate-950 font-black rounded-xl shadow-lg">
               <Utensils size={20} />
@@ -948,10 +948,10 @@ export const PosView: React.FC<PosViewProps> = ({
         </div>
       )}
 
-      {/* İKİLİ EKRAN YAPISI */}
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-3.5 min-h-0">
-        {/* SOL PANEL: ÜRÜN KATALOĞU VE KASA GÖSTERGESİ / ÖDEME PANELİ */}
-        <div className="md:col-span-7 xl:col-span-8 flex flex-col gap-3.5 min-h-0">
+      {/* ANA EKRAN DÜZENİ: SOLDA ÜRÜN KATALOĞU (FLEX-GROW & H-FULL), SAĞDA SEPET VE ÖDEME ÖZETİ */}
+      <div className="flex-1 flex flex-col lg:flex-row gap-3.5 min-h-0 h-full">
+        {/* SOL PANEL: ÜRÜN KATALOĞU (TÜM ALANI DOLDURUR - FLEX-GROW & H-FULL) */}
+        <div className="flex-1 flex flex-col min-h-0 h-full">
           <PosProductCatalog
             stocks={safeStocks}
             onAddToCart={handleAddToCart}
@@ -959,113 +959,142 @@ export const PosView: React.FC<PosViewProps> = ({
             setSearchTerm={setProductSearchTerm}
             searchInputRef={searchInputRef}
           />
+        </div>
 
-          {/* KASA GÖSTERGESİ VE ÖDEME PANELİ (GÖSTERGE SOL PANEL ALTINA ALINDI) */}
-          <div className="p-4 bg-slate-900 rounded-2xl border-2 border-slate-700 shadow-2xl space-y-3.5 shrink-0" style={{ backgroundColor: '#0f172a' }}>
+        {/* SAĞ PANEL: SEPET & ÖDEME ÖZETİ & HIZLI AKSİYONLAR */}
+        <div className="w-full lg:w-[440px] xl:w-[480px] 2xl:w-[520px] shrink-0 flex flex-col gap-3 min-h-0 h-full overflow-y-auto custom-scrollbar">
+          
+          {/* SABİT ANA GENEL TOPLAM GÖSTERGESİ (SAĞ ÜST) */}
+          <div className="bg-slate-900 p-3.5 rounded-2xl border-2 border-teal-500/50 flex flex-col justify-center items-end shadow-xl shrink-0" style={{ backgroundColor: '#0f172a' }}>
+            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">
+              ÖDENECEK TUTAR
+            </span>
+            <span className="text-teal-300 font-black text-3xl sm:text-4xl font-mono tracking-tight leading-none mt-1" style={{ color: '#2dd4bf' }}>
+              ₺{summary.grandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+            {selectedCurrency !== 'TRY' && (
+              <div className="text-amber-300 font-mono text-base font-black pt-1.5 mt-1.5 border-t border-slate-800 w-full text-right" style={{ color: '#fcd34d' }}>
+                {currencySymbol}{convertedTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {selectedCurrency}
+              </div>
+            )}
+          </div>
+
+          {/* SEPET TABLOSU */}
+          <div className="flex-1 min-h-[250px] flex flex-col">
+            <PosCartTable
+              items={cartItems}
+              onUpdateQuantity={handleUpdateQuantity}
+              onSetQuantity={handleSetQuantity}
+              onUpdateDiscount={handleUpdateDiscount}
+              onUpdateUnitPrice={handleUpdateUnitPrice}
+              onRemoveItem={handleRemoveItem}
+              onClearCart={handleClearCart}
+            />
+          </div>
+
+          {/* 3. ÖDEME ÖZETİ VE HIZLI AKSİYON PANELİ */}
+          <div className="p-3.5 bg-slate-900 rounded-2xl border-2 border-slate-700 shadow-xl space-y-3 shrink-0" style={{ backgroundColor: '#0f172a' }}>
             
-            {/* İSKONTO VE PARA BİRİMİ PANELİ */}
-            <div className="p-3.5 bg-slate-900 rounded-2xl border-2 border-slate-700 grid grid-cols-1 md:grid-cols-12 gap-3.5 items-center" style={{ backgroundColor: '#0f172a' }}>
-              {/* 2. İSKONTO SEÇİMİ (% YÜZDE, ₺ İSKONTO, 🎯 NET ALINACAK TUTAR) */}
-              <div className="md:col-span-12 space-y-1.5">
-                <div className="flex flex-wrap items-center justify-between gap-1">
-                  <span className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1" style={{ color: '#fcd34d' }}>
-                    <Sparkles size={15} />
-                    İskonto / Artırım:
-                  </span>
-                  <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-700 flex-wrap">
-                    <button
-                      type="button"
-                      onClick={() => { setDiscountMode('percent'); setDiscountVal(''); }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer active:scale-95 touch-manipulation ${
-                        discountMode === 'percent' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
-                      }`}
-                      style={discountMode === 'percent' ? { backgroundColor: '#f59e0b', color: '#020617', fontWeight: 900 } : {}}
-                    >
-                      % Yüzde
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setDiscountMode('amount'); setDiscountVal(''); }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer active:scale-95 touch-manipulation ${
-                        discountMode === 'amount' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
-                      }`}
-                      style={discountMode === 'amount' ? { backgroundColor: '#f59e0b', color: '#020617', fontWeight: 900 } : {}}
-                    >
-                      ₺ İskonto
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setDiscountMode('markup_percent'); setDiscountVal(''); }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer active:scale-95 touch-manipulation ${
-                        discountMode === 'markup_percent' ? 'bg-rose-500 text-white shadow' : 'text-slate-400 hover:text-white'
-                      }`}
-                      style={discountMode === 'markup_percent' ? { backgroundColor: '#f43f5e', color: '#ffffff', fontWeight: 900 } : {}}
-                    >
-                      📈 % Artırım
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setDiscountMode('markup_amount'); setDiscountVal(''); }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer active:scale-95 touch-manipulation ${
-                        discountMode === 'markup_amount' ? 'bg-rose-500 text-white shadow' : 'text-slate-400 hover:text-white'
-                      }`}
-                      style={discountMode === 'markup_amount' ? { backgroundColor: '#f43f5e', color: '#ffffff', fontWeight: 900 } : {}}
-                    >
-                      📈 ₺ Artırım
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setDiscountMode('target'); setDiscountVal(''); }}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer active:scale-95 touch-manipulation ${
-                        discountMode === 'target' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
-                      }`}
-                      style={discountMode === 'target' ? { backgroundColor: '#f59e0b', color: '#020617', fontWeight: 900 } : {}}
-                    >
-                      🎯 Net Tutar
-                    </button>
-                  </div>
-                </div>
-
-                {/* İSKONTO/ARTIRIM GİRİŞ INPUT'U */}
-                <PosNumpadModal
-                  isOpen={isDiscountNumpadOpen}
-                  onClose={() => setIsDiscountNumpadOpen(false)}
-                  title={discountMode === 'percent' ? 'İskonto % Oranı' : discountMode === 'amount' ? 'İskonto Tutarı (₺)' : discountMode === 'markup_percent' ? 'Artırım % Oranı' : discountMode === 'markup_amount' ? 'Artırım Tutarı (₺)' : 'Alınacak Net Tutar (₺)'}
-                  initialValue={discountVal}
-                  onConfirm={(val) => setDiscountVal(val)}
-                  allowDecimal={true}
-                />
-                <div className="relative flex items-center">
+            {/* İSKONTO VE ARTIRIM SEÇİMİ */}
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-1">
+                <span className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1" style={{ color: '#fcd34d' }}>
+                  <Sparkles size={14} />
+                  İskonto / Artırım:
+                </span>
+                <div className="flex items-center gap-1 bg-slate-900 p-0.5 rounded-xl border border-slate-700 flex-wrap">
                   <button
-                    onClick={() => setIsDiscountNumpadOpen(true)}
-                    className="w-full text-left pl-3.5 pr-9 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-xs sm:text-sm text-white font-bold hover:border-amber-400 transition-colors flex items-center h-[42px]"
-                    style={{ backgroundColor: '#0f172a', color: '#ffffff' }}
+                    type="button"
+                    onClick={() => { setDiscountMode('percent'); setDiscountVal(''); }}
+                    className={`px-2 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer active:scale-95 touch-manipulation ${
+                      discountMode === 'percent' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
+                    }`}
+                    style={discountMode === 'percent' ? { backgroundColor: '#f59e0b', color: '#020617', fontWeight: 900 } : {}}
                   >
-                    {discountVal === '' || discountVal === 0 ? (
-                      <span className="text-slate-500">
-                        {discountMode === 'percent'
-                          ? 'İskonto % Oranı Giriniz...'
-                          : discountMode === 'amount'
-                          ? 'İskonto Tutarı ₺ Giriniz...'
-                          : discountMode === 'markup_percent'
-                          ? 'Artırım % Oranı Giriniz...'
-                          : discountMode === 'markup_amount'
-                          ? 'Artırım Tutarı ₺ Giriniz...'
-                          : 'Alınacak Net Tutar ₺ Giriniz...'}
-                      </span>
-                    ) : (
-                      <span>{discountVal}</span>
-                    )}
+                    % Yüzde
                   </button>
-                  <span className="absolute right-3 text-xs font-black font-mono text-amber-400" style={{ color: '#fbbf24' }}>
-                    {discountMode === 'percent' || discountMode === 'markup_percent' ? '%' : '₺'}
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => { setDiscountMode('amount'); setDiscountVal(''); }}
+                    className={`px-2 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer active:scale-95 touch-manipulation ${
+                      discountMode === 'amount' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
+                    }`}
+                    style={discountMode === 'amount' ? { backgroundColor: '#f59e0b', color: '#020617', fontWeight: 900 } : {}}
+                  >
+                    ₺ İskonto
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setDiscountMode('markup_percent'); setDiscountVal(''); }}
+                    className={`px-2 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer active:scale-95 touch-manipulation ${
+                      discountMode === 'markup_percent' ? 'bg-rose-500 text-white shadow' : 'text-slate-400 hover:text-white'
+                    }`}
+                    style={discountMode === 'markup_percent' ? { backgroundColor: '#f43f5e', color: '#ffffff', fontWeight: 900 } : {}}
+                  >
+                    📈 % Artırım
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setDiscountMode('markup_amount'); setDiscountVal(''); }}
+                    className={`px-2 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer active:scale-95 touch-manipulation ${
+                      discountMode === 'markup_amount' ? 'bg-rose-500 text-white shadow' : 'text-slate-400 hover:text-white'
+                    }`}
+                    style={discountMode === 'markup_amount' ? { backgroundColor: '#f43f5e', color: '#ffffff', fontWeight: 900 } : {}}
+                  >
+                    📈 ₺ Artırım
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setDiscountMode('target'); setDiscountVal(''); }}
+                    className={`px-2 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer active:scale-95 touch-manipulation ${
+                      discountMode === 'target' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
+                    }`}
+                    style={discountMode === 'target' ? { backgroundColor: '#f59e0b', color: '#020617', fontWeight: 900 } : {}}
+                  >
+                    🎯 Net Tutar
+                  </button>
                 </div>
               </div>
 
+              {/* İSKONTO/ARTIRIM GİRİŞ INPUT'U */}
+              <PosNumpadModal
+                isOpen={isDiscountNumpadOpen}
+                onClose={() => setIsDiscountNumpadOpen(false)}
+                title={discountMode === 'percent' ? 'İskonto % Oranı' : discountMode === 'amount' ? 'İskonto Tutarı (₺)' : discountMode === 'markup_percent' ? 'Artırım % Oranı' : discountMode === 'markup_amount' ? 'Artırım Tutarı (₺)' : 'Alınacak Net Tutar (₺)'}
+                initialValue={discountVal}
+                onConfirm={(val) => setDiscountVal(val)}
+                allowDecimal={true}
+              />
+              <div className="relative flex items-center">
+                <button
+                  onClick={() => setIsDiscountNumpadOpen(true)}
+                  className="w-full text-left pl-3 pr-8 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white font-bold hover:border-amber-400 transition-colors flex items-center h-[38px]"
+                  style={{ backgroundColor: '#020617', color: '#ffffff' }}
+                >
+                  {discountVal === '' || discountVal === 0 ? (
+                    <span className="text-slate-500">
+                      {discountMode === 'percent'
+                        ? 'İskonto % Oranı Giriniz...'
+                        : discountMode === 'amount'
+                        ? 'İskonto Tutarı ₺ Giriniz...'
+                        : discountMode === 'markup_percent'
+                        ? 'Artırım % Oranı Giriniz...'
+                        : discountMode === 'markup_amount'
+                        ? 'Artırım Tutarı ₺ Giriniz...'
+                        : 'Alınacak Net Tutar ₺ Giriniz...'}
+                    </span>
+                  ) : (
+                    <span>{discountVal}</span>
+                  )}
+                </button>
+                <span className="absolute right-3 text-xs font-black font-mono text-amber-400" style={{ color: '#fbbf24' }}>
+                  {discountMode === 'percent' || discountMode === 'markup_percent' ? '%' : '₺'}
+                </span>
+              </div>
             </div>
-              {/* HESAPLAMA ÖZETİ (SADELEŞTİRİLMİŞ) */}
-            <div className="flex flex-col gap-1.5 border-y border-slate-800 py-3.5 text-xs font-mono">
+
+            {/* HESAPLAMA ÖZETİ */}
+            <div className="flex flex-col gap-1 border-y border-slate-800 py-2.5 text-xs font-mono">
               <div className="flex justify-between text-slate-300 font-bold">
                 <span>Ara Toplam:</span>
                 <span className="text-white font-black" style={{ color: '#ffffff' }}>₺{summary.rawTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -1083,208 +1112,87 @@ export const PosView: React.FC<PosViewProps> = ({
                 </div>
               )}
             </div>
-            {/* HIZLI AKSİYON ÖDEME & ONLINE SİPARİŞ BÖLÜMÜ (AŞAĞIDA BİRLİKTE) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 pt-1">
-              {/* HIZLI AKSİYON ÖDEME BUTONLARI */}
-              <div className="lg:col-span-7 xl:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                <button
-                  disabled={cartItems.length === 0 || isProcessing}
-                  onClick={handleQuickCashSale}
-                  className="py-3.5 sm:py-4 px-2.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-slate-950 font-black rounded-2xl text-xs sm:text-sm shadow-xl shadow-emerald-500/30 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer active:scale-95 touch-manipulation border-2 border-emerald-300"
-                >
-                  <DollarSign size={20} className="shrink-0" />
-                  <span className="text-center font-black">NAKİT [F2]</span>
-                </button>
 
-                <button
-                  disabled={cartItems.length === 0 || isProcessing}
-                  onClick={handleQuickPosSale}
-                  className="py-3.5 sm:py-4 px-2.5 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 text-slate-950 font-black rounded-2xl text-xs sm:text-sm shadow-xl shadow-blue-500/30 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer active:scale-95 touch-manipulation border-2 border-blue-300"
-                >
-                  <CreditCard size={20} className="shrink-0" />
-                  <span className="text-center font-black">POS [F3]</span>
-                </button>
+            {/* HIZLI AKSİYON ÖDEME BUTONLARI */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button
+                disabled={cartItems.length === 0 || isProcessing}
+                onClick={handleQuickCashSale}
+                className="py-3 px-2 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-slate-950 font-black rounded-xl text-xs shadow-lg shadow-emerald-500/30 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 touch-manipulation border-2 border-emerald-300"
+              >
+                <DollarSign size={18} className="shrink-0" />
+                <span className="text-center font-black">NAKİT [F2]</span>
+              </button>
 
-                <button
-                  disabled={cartItems.length === 0 || isProcessing}
-                  onClick={() => setIsSplitModalOpen(true)}
-                  className="py-3.5 sm:py-4 px-2.5 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-black rounded-2xl text-xs sm:text-sm shadow-xl shadow-purple-600/30 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer active:scale-95 touch-manipulation border-2 border-purple-400"
-                >
-                  <Zap size={18} className="shrink-0" />
-                  <span className="text-center font-black">PARÇALI [F4]</span>
-                </button>
+              <button
+                disabled={cartItems.length === 0 || isProcessing}
+                onClick={handleQuickPosSale}
+                className="py-3 px-2 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 text-slate-950 font-black rounded-xl text-xs shadow-lg shadow-blue-500/30 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 touch-manipulation border-2 border-blue-300"
+              >
+                <CreditCard size={18} className="shrink-0" />
+                <span className="text-center font-black">POS [F3]</span>
+              </button>
 
-                <button
-                  disabled={cartItems.length === 0 || isProcessing}
-                  onClick={handleParkSale}
-                  className="py-3.5 sm:py-4 px-2.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-black rounded-2xl text-xs sm:text-sm shadow-xl shadow-amber-500/20 transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer active:scale-95 touch-manipulation border-2 border-amber-300"
-                >
-                  <Clock size={18} className="shrink-0" />
-                  <span className="text-center font-black">ASKI [F8]</span>
-                </button>
-              </div>
+              <button
+                disabled={cartItems.length === 0 || isProcessing}
+                onClick={() => setIsSplitModalOpen(true)}
+                className="py-3 px-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-black rounded-xl text-xs shadow-lg shadow-purple-600/30 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 touch-manipulation border-2 border-purple-400"
+              >
+                <Zap size={16} className="shrink-0" />
+                <span className="text-center font-black">PARÇALI [F4]</span>
+              </button>
 
-              {/* ONLINE SİPARİŞ PLATFORMLARI (AŞAĞIDA ÖDEMENİN YANINDA) */}
-              <div className="lg:col-span-5 xl:col-span-4 p-2.5 bg-slate-950/80 border-2 border-slate-700/80 rounded-2xl shadow-xl flex flex-col justify-between gap-2" style={{ backgroundColor: '#020617' }}>
-                <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-base">🛵</span>
-                    <span className="text-xs font-black text-white block leading-tight">ONLINE SİPARİŞ</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsPlatformSettingsOpen(true)}
-                    className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[10px] font-black flex items-center gap-1 shrink-0 transition-all cursor-pointer active:scale-95"
-                    title="Platform Oranlarını ve Komisyonları Düzenle"
-                  >
-                    <Settings size={12} className="text-teal-400" />
-                    <span>Oranlar</span>
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-1.5">
-                  {platforms
-                    .filter((p) => p.active)
-                    .map((plat) => (
-                      <button
-                        key={plat.id}
-                        type="button"
-                        onClick={() => setSelectedPlatformForSale(plat)}
-                        className={`px-2 py-1.5 rounded-xl text-[11px] font-black flex items-center justify-between gap-1 transition-all cursor-pointer shadow-md active:scale-95 touch-manipulation hover:scale-[1.02] border ${plat.bgColor} ${plat.borderColor} ${plat.textColor}`}
-                        title={`${plat.name} Sipariş Gir (%${plat.commissionRate} Komisyon)`}
-                      >
-                        <div className="flex items-center gap-1 min-w-0 truncate">
-                          <span className="text-xs shrink-0">{plat.icon}</span>
-                          <span className="truncate font-black">{plat.name}</span>
-                        </div>
-                        <span className={`px-1 py-0.2 rounded text-[9px] font-mono font-black shrink-0 ${plat.badgeColor}`}>
-                          %{plat.commissionRate}
-                        </span>
-                      </button>
-                    ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* SAĞ PANEL: SEPET & MÜŞTERİ SEÇİMİ (GENİŞ SEPET TABLOSU) */}
-        <div className="md:col-span-5 xl:col-span-4 flex flex-col gap-3.5 min-h-0 relative">
-          
-          {/* SABİT ANA GENEL TOPLAM GÖSTERGESİ (SAĞ ÜST) */}
-          <div className="sticky top-4 z-10 bg-slate-900 p-4 rounded-2xl border-2 border-teal-500/50 flex flex-col justify-center items-end shadow-2xl shrink-0" style={{ backgroundColor: '#0f172a' }}>
-            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">
-              ÖDENECEK TUTAR
-            </span>
-            <span className="text-teal-300 font-black text-4xl sm:text-5xl font-mono tracking-tight leading-none mt-1" style={{ color: '#2dd4bf' }}>
-              ₺{summary.grandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-            {selectedCurrency !== 'TRY' && (
-              <div className="text-amber-300 font-mono text-lg font-black pt-2 mt-2 border-t border-slate-800 w-full text-right" style={{ color: '#fcd34d' }}>
-                {currencySymbol}{convertedTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {selectedCurrency}
-              </div>
-            )}
-          </div>
-
-          {/* 1. MÜŞTERİ / CARİ SEÇİMİ */}
-          <div className="p-3.5 bg-slate-900 rounded-2xl border-2 border-slate-700 relative shrink-0 shadow-xl" style={{ backgroundColor: '#0f172a' }}>
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <label className="text-xs font-black text-white flex items-center gap-1.5 uppercase tracking-wider" style={{ color: '#ffffff' }}>
-                <User size={16} className="text-teal-400" style={{ color: '#2dd4bf' }} />
-                Müşteri (Cari)
-              </label>
-              {selectedCari ? (
-                <button
-                  onClick={() => setSelectedCari(null)}
-                  className="text-xs font-black text-amber-300 hover:underline cursor-pointer"
-                  style={{ color: '#fcd34d' }}
-                >
-                  Perakendeye Dön
-                </button>
-              ) : (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-500/20 text-teal-300 border border-teal-500/40">
-                  Perakende Satış
-                </span>
-              )}
+              <button
+                disabled={cartItems.length === 0 || isProcessing}
+                onClick={handleParkSale}
+                className="py-3 px-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-black rounded-xl text-xs shadow-lg shadow-amber-500/20 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 touch-manipulation border-2 border-amber-300"
+              >
+                <Clock size={16} className="shrink-0" />
+                <span className="text-center font-black">ASKI [F8]</span>
+              </button>
             </div>
 
-            {selectedCari ? (
-              <div className="p-2.5 bg-teal-500/10 border border-teal-400/40 rounded-xl flex items-center justify-between">
-                <div>
-                  <h5 className="text-xs font-black text-white" style={{ color: '#ffffff' }}>{selectedCari.name}</h5>
-                  <span className="text-[11px] text-slate-300 font-mono">
-                    {selectedCari.code} • Bakiye:{' '}
-                    <strong className={selectedCari.balance >= 0 ? 'text-emerald-400' : 'text-red-400'}>
-                      ₺{selectedCari.balance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                    </strong>
-                  </span>
+            {/* ONLINE SİPARİŞ PLATFORMLARI */}
+            <div className="p-2.5 bg-slate-950/80 border-2 border-slate-700/80 rounded-xl shadow-md flex flex-col gap-2" style={{ backgroundColor: '#020617' }}>
+              <div className="flex items-center justify-between border-b border-slate-800 pb-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm">🛵</span>
+                  <span className="text-xs font-black text-white block leading-tight">ONLINE SİPARİŞ</span>
                 </div>
-                <span className="px-2 py-0.5 rounded text-[10px] font-extrabold bg-teal-500/20 text-teal-200 border border-teal-400/50">
-                  Seçili Cari
-                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsPlatformSettingsOpen(true)}
+                  className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[10px] font-black flex items-center gap-1 shrink-0 transition-all cursor-pointer active:scale-95"
+                  title="Platform Oranlarını ve Komisyonları Düzenle"
+                >
+                  <Settings size={11} className="text-teal-400" />
+                  <span>Oranlar</span>
+                </button>
               </div>
-            ) : (
-              <div className="relative">
-                <input
-                  type="text"
-                  value={cariSearchTerm}
-                  onFocus={() => {
-                    setIsCariDropdownOpen(true);
-                    setIsCariKeyboardOpen(true);
-                  }}
-                  onChange={(e) => {
-                    setCariSearchTerm(e.target.value);
-                    setIsCariDropdownOpen(true);
-                  }}
-                  placeholder="Müşteri Ara veya 'Perakende Müşteri'..."
-                  className="w-full px-3 py-2.5 bg-slate-950 border-2 border-slate-700 rounded-xl text-xs text-white placeholder-slate-400 font-bold focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400 transition-all shadow-inner"
-                  style={{ backgroundColor: '#020617', color: '#ffffff' }}
-                />
-                
 
-                {isCariDropdownOpen && (
-                  <div className="absolute left-0 right-0 top-full mt-1 z-30 bg-slate-900 border-2 border-slate-600 rounded-xl shadow-2xl max-h-48 overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-2 gap-1.5">
+                {platforms
+                  .filter((p) => p.active)
+                  .map((plat) => (
                     <button
-                      onClick={() => {
-                        setSelectedCari(null);
-                        setIsCariDropdownOpen(false);
-                      }}
-                      className="w-full text-left p-2.5 hover:bg-slate-800 text-xs font-black text-teal-300 border-b border-slate-700 cursor-pointer"
+                      key={plat.id}
+                      type="button"
+                      onClick={() => setSelectedPlatformForSale(plat)}
+                      className={`px-2 py-1.5 rounded-xl text-[11px] font-black flex items-center justify-between gap-1 transition-all cursor-pointer shadow-md active:scale-95 touch-manipulation hover:scale-[1.02] border ${plat.bgColor} ${plat.borderColor} ${plat.textColor}`}
+                      title={`${plat.name} Sipariş Gir (%${plat.commissionRate} Komisyon)`}
                     >
-                      🛒 Perakende Müşteri (Kasasız Anında Satış)
+                      <div className="flex items-center gap-1 min-w-0 truncate">
+                        <span className="text-xs shrink-0">{plat.icon}</span>
+                        <span className="truncate font-black">{plat.name}</span>
+                      </div>
+                      <span className={`px-1 py-0.2 rounded text-[9px] font-mono font-black shrink-0 ${plat.badgeColor}`}>
+                        %{plat.commissionRate}
+                      </span>
                     </button>
-                    {filteredCariler.map((c) => (
-                      <button
-                        key={c.id}
-                        onClick={() => {
-                          setSelectedCari(c);
-                          setIsCariDropdownOpen(false);
-                          setCariSearchTerm('');
-                        }}
-                        className="w-full text-left p-2.5 hover:bg-slate-800 text-xs text-white border-b border-slate-700/60 last:border-none flex justify-between cursor-pointer font-medium"
-                      >
-                        <span className="font-bold">{c.name}</span>
-                        <span className="font-mono text-xs text-teal-300 font-bold">
-                          ₺{c.balance.toFixed(2)}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+                  ))}
               </div>
-            )}
+            </div>
           </div>
-
-          {/* 2. SEPET TABLOSU (SAĞ PANELİ TAM KAPLAR VE RAHATÇA UZAR) */}
-          <PosCartTable
-            items={cartItems}
-            onUpdateQuantity={handleUpdateQuantity}
-            onSetQuantity={handleSetQuantity}
-            onUpdateDiscount={handleUpdateDiscount}
-            onUpdateUnitPrice={handleUpdateUnitPrice}
-            onRemoveItem={handleRemoveItem}
-            onClearCart={handleClearCart}
-          />
         </div>
       </div>
 

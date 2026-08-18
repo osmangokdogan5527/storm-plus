@@ -95,10 +95,10 @@ export interface AyarlarViewProps {
   backupMessage: { text: string; type: 'success' | 'error' } | null;
   setResetModalOpen: (open: boolean) => void;
   setResetExcludeStocks?: (exclude: boolean) => void;
-  geminiApiKey: string;
-  setGeminiApiKey: (key: string) => void;
-  isAiEnabled: boolean;
-  setIsAiEnabled: (enabled: boolean) => void;
+  geminiApiKey?: string;
+  setGeminiApiKey?: (key: string) => void;
+  isAiEnabled?: boolean;
+  setIsAiEnabled?: (enabled: boolean) => void;
   isSecurityActive: boolean;
   setIsSecurityActive: (active: boolean) => void;
   userRole: 'admin' | 'employee';

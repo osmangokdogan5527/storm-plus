@@ -430,14 +430,19 @@ export const StormLogo = ({
   );
 };
 
-export const APP_VERSION = '1.4.2';
+export const APP_VERSION = '1.4.3';
 
 export const CHANGELOG = {
-  version: '1.4.2',
+  version: '1.4.3',
   features: [
-    "Sürüm 1.4.2 için geliştirmeler başladı."
+    "Hızlı Satış (POS) Ekran Düzeni: Ürün kataloğu ve sepet paneli arasındaki esnek yerleşim optimize edildi, ürün listesinin alt kısımda kalması engellendi.",
+    "POS Sepet Alanı Genişletmesi: Sağ paneldeki müşteri/cari seçim alanı kaldırılarak sepet ve ödeme aksiyonları için daha ferah bir çalışma alanı sağlandı.",
+    "Kompakt Sepet Kartları: Sepetteki ürün kartlarının dikey yüksekliği ve boşlukları optimize edilerek ekranda aynı anda daha fazla ürün görüntülenebilir hale getirildi."
   ],
-  fixes: []
+  fixes: [
+    "Hızlı Satış ekranında sepet ve ürün kataloğu arasındaki dikey taşma ve görünürlük sorunları giderildi.",
+    "Ayarlar ve İzinler panelindeki arayüz bileşenleri stabilize edildi."
+  ]
 };
 
 export const PREDEFINED_USERS = [
@@ -689,10 +694,20 @@ export const PIN_ACCOUNTS = [
 
 export const changelogData = [
   {
+    version: "1.4.3",
+    date: "17.08.2026",
+    changes: [
+      "Hızlı Satış (POS) Ekran Düzeni: Ürün kataloğu ve sepet paneli arasındaki esnek yerleşim optimize edildi, ürün listesinin alt kısımda kalması engellendi.",
+      "POS Sepet Alanı Genişletmesi: Sağ paneldeki müşteri/cari seçim alanı kaldırılarak sepet ve ödeme aksiyonları için daha ferah bir çalışma alanı sağlandı.",
+      "Kompakt Sepet Kartları: Sepetteki ürün kartlarının dikey yüksekliği ve boşlukları optimize edilerek ekranda aynı anda daha fazla ürün görüntülenebilir hale getirildi.",
+      "Hata Düzeltmeleri: Hızlı Satış ekranındaki dikey taşma sorunları ile ayarlar panelindeki güvenlik/yetki alanları stabilize edildi."
+    ]
+  },
+  {
     version: "1.4.2",
     date: "16.08.2026",
     changes: [
-      "Sürüm 1.4.2 hazırlıkları başladı, güncellemeler ve geliştirmeler bu sürüme eklenecek."
+      "Sürüm 1.4.2 hazırlıkları tamamlandı ve genel sistem optimizasyonları yapıldı."
     ]
   },
   {
