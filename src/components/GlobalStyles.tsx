@@ -4,13 +4,20 @@ interface GlobalStylesProps {
   bodyPatternSvg: string;
   activePattern: any;
   themeCssRules: string;
+  appFontSize?: number;
 }
 
-export const GlobalStyles: React.FC<GlobalStylesProps> = ({ themeCssRules, bodyPatternSvg, activePattern }) => {
+export const GlobalStyles: React.FC<GlobalStylesProps> = ({ themeCssRules, bodyPatternSvg, activePattern, appFontSize = 12 }) => {
+    const fontSize = Math.min(14, Math.max(9, typeof appFontSize === 'number' ? appFontSize : 12));
     return (
       <style>{`
         :root {
+          --app-font-size: ${fontSize}px;
           ${themeCssRules}
+        }
+
+        html {
+          font-size: ${fontSize}px !important;
         }
 
         /* FLUID MESH GEÇİŞLERİ VE SIVI TASARIM STİLİ OVERRIDES */

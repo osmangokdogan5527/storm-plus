@@ -23,11 +23,13 @@ import {
   Download,
   Scan,
   QrCode,
-  ShieldAlert
+  ShieldAlert,
+  Sparkles
 } from 'lucide-react';
 import BarcodeScannerModal from './BarcodeScannerModal';
 import { StockModal } from './stoklar/StockModal';
 import { PrintBarcodeModal } from './stoklar/PrintBarcodeModal';
+import { BulkPriceModal } from './stoklar/BulkPriceModal';
 
 interface StoklarViewProps {
   stoklar?: Stock[];
@@ -65,6 +67,7 @@ function StoklarView({
   const [filterType, setFilterType] = useState<'all' | 'critical' | 'instock' | 'outstock'>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedBrand, setSelectedBrand] = useState<string>('');
+  const [isBulkPriceModalOpen, setIsBulkPriceModalOpen] = useState<boolean>(false);
   
   const [selectedStockForDetails, setSelectedStockForDetails] = useState<Stock | null>(null);
   const [expandedCariId, setExpandedCariId] = useState<string | null>(null);
@@ -389,14 +392,27 @@ function StoklarView({
           <h1 id="stoklar-heading" className="text-sm font-semibold uppercase tracking-[0.2em] text-white/90">Ürün ve Stok Takibi</h1>
           <p className="text-white/40 text-xs mt-1">Sattığınız ürünlerin, sunduğunuz hizmetlerin stok miktarlarını ve maliyetlerini anlık izleyin.</p>
         </div>
-        <button 
-          id="btn-add-stock"
-          onClick={handleOpenCreateModal}
-          className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-black text-xs font-semibold uppercase tracking-wider px-4 py-3 rounded-lg transition duration-150 shadow-[0_0_12px_rgba(45,212,191,0.2)] cursor-pointer"
-        >
-          <Plus size={16} />
-          <span>Yeni Stok Kartı Ekle</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button 
+            id="btn-bulk-price"
+            type="button"
+            onClick={() => setIsBulkPriceModalOpen(true)}
+            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-teal-300 border border-teal-500/30 hover:border-teal-400 text-xs font-semibold uppercase tracking-wider px-4 py-3 rounded-lg transition duration-150 shadow-md cursor-pointer"
+            title="Tüm ürünlerin veya seçili kategorinin fiyatlarına toplu zam/indirim uygulayın"
+          >
+            <Sparkles size={16} className="text-teal-400" />
+            <span>Toplu Fiyat Güncelle</span>
+          </button>
+          <button 
+            id="btn-add-stock"
+            type="button"
+            onClick={handleOpenCreateModal}
+            className="flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-black text-xs font-semibold uppercase tracking-wider px-4 py-3 rounded-lg transition duration-150 shadow-[0_0_12px_rgba(45,212,191,0.2)] cursor-pointer"
+          >
+            <Plus size={16} />
+            <span>Yeni Stok Kartı Ekle</span>
+          </button>
+        </div>
       </div>
 
       {/* Bento-Grid Stats and Dynamic Filters */}
@@ -903,6 +919,14 @@ function StoklarView({
         isPrintModalOpen={isPrintModalOpen}
         setIsPrintModalOpen={setIsPrintModalOpen}
         printingStock={printingStock}
+      />
+
+      <BulkPriceModal
+        isOpen={isBulkPriceModalOpen}
+        onClose={() => setIsBulkPriceModalOpen(false)}
+        stoklar={stoklar}
+        categories={categories}
+        brands={brands}
       />
     </div>
   );

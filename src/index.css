@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 html {
-  font-size: calc(var(--app-font-size, 16px) * 1.05);
+  font-size: var(--app-font-size, 12px);
 }
 
 /* Modern Global Webkit Scrollbars */

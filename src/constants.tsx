@@ -430,19 +430,16 @@ export const StormLogo = ({
   );
 };
 
-export const APP_VERSION = '1.4.3';
+export const APP_VERSION = '1.4.4';
 
 export const CHANGELOG = {
-  version: '1.4.3',
+  version: '1.4.4',
   features: [
-    "Hızlı Satış (POS) Ekran Düzeni: Ürün kataloğu ve sepet paneli arasındaki esnek yerleşim optimize edildi, ürün listesinin alt kısımda kalması engellendi.",
-    "POS Sepet Alanı Genişletmesi: Sağ paneldeki müşteri/cari seçim alanı kaldırılarak sepet ve ödeme aksiyonları için daha ferah bir çalışma alanı sağlandı.",
-    "Kompakt Sepet Kartları: Sepetteki ürün kartlarının dikey yüksekliği ve boşlukları optimize edilerek ekranda aynı anda daha fazla ürün görüntülenebilir hale getirildi."
+    "Toplu ve Manuel Fiyat Güncelleme Modülü: Seçili ürünlere tek tıkla % zam, % indirim veya sabit tutar uygulama aracı eklendi.",
+    "Dokunmatik / Hızlı Numpad Desteği: Ürün listesinde tek tek gezinerek sayısal tuş takımı (Numpad) ile hızlıca satış ve alış fiyatlarını değiştirebilme imkanı sağlandı.",
+    "Hızlı Gezinme ve +/- Butonları: Satırlar arasında yukarı/aşağı oklarla seri geçiş ve aktif ürün için anlık +%5, +%10, -%5, -%10 hızlı fiyat ayarlama butonları eklendi."
   ],
-  fixes: [
-    "Hızlı Satış ekranında sepet ve ürün kataloğu arasındaki dikey taşma ve görünürlük sorunları giderildi.",
-    "Ayarlar ve İzinler panelindeki arayüz bileşenleri stabilize edildi."
-  ]
+  fixes: []
 };
 
 export const PREDEFINED_USERS = [
@@ -693,6 +690,17 @@ export const PIN_ACCOUNTS = [
 ];
 
 export const changelogData = [
+  {
+    version: "1.4.4",
+    date: "18.08.2026",
+    changes: [
+      "Hızlı & Manuel Fiyat Güncelleme Modülü: Stok listesindeki ürünlerin satış ve alış fiyatlarını canlı liste ve sağ paneldeki Numpad tuş takımı üzerinden saniyeler içinde güncelleyebilme özelliği eklendi.",
+      "Dokunmatik Numpad & Hızlı Yüzde Butonları: Ürün satış/alış fiyatlarını doğrudan yazma, temizleme, hızlı +%5, +%10, -%5, -%10 artırma/azaltma ve liste üzerinde yukarı/aşağı seri geçiş butonları sunuldu.",
+      "Canlı Fiyat Fark Göstergeleri: Eski ve yeni fiyatlar arasındaki farkı (₺) anlık olarak hesaplayan ve görsel olarak vurgulayan fark rozetleri entegre edildi.",
+      "Yüksek Kontrast & Ergonomik UI: Aktif seçili ürün başlıkları ve metinleri koyu temada yüksek okunurluklu net beyaz renklere kavuşturuldu, arayüz sadeleştirilerek doğrudan tablo ve numpad girişine odaklandı.",
+      "Hızlı Satış (POS 1.4.4) Motoru: Hızlı Satış Terminali v1.4.4 sürümüne uyarlandı ve tüm finansal matematiksel metrikler doğrulanarak sistem kararlılığı sağlandı."
+    ]
+  },
   {
     version: "1.4.3",
     date: "17.08.2026",

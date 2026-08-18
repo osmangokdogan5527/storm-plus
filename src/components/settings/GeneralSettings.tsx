@@ -238,12 +238,12 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({
                         <span className="font-serif font-bold text-base">A</span>
                       </div>
                       <div>
-                        <h3 className="text-xs font-bold text-white uppercase tracking-wider">Uygulama Yazı Boyutu (6px - 18px)</h3>
-                        <p className="text-[11px] text-white/50 mt-0.5">Yazı boyutunu 6px ile 18px arasında doğrudan seçin</p>
+                        <h3 className="text-xs font-bold text-white uppercase tracking-wider">Uygulama Yazı Boyutu (9px - 14px)</h3>
+                        <p className="text-[11px] text-white/50 mt-0.5">Yazı boyutunu 9px ile 14px arasında doğrudan seçin</p>
                       </div>
                     </div>
                     <div className="px-3 py-1 rounded-xl bg-teal-500/20 border border-teal-500/40 text-teal-300 font-mono font-black text-sm">
-                      {typeof appFontSize === 'number' ? appFontSize : 14} px
+                      {typeof appFontSize === 'number' ? appFontSize : 12} px
                     </div>
                   </div>
 
@@ -253,12 +253,14 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({
                       <button
                         type="button"
                         onClick={() => {
-                          const currentPx = typeof appFontSize === 'number' ? appFontSize : 14;
-                          const next = Math.max(6, currentPx - 1);
+                          const currentPx = typeof appFontSize === 'number' ? appFontSize : 12;
+                          const next = Math.max(9, currentPx - 1);
                           setAppFontSize(next);
                           localStorage.setItem('storm_muhasebe_font_size', next.toString());
+                          document.documentElement.style.setProperty('--app-font-size', `${next}px`);
+                          document.documentElement.style.fontSize = `${next}px`;
                         }}
-                        disabled={(typeof appFontSize === 'number' ? appFontSize : 14) <= 6}
+                        disabled={(typeof appFontSize === 'number' ? appFontSize : 12) <= 9}
                         className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-white font-bold flex items-center justify-center border border-white/10 cursor-pointer active:scale-95 transition-all shrink-0"
                         title="1px Azalt"
                       >
@@ -268,33 +270,37 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({
                       <div className="flex-1 flex flex-col gap-1">
                         <input
                           type="range"
-                          min={6}
-                          max={18}
+                          min={9}
+                          max={14}
                           step={1}
-                          value={typeof appFontSize === 'number' ? appFontSize : 14}
+                          value={typeof appFontSize === 'number' ? appFontSize : 12}
                           onChange={(e) => {
                             const val = Number(e.target.value);
                             setAppFontSize(val);
                             localStorage.setItem('storm_muhasebe_font_size', val.toString());
+                            document.documentElement.style.setProperty('--app-font-size', `${val}px`);
+                            document.documentElement.style.fontSize = `${val}px`;
                           }}
                           className="w-full accent-teal-400 cursor-pointer h-2 bg-slate-800 rounded-lg"
                         />
                         <div className="flex justify-between text-[10px] font-mono text-white/40 px-0.5">
-                          <span>6px</span>
-                          <span>12px</span>
-                          <span>18px</span>
+                          <span>9px</span>
+                          <span>11px</span>
+                          <span>14px</span>
                         </div>
                       </div>
 
                       <button
                         type="button"
                         onClick={() => {
-                          const currentPx = typeof appFontSize === 'number' ? appFontSize : 14;
-                          const next = Math.min(18, currentPx + 1);
+                          const currentPx = typeof appFontSize === 'number' ? appFontSize : 12;
+                          const next = Math.min(14, currentPx + 1);
                           setAppFontSize(next);
                           localStorage.setItem('storm_muhasebe_font_size', next.toString());
+                          document.documentElement.style.setProperty('--app-font-size', `${next}px`);
+                          document.documentElement.style.fontSize = `${next}px`;
                         }}
-                        disabled={(typeof appFontSize === 'number' ? appFontSize : 14) >= 18}
+                        disabled={(typeof appFontSize === 'number' ? appFontSize : 12) >= 14}
                         className="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-white font-bold flex items-center justify-center border border-white/10 cursor-pointer active:scale-95 transition-all shrink-0"
                         title="1px Artır"
                       >
@@ -302,13 +308,13 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({
                       </button>
                     </div>
 
-                    {/* Quick Px Selector Badges (6px to 18px) */}
+                    {/* Quick Px Selector Badges (9px to 14px) */}
                     <div>
                       <span className="text-[10px] font-bold text-white/50 uppercase tracking-wider block mb-1.5">
-                        Piksel Seçimi (6px - 18px)
+                        Piksel Seçimi (9px - 14px)
                       </span>
                       <div className="flex flex-wrap gap-1.5">
-                        {[6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map((px) => {
+                        {[9, 10, 11, 12, 13, 14].map((px) => {
                           const isSelected = appFontSize === px;
                           return (
                             <button
@@ -317,8 +323,10 @@ export const GeneralSettings: React.FC<GeneralSettingsProps> = ({
                               onClick={() => {
                                 setAppFontSize(px);
                                 localStorage.setItem('storm_muhasebe_font_size', px.toString());
+                                document.documentElement.style.setProperty('--app-font-size', `${px}px`);
+                                document.documentElement.style.fontSize = `${px}px`;
                               }}
-                              className={`px-2.5 py-1 rounded-lg border text-xs font-mono font-bold transition cursor-pointer active:scale-95 ${
+                              className={`px-3 py-1.5 rounded-lg border text-xs font-mono font-bold transition cursor-pointer active:scale-95 ${
                                 isSelected
                                   ? 'border-teal-400 bg-teal-500 text-slate-950 font-black shadow-[0_2px_8px_rgba(45,212,191,0.4)]'
                                   : 'border-white/10 hover:border-white/30 bg-white/5 text-white/70 hover:text-white'

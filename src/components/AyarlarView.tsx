@@ -1,4 +1,3 @@
-import { ShortcutsSettings } from './settings/ShortcutsSettings';
 import { PermissionsSettings } from './settings/PermissionsSettings';
 import { ProfileSettings } from './settings/ProfileSettings';
 import { GeneralSettings } from './settings/GeneralSettings';
@@ -26,8 +25,8 @@ import {
   ChevronDown, 
   Check,
   Menu,
-  Keyboard,
-  Sparkles
+  Sparkles,
+  Database
 } from 'lucide-react';
 import TemplateDesignerView from './TemplateDesignerView';
 import { reportErrorToTelegram } from '../utils/telegramLogger';
@@ -36,8 +35,7 @@ import {
   COLOR_PRESETS, 
   TAB_DEFS, 
   SIDEBAR_BG_PRESETS, 
-  SIDEBAR_PATTERNS,
-  DEFAULT_SHORTCUTS
+  SIDEBAR_PATTERNS
 } from '../constants';
 
 export interface AyarlarViewProps {
@@ -199,7 +197,7 @@ export default function AyarlarView({
 }: AyarlarViewProps) {
   
   // Local-only states for setting sub-tabs and forms
-  const [settingsSubTab, setSettingsSubTab] = useState<'general' | 'profile' | 'template-designer' | 'ai' | 'permissions' | 'shortcuts'>('general');
+  const [settingsSubTab, setSettingsSubTab] = useState<'general' | 'data' | 'template-designer' | 'permissions'>('general');
   const [aiInfoModalOpen, setAiInfoModalOpen] = useState(false);
   const [initialPinInput, setInitialPinInput] = useState('');
   const [setupError, setSetupError] = useState<string | null>(null);
@@ -219,68 +217,6 @@ export default function AyarlarView({
   });
   
   const [confirmDeactivate, setConfirmDeactivate] = useState(false);
-
-  const [editingShortcutId, setEditingShortcutId] = useState<string | null>(null);
-
-
-  const handleShortcutKeyDown = (e: React.KeyboardEvent, id: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (e.key === 'Escape') {
-      setEditingShortcutId(null);
-      return;
-    }
-
-    if (['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) {
-      return;
-    }
-
-    const updated = shortcuts.map(s => {
-      if (s.id === id) {
-        return {
-          ...s,
-          key: e.key.toLowerCase(),
-          altKey: e.altKey,
-          ctrlKey: e.ctrlKey,
-          shiftKey: e.shiftKey,
-        };
-      }
-      return s;
-    });
-
-    setShortcuts(updated);
-    localStorage.setItem('storm_muhasebe_shortcuts', JSON.stringify(updated));
-    setEditingShortcutId(null);
-    showToast('Kısayol başarıyla güncellendi.', 'success');
-  };
-
-  const handleResetShortcuts = () => {
-    const confirmReset = window.confirm('Tüm kısayolları varsayılan değerlerine döndürmek istediğinizden emin misiniz?');
-    if (confirmReset) {
-      setShortcuts(DEFAULT_SHORTCUTS);
-      localStorage.setItem('storm_muhasebe_shortcuts', JSON.stringify(DEFAULT_SHORTCUTS));
-      showToast('Tüm kısayollar varsayılana sıfırlandı.', 'success');
-    }
-  };
-
-  const handleClearShortcut = (id: string) => {
-    const updated = shortcuts.map(s => {
-      if (s.id === id) {
-        return {
-          ...s,
-          key: '',
-          altKey: false,
-          ctrlKey: false,
-          shiftKey: false,
-        };
-      }
-      return s;
-    });
-    setShortcuts(updated);
-    localStorage.setItem('storm_muhasebe_shortcuts', JSON.stringify(updated));
-    showToast('Kısayol temizlendi.', 'info');
-  };
 
   const currentThemeData = COLOR_PRESETS.find(p => p.id === activeTheme) || COLOR_PRESETS[0];
 
@@ -397,13 +333,48 @@ export default function AyarlarView({
 
         {/* Settings Sub-Tabs */}
         <div className="flex border-b border-slate-200 gap-1.5 scrollbar-thin overflow-x-auto pb-px">
+          <button
+            onClick={() => setSettingsSubTab('general')}
+            className={`flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 cursor-pointer shrink-0 ${
+              settingsSubTab === 'general'
+                ? 'border-teal-600 text-teal-600 font-extrabold bg-teal-50/50'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Palette size={15} />
+            <span>Genel Ayarlar & Görünüm</span>
+          </button>
+
+          <button
+            onClick={() => setSettingsSubTab('data')}
+            className={`flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 cursor-pointer shrink-0 ${
+              settingsSubTab === 'data'
+                ? 'border-teal-600 text-teal-600 font-extrabold bg-teal-50/50'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Database size={15} />
+            <span>Veri & Yedekleme Yönetimi</span>
+          </button>
+
+          <button
+            onClick={() => setSettingsSubTab('template-designer')}
+            className={`flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 cursor-pointer shrink-0 ${
+              settingsSubTab === 'template-designer'
+                ? 'border-teal-600 text-teal-600 font-extrabold bg-teal-50/50'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <Printer size={15} />
+            <span>Fiş & Şablon Tasarımı</span>
+          </button>
           
           {(!isSecurityActive || userRole === 'admin') && (
             <button
               onClick={() => setSettingsSubTab('permissions')}
-              className={`flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 cursor-pointer ${
+              className={`flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 cursor-pointer shrink-0 ${
                 settingsSubTab === 'permissions'
-                  ? 'border-teal-600 text-teal-600 font-extrabold'
+                  ? 'border-teal-600 text-teal-600 font-extrabold bg-teal-50/50'
                   : 'border-transparent text-slate-500 hover:text-slate-800'
               }`}
             >
@@ -411,17 +382,6 @@ export default function AyarlarView({
               <span>Yönetici & Yetkiler</span>
             </button>
           )}
-          <button
-            onClick={() => setSettingsSubTab('shortcuts')}
-            className={`hidden md:flex items-center gap-2 px-5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 cursor-pointer ${
-              settingsSubTab === 'shortcuts'
-                ? 'border-teal-600 text-teal-600 font-extrabold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <Keyboard size={15} />
-            <span>Kısayollar</span>
-          </button>
         </div>
 
         {settingsSubTab === 'general' && (
@@ -466,7 +426,7 @@ export default function AyarlarView({
             printSettingsSuccess={printSettingsSuccess}
           />
         )}
-        {settingsSubTab === 'profile' && (
+        {settingsSubTab === 'data' && (
           <ProfileSettings
             profileName={profileName}
             setProfileName={setProfileName}
@@ -532,25 +492,6 @@ export default function AyarlarView({
             setAdminPinChangeSuccess={setAdminPinChangeSuccess}
             setSensitiveTabs={setSensitiveTabs}
           />
-        )}
-        {settingsSubTab === 'shortcuts' && (
-          <div className="animate-fade-in">
-            <div className="md:hidden p-8 text-center bg-slate-50 rounded-2xl border border-slate-200">
-              <Keyboard className="mx-auto mb-3 text-slate-400" size={32} />
-              <p className="text-sm font-bold text-slate-700">Klavye kısayolları mobil cihazlarda kullanılamaz.</p>
-            </div>
-            <div className="hidden md:block">
-              <ShortcutsSettings
-                shortcuts={shortcuts}
-                setShortcuts={setShortcuts}
-                editingShortcutId={editingShortcutId}
-                setEditingShortcutId={setEditingShortcutId}
-                handleShortcutKeyDown={handleShortcutKeyDown}
-                handleClearShortcut={handleClearShortcut}
-                handleResetShortcuts={handleResetShortcuts}
-              />
-            </div>
-          </div>
         )}
 
       </div>

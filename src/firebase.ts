@@ -311,6 +311,38 @@ export async function deleteStock(id: string) {
   }
 }
 
+export async function updateBulkStockPrices(
+  updates: { id: string; salesPrice?: number; purchasePrice?: number }[]
+) {
+  try {
+    if (!updates || updates.length === 0) return;
+    
+    // Chunk in groups of 400 (Firestore limit is 500)
+    const chunkSize = 400;
+    for (let i = 0; i < updates.length; i += chunkSize) {
+      const chunk = updates.slice(i, i + chunkSize);
+      const batch = writeBatch(db);
+      for (const item of chunk) {
+        const docRef = doc(db, getPath(STOKLAR_COLL), item.id);
+        const updateData: Record<string, any> = {};
+        if (typeof item.salesPrice === 'number') {
+          updateData.salesPrice = item.salesPrice;
+        }
+        if (typeof item.purchasePrice === 'number') {
+          updateData.purchasePrice = item.purchasePrice;
+        }
+        if (Object.keys(updateData).length > 0) {
+          batch.update(docRef, updateData);
+        }
+      }
+      await batch.commit();
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, `${getPath(STOKLAR_COLL)}/bulk_price_update`);
+    throw error;
+  }
+}
+
 // ATOMIC TRANSACTION LOGIC: Save Transaction, Update Stock levels, and Update Cari balances
 export async function createTransaction(islemData: Omit<Transaction, 'id'>) {
   try {

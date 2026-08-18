@@ -5,6 +5,8 @@ import { PosNumpadModal } from './PosNumpadModal';
 
 interface PosCartTableProps {
   items: PosCartItem[];
+  selectedItemId?: string | null;
+  onSelectItem?: (id: string) => void;
   onUpdateQuantity: (id: string, delta: number) => void;
   onSetQuantity: (id: string, qty: number) => void;
   onUpdateDiscount: (id: string, discountRate: number) => void;
@@ -15,6 +17,8 @@ interface PosCartTableProps {
 
 export const PosCartTable: React.FC<PosCartTableProps> = ({
   items = [],
+  selectedItemId,
+  onSelectItem,
   onUpdateQuantity,
   onSetQuantity,
   onUpdateDiscount,
@@ -42,7 +46,7 @@ export const PosCartTable: React.FC<PosCartTableProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-[320px] bg-slate-900 border-2 border-slate-700 rounded-2xl overflow-hidden shadow-2xl relative" style={{ backgroundColor: '#0f172a' }}>
+    <div className="w-full flex flex-col bg-slate-900 border-2 border-slate-700 rounded-2xl overflow-hidden shadow-2xl relative transition-all" style={{ backgroundColor: '#0f172a' }}>
       {/* Numpad Modal */}
       {numpadState && (
         <PosNumpadModal
@@ -116,21 +120,28 @@ export const PosCartTable: React.FC<PosCartTableProps> = ({
       </div>
 
       {/* SEPET LİSTESİ */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-1.5 custom-scrollbar bg-slate-900" style={{ backgroundColor: '#0f172a' }}>
+      <div className="w-full p-2 space-y-1.5 custom-scrollbar bg-slate-900" style={{ backgroundColor: '#0f172a' }}>
         {safeItems.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-slate-400 py-10 space-y-2">
-            <span className="text-3xl">🛒</span>
+          <div className="flex flex-col items-center justify-center text-slate-400 py-6 space-y-1.5">
+            <span className="text-2xl">🛒</span>
             <p className="text-xs font-black text-white">Sepetiniz Boş</p>
             <p className="text-[11px] text-slate-300 font-medium text-center">
               Sol taraftan ürün seçebilir veya barkod okutabilirsiniz.
             </p>
           </div>
         ) : (
-          safeItems.map((item) => (
+          safeItems.map((item) => {
+            const isSelected = selectedItemId === item.id;
+            return (
             <div
               key={item.id}
-              className="p-2 sm:p-2.5 rounded-xl bg-slate-950/70 border border-slate-700 hover:border-teal-400/80 transition-all shadow-md space-y-1.5 group"
-              style={{ backgroundColor: 'rgba(2, 6, 23, 0.7)' }}
+              onClick={() => onSelectItem && onSelectItem(item.id)}
+              className={`p-2 sm:p-2.5 rounded-xl border transition-all shadow-md space-y-1.5 group cursor-pointer ${
+                isSelected 
+                  ? 'bg-slate-950 border-teal-400 ring-2 ring-teal-400/40 shadow-lg shadow-teal-500/10' 
+                  : 'bg-slate-950/70 border-slate-700 hover:border-teal-400/80'
+              }`}
+              style={{ backgroundColor: isSelected ? '#020617' : 'rgba(2, 6, 23, 0.7)' }}
             >
               {/* SATIR 1: Ürün İsmi, Kod & Silme Butonu */}
               <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-1.5">
@@ -211,7 +222,8 @@ export const PosCartTable: React.FC<PosCartTableProps> = ({
                 </div>
               </div>
             </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

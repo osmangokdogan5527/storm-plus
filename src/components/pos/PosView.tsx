@@ -13,8 +13,9 @@ import { PosPlatformSettingsModal } from './PosPlatformSettingsModal';
 import { PosDirectPlatformSaleModal } from './PosDirectPlatformSaleModal';
 import { PosTableManagementModal } from './PosTableManagementModal';
 import { PosTableAdisyonModal } from './PosTableAdisyonModal';
+import { PosNumpadControlPanel } from './PosNumpadControlPanel';
 import { findStockByBarcodeOrSearch, calculateLineTotal, calculateCartSummary, generateReceiptNo } from '../../utils/posUtils';
-import { ShoppingCart, Zap, DollarSign, CreditCard, User, Clock, CheckCircle2, RotateCcw, Search, Plus, Sparkles, HelpCircle, Percent, Settings, ShoppingBag, Utensils, Receipt, ArrowLeftRight } from 'lucide-react';
+import { ShoppingCart, Zap, DollarSign, CreditCard, User, Clock, CheckCircle2, RotateCcw, Search, Plus, Sparkles, HelpCircle, Percent, Settings, ShoppingBag, Utensils, Receipt, ArrowLeftRight, Calculator, List } from 'lucide-react';
 import { reportErrorToTelegram } from '../../utils/telegramLogger';
 
 interface PosViewProps {
@@ -46,6 +47,8 @@ export const PosView: React.FC<PosViewProps> = ({
   const safeBankAccounts = Array.isArray(bankAccounts) ? bankAccounts : [];
   // SEPET & MÜŞTERİ STATE'LERİ
   const [cartItems, setCartItems] = useState<PosCartItem[]>([]);
+  const [selectedCartItemId, setSelectedCartItemId] = useState<string | null>(null);
+  const [rightPanelViewMode, setRightPanelViewMode] = useState<'combined' | 'cart' | 'numpad'>('combined');
   const [selectedCari, setSelectedCari] = useState<Cari | null>(null);
   const [cariSearchTerm, setCariSearchTerm] = useState<string>('');
   const [isCariKeyboardOpen, setIsCariKeyboardOpen] = useState(false);
@@ -454,13 +457,30 @@ export const PosView: React.FC<PosViewProps> = ({
   };
 
   // HIZLI NAKİT SATIŞ (F2)
-  const handleQuickCashSale = async () => {
+  const handleQuickCashSale = async (receivedAmount?: number) => {
     if (cartItems.length === 0 || isProcessing) return;
 
+    let finalGrandTotal = summary.grandTotal;
+    let cashGiven = 0;
+    let cashReceived = receivedAmount !== undefined && receivedAmount > 0 ? receivedAmount : finalGrandTotal;
+
+    if (receivedAmount !== undefined && receivedAmount > 0) {
+      if (receivedAmount < finalGrandTotal) {
+        // Alınan tutar ödenecekten az ise (Örn: 500 TL yerine 490 TL verildiyse) aradaki fark otomatik iskonto yapılır
+        setDiscountMode('target');
+        setDiscountVal(receivedAmount);
+        finalGrandTotal = receivedAmount;
+        cashGiven = 0;
+      } else {
+        // Alınan tutar toplamdan fazla ise para üstü verilir
+        cashGiven = receivedAmount - finalGrandTotal;
+      }
+    }
+
     const split: PosPaymentSplit = {
-      cashAmount: summary.grandTotal,
-      cashReceived: summary.grandTotal,
-      changeGiven: 0,
+      cashAmount: finalGrandTotal,
+      cashReceived: cashReceived,
+      changeGiven: cashGiven,
       posAmount: 0,
       openAccountAmount: 0,
     };
@@ -546,16 +566,19 @@ export const PosView: React.FC<PosViewProps> = ({
       const cariId = selectedCari ? selectedCari.id : defaultPlatCariId;
       const cariName = selectedCari ? selectedCari.name : defaultPlatCariName;
 
+      const finalSaleGrandTotal = paymentSplit.cashAmount + paymentSplit.posAmount + paymentSplit.openAccountAmount;
+      const finalSaleDiscount = Math.max(0, summary.subtotalAfterLineDiscounts - finalSaleGrandTotal);
+
       const success = await onCompletePosSale({
         receiptNo,
         cariId,
         cariName,
         items: cartItems,
         paymentSplit,
-        grandTotal: summary.grandTotal,
+        grandTotal: finalSaleGrandTotal,
         subtotal: summary.subtotalAfterLineDiscounts,
         totalTax: 0,
-        totalDiscount: summary.totalDiscount,
+        totalDiscount: finalSaleDiscount,
         date,
       });
 
@@ -570,9 +593,9 @@ export const PosView: React.FC<PosViewProps> = ({
           cariId: selectedCari?.id,
           cariName,
           subtotal: summary.subtotalAfterLineDiscounts,
-          totalDiscount: summary.totalDiscount,
+          totalDiscount: finalSaleDiscount,
           totalTax: 0,
-          grandTotal: summary.grandTotal,
+          grandTotal: finalSaleGrandTotal,
         };
 
         setCompletedSaleSummary(saleSummary);
@@ -756,7 +779,7 @@ export const PosView: React.FC<PosViewProps> = ({
             <h2 className="text-sm font-black text-white flex items-center gap-2">
               <span>HIZLI SATIŞ TERMİNALİ</span>
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-teal-600 text-white border border-teal-400 font-black shadow-sm">
-                1.4.3 POS Engine
+                1.4.4 POS Engine
               </span>
             </h2>
             <p className="text-[11px] text-slate-300 font-medium">
@@ -765,88 +788,71 @@ export const PosView: React.FC<PosViewProps> = ({
           </div>
         </div>
 
-        {/* KISAYOL TUŞLARI - YÜKSEK KONTRAST DOKUNMATİK SATIŞ BUTONLARI */}
-        <div className="flex items-center gap-2 overflow-x-auto text-xs font-mono font-bold custom-scrollbar py-0.5">
+        {/* DOKUNMATİK HIZLI SATIŞ VE İŞLEM BUTONLARI */}
+        <div className="flex items-center gap-2 overflow-x-auto text-xs font-bold custom-scrollbar py-0.5">
           <button
             type="button"
             onClick={() => searchInputRef.current?.focus()}
-            className="px-3.5 py-2 rounded-xl font-black shadow-md flex items-center gap-2 border cursor-pointer active:scale-95 transition-all touch-manipulation hover:brightness-125"
-            style={{ backgroundColor: '#1e293b', color: '#ffffff', borderColor: '#334155' }}
-            title="Barkod Arama Kutusuna Odaklan [F1]"
+            className="px-3 py-2 rounded-xl font-black shadow-md flex items-center gap-1.5 border cursor-pointer active:scale-95 transition-all touch-manipulation hover:brightness-125 bg-slate-800 text-teal-300 border-slate-700"
+            title="Barkod / Arama Kutusuna Odaklan"
           >
-            <span className="px-2 py-0.5 rounded-lg text-xs font-mono font-black" style={{ color: '#2dd4bf', backgroundColor: 'rgba(20,184,166,0.25)' }}>
-              F1
-            </span>
-            <span style={{ color: '#ffffff' }}>Barkod</span>
+            <Search size={16} className="text-teal-400" />
+            <span>Barkod / Arama</span>
           </button>
 
           <button
             type="button"
             onClick={handleQuickCashSale}
             disabled={cartItems.length === 0 || isProcessing}
-            className="px-3.5 py-2 rounded-xl font-black shadow-md flex items-center gap-2 border cursor-pointer active:scale-95 transition-all touch-manipulation disabled:opacity-40 hover:brightness-125"
-            style={{ backgroundColor: '#065f46', color: '#ffffff', borderColor: '#10b981' }}
-            title="Hızlı Nakit Satış Yap [F2]"
+            className="px-3 py-2 rounded-xl font-black shadow-md flex items-center gap-1.5 border cursor-pointer active:scale-95 transition-all touch-manipulation disabled:opacity-40 hover:brightness-125 bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400"
+            title="Hızlı Nakit Satış Yap"
           >
-            <span className="px-2 py-0.5 rounded-lg text-xs font-mono font-black" style={{ color: '#a7f3d0', backgroundColor: 'rgba(16,185,129,0.25)' }}>
-              F2
-            </span>
-            <span style={{ color: '#ffffff' }}>Hızlı Nakit</span>
+            <DollarSign size={16} />
+            <span>Hızlı Nakit</span>
           </button>
 
           <button
             type="button"
             onClick={handleQuickPosSale}
             disabled={cartItems.length === 0 || isProcessing}
-            className="px-3.5 py-2 rounded-xl font-black shadow-md flex items-center gap-2 border cursor-pointer active:scale-95 transition-all touch-manipulation disabled:opacity-40 hover:brightness-125"
-            style={{ backgroundColor: '#1e40af', color: '#ffffff', borderColor: '#3b82f6' }}
-            title="Hızlı POS Satış Yap [F3]"
+            className="px-3 py-2 rounded-xl font-black shadow-md flex items-center gap-1.5 border cursor-pointer active:scale-95 transition-all touch-manipulation disabled:opacity-40 hover:brightness-125 bg-blue-600 hover:bg-blue-500 text-white border-blue-400"
+            title="Hızlı POS Kart Satışı Yap"
           >
-            <span className="px-2 py-0.5 rounded-lg text-xs font-mono font-black" style={{ color: '#bfdbfe', backgroundColor: 'rgba(59,130,246,0.25)' }}>
-              F3
-            </span>
-            <span style={{ color: '#ffffff' }}>Hızlı POS</span>
+            <CreditCard size={16} />
+            <span>Hızlı POS</span>
           </button>
 
           <button
             type="button"
             onClick={() => { if (cartItems.length > 0) setIsSplitModalOpen(true); }}
             disabled={cartItems.length === 0 || isProcessing}
-            className="px-3.5 py-2 rounded-xl font-black shadow-md flex items-center gap-2 border cursor-pointer active:scale-95 transition-all touch-manipulation disabled:opacity-40 hover:brightness-125"
-            style={{ backgroundColor: '#6b21a8', color: '#ffffff', borderColor: '#a855f7' }}
-            title="Parçalı Ödeme Ekranını Aç [F4]"
+            className="px-3 py-2 rounded-xl font-black shadow-md flex items-center gap-1.5 border cursor-pointer active:scale-95 transition-all touch-manipulation disabled:opacity-40 hover:brightness-125 bg-purple-700 hover:bg-purple-600 text-white border-purple-400"
+            title="Parçalı Ödeme Ekranını Aç"
           >
-            <span className="px-2 py-0.5 rounded-lg text-xs font-mono font-black" style={{ color: '#e9d5ff', backgroundColor: 'rgba(168,85,247,0.25)' }}>
-              F4
-            </span>
-            <span style={{ color: '#ffffff' }}>Parçalı Ödeme</span>
+            <Zap size={15} />
+            <span>Parçalı Ödeme</span>
           </button>
 
           <button
             type="button"
             onClick={() => setIsParkedModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl font-black flex items-center gap-2 cursor-pointer transition-all shadow-md active:scale-95 border touch-manipulation hover:brightness-110"
-            style={{ backgroundColor: '#f59e0b', color: '#020617', borderColor: '#fbbf24' }}
-            title="Askıdaki Satışları Görüntüle [F8]"
+            className="px-3 py-2 rounded-xl font-black flex items-center gap-1.5 cursor-pointer transition-all shadow-md active:scale-95 border touch-manipulation hover:brightness-110 bg-amber-500 hover:bg-amber-400 text-slate-950 border-amber-300"
+            title="Askıdaki Satışları Görüntüle"
           >
-            <Clock size={16} style={{ color: '#020617' }} />
-            <span className="px-2 py-0.5 rounded-lg text-xs font-mono font-black" style={{ color: '#020617', backgroundColor: 'rgba(2,6,23,0.25)' }}>
-              F8
-            </span>
-            <span style={{ color: '#020617', fontWeight: 900 }}>Askıdaki Satışlar ({(parkedSales || []).length})</span>
+            <Clock size={16} className="text-slate-950" />
+            <span className="font-black">Askıdakiler ({(parkedSales || []).length})</span>
           </button>
 
           {/* RESTORAN MASA PLANINI AÇ BUTONU */}
           <button
             type="button"
             onClick={() => setIsTableModalOpen(true)}
-            className="px-3.5 py-2 rounded-xl font-black flex items-center gap-2 cursor-pointer transition-all shadow-md active:scale-95 border touch-manipulation hover:brightness-110"
-            style={{ backgroundColor: '#059669', color: '#ffffff', borderColor: '#34d399' }}
+            className="px-3 py-2 rounded-xl font-black flex items-center gap-1.5 cursor-pointer transition-all shadow-md active:scale-95 border touch-manipulation hover:brightness-110 bg-emerald-700 hover:bg-emerald-600 text-white border-emerald-400"
             title="Restoran Masalarını ve Adisyon Planını Aç"
           >
             <Utensils size={16} className="text-white" />
-            <span style={{ color: '#ffffff', fontWeight: 900 }}>
-              Masa Planı ({(tables || []).filter((t) => t.status === 'occupied' || t.status === 'bill_printed').length} Dolu)
+            <span className="font-black">
+              Masa Planı ({(tables || []).filter((t) => t.status === 'occupied' || t.status === 'bill_printed').length})
             </span>
           </button>
 
@@ -855,12 +861,11 @@ export const PosView: React.FC<PosViewProps> = ({
             <button
               type="button"
               onClick={() => setIsReceiptModalOpen(true)}
-              className="px-3.5 py-2 rounded-xl font-black flex items-center gap-2 cursor-pointer transition-all shadow-md active:scale-95 border touch-manipulation hover:brightness-110"
-              style={{ backgroundColor: '#0284c7', color: '#ffffff', borderColor: '#38bdf8' }}
+              className="px-3 py-2 rounded-xl font-black flex items-center gap-1.5 cursor-pointer transition-all shadow-md active:scale-95 border touch-manipulation hover:brightness-110 bg-sky-700 hover:bg-sky-600 text-white border-sky-400"
               title="Son Tamamlanan Satışın Fişini Yazdır / İncele"
             >
               <Receipt size={16} className="text-white" />
-              <span style={{ color: '#ffffff', fontWeight: 900 }}>
+              <span className="font-black">
                 Son Fiş (#{completedSaleSummary.receiptNo})
               </span>
             </button>
@@ -961,8 +966,8 @@ export const PosView: React.FC<PosViewProps> = ({
           />
         </div>
 
-        {/* SAĞ PANEL: SEPET & ÖDEME ÖZETİ & HIZLI AKSİYONLAR */}
-        <div className="w-full lg:w-[440px] xl:w-[480px] 2xl:w-[520px] shrink-0 flex flex-col gap-3 min-h-0 h-full overflow-y-auto custom-scrollbar">
+        {/* SAĞ PANEL: SEPET & SAYISAL TUŞ TAKIMI & ÖDEME ÖZETİ */}
+        <div className="w-full lg:w-[440px] xl:w-[480px] 2xl:w-[520px] shrink-0 flex flex-col gap-2.5 min-h-0 h-full overflow-y-auto custom-scrollbar">
           
           {/* SABİT ANA GENEL TOPLAM GÖSTERGESİ (SAĞ ÜST) */}
           <div className="bg-slate-900 p-3.5 rounded-2xl border-2 border-teal-500/50 flex flex-col justify-center items-end shadow-xl shrink-0" style={{ backgroundColor: '#0f172a' }}>
@@ -979,179 +984,94 @@ export const PosView: React.FC<PosViewProps> = ({
             )}
           </div>
 
-          {/* SEPET TABLOSU */}
-          <div className="flex-1 min-h-[250px] flex flex-col">
-            <PosCartTable
-              items={cartItems}
-              onUpdateQuantity={handleUpdateQuantity}
-              onSetQuantity={handleSetQuantity}
-              onUpdateDiscount={handleUpdateDiscount}
-              onUpdateUnitPrice={handleUpdateUnitPrice}
-              onRemoveItem={handleRemoveItem}
-              onClearCart={handleClearCart}
-            />
+          {/* DOKUNMATİK GÖRÜNÜM SEÇİCİ SEKMELERİ (SEPET / TUŞ TAKIMI / KOMBİNE) */}
+          <div className="grid grid-cols-3 gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 shrink-0">
+            <button
+              type="button"
+              onClick={() => setRightPanelViewMode('combined')}
+              className={`py-2 px-2 rounded-lg text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer touch-manipulation active:scale-95 ${
+                rightPanelViewMode === 'combined'
+                  ? 'bg-teal-500 text-slate-950 shadow-md font-black'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+              }`}
+            >
+              <Zap size={14} />
+              <span>Kombine</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setRightPanelViewMode('cart')}
+              className={`py-2 px-2 rounded-lg text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer touch-manipulation active:scale-95 ${
+                rightPanelViewMode === 'cart'
+                  ? 'bg-teal-500 text-slate-950 shadow-md font-black'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+              }`}
+            >
+              <ShoppingCart size={14} />
+              <span>Sepet ({cartItems.length})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setRightPanelViewMode('numpad')}
+              className={`py-2 px-2 rounded-lg text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer touch-manipulation active:scale-95 ${
+                rightPanelViewMode === 'numpad'
+                  ? 'bg-teal-500 text-slate-950 shadow-md font-black'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+              }`}
+            >
+              <Calculator size={14} />
+              <span>Tuş Takımı</span>
+            </button>
           </div>
 
-          {/* 3. ÖDEME ÖZETİ VE HIZLI AKSİYON PANELİ */}
-          <div className="p-3.5 bg-slate-900 rounded-2xl border-2 border-slate-700 shadow-xl space-y-3 shrink-0" style={{ backgroundColor: '#0f172a' }}>
-            
-            {/* İSKONTO VE ARTIRIM SEÇİMİ */}
-            <div className="space-y-1.5">
-              <div className="flex flex-wrap items-center justify-between gap-1">
-                <span className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-1" style={{ color: '#fcd34d' }}>
-                  <Sparkles size={14} />
-                  İskonto / Artırım:
-                </span>
-                <div className="flex items-center gap-1 bg-slate-900 p-0.5 rounded-xl border border-slate-700 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => { setDiscountMode('percent'); setDiscountVal(''); }}
-                    className={`px-2 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer active:scale-95 touch-manipulation ${
-                      discountMode === 'percent' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
-                    }`}
-                    style={discountMode === 'percent' ? { backgroundColor: '#f59e0b', color: '#020617', fontWeight: 900 } : {}}
-                  >
-                    % Yüzde
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setDiscountMode('amount'); setDiscountVal(''); }}
-                    className={`px-2 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer active:scale-95 touch-manipulation ${
-                      discountMode === 'amount' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
-                    }`}
-                    style={discountMode === 'amount' ? { backgroundColor: '#f59e0b', color: '#020617', fontWeight: 900 } : {}}
-                  >
-                    ₺ İskonto
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setDiscountMode('markup_percent'); setDiscountVal(''); }}
-                    className={`px-2 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer active:scale-95 touch-manipulation ${
-                      discountMode === 'markup_percent' ? 'bg-rose-500 text-white shadow' : 'text-slate-400 hover:text-white'
-                    }`}
-                    style={discountMode === 'markup_percent' ? { backgroundColor: '#f43f5e', color: '#ffffff', fontWeight: 900 } : {}}
-                  >
-                    📈 % Artırım
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setDiscountMode('markup_amount'); setDiscountVal(''); }}
-                    className={`px-2 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer active:scale-95 touch-manipulation ${
-                      discountMode === 'markup_amount' ? 'bg-rose-500 text-white shadow' : 'text-slate-400 hover:text-white'
-                    }`}
-                    style={discountMode === 'markup_amount' ? { backgroundColor: '#f43f5e', color: '#ffffff', fontWeight: 900 } : {}}
-                  >
-                    📈 ₺ Artırım
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setDiscountMode('target'); setDiscountVal(''); }}
-                    className={`px-2 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer active:scale-95 touch-manipulation ${
-                      discountMode === 'target' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
-                    }`}
-                    style={discountMode === 'target' ? { backgroundColor: '#f59e0b', color: '#020617', fontWeight: 900 } : {}}
-                  >
-                    🎯 Net Tutar
-                  </button>
-                </div>
-              </div>
-
-              {/* İSKONTO/ARTIRIM GİRİŞ INPUT'U */}
-              <PosNumpadModal
-                isOpen={isDiscountNumpadOpen}
-                onClose={() => setIsDiscountNumpadOpen(false)}
-                title={discountMode === 'percent' ? 'İskonto % Oranı' : discountMode === 'amount' ? 'İskonto Tutarı (₺)' : discountMode === 'markup_percent' ? 'Artırım % Oranı' : discountMode === 'markup_amount' ? 'Artırım Tutarı (₺)' : 'Alınacak Net Tutar (₺)'}
-                initialValue={discountVal}
-                onConfirm={(val) => setDiscountVal(val)}
-                allowDecimal={true}
+          {/* 1. SEPET TABLOSU (KOMBİNE VEYA SEPET MODUNDA) */}
+          {(rightPanelViewMode === 'cart' || rightPanelViewMode === 'combined') && (
+            <div className="w-full flex flex-col shrink-0 transition-all duration-200">
+              <PosCartTable
+                items={cartItems}
+                selectedItemId={selectedCartItemId}
+                onSelectItem={(id) => setSelectedCartItemId(id)}
+                onUpdateQuantity={handleUpdateQuantity}
+                onSetQuantity={handleSetQuantity}
+                onUpdateDiscount={handleUpdateDiscount}
+                onUpdateUnitPrice={handleUpdateUnitPrice}
+                onRemoveItem={(id) => {
+                  handleRemoveItem(id);
+                  if (selectedCartItemId === id) setSelectedCartItemId(null);
+                }}
+                onClearCart={() => {
+                  handleClearCart();
+                  setSelectedCartItemId(null);
+                }}
               />
-              <div className="relative flex items-center">
-                <button
-                  onClick={() => setIsDiscountNumpadOpen(true)}
-                  className="w-full text-left pl-3 pr-8 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white font-bold hover:border-amber-400 transition-colors flex items-center h-[38px]"
-                  style={{ backgroundColor: '#020617', color: '#ffffff' }}
-                >
-                  {discountVal === '' || discountVal === 0 ? (
-                    <span className="text-slate-500">
-                      {discountMode === 'percent'
-                        ? 'İskonto % Oranı Giriniz...'
-                        : discountMode === 'amount'
-                        ? 'İskonto Tutarı ₺ Giriniz...'
-                        : discountMode === 'markup_percent'
-                        ? 'Artırım % Oranı Giriniz...'
-                        : discountMode === 'markup_amount'
-                        ? 'Artırım Tutarı ₺ Giriniz...'
-                        : 'Alınacak Net Tutar ₺ Giriniz...'}
-                    </span>
-                  ) : (
-                    <span>{discountVal}</span>
-                  )}
-                </button>
-                <span className="absolute right-3 text-xs font-black font-mono text-amber-400" style={{ color: '#fbbf24' }}>
-                  {discountMode === 'percent' || discountMode === 'markup_percent' ? '%' : '₺'}
-                </span>
-              </div>
             </div>
+          )}
 
-            {/* HESAPLAMA ÖZETİ */}
-            <div className="flex flex-col gap-1 border-y border-slate-800 py-2.5 text-xs font-mono">
-              <div className="flex justify-between text-slate-300 font-bold">
-                <span>Ara Toplam:</span>
-                <span className="text-white font-black" style={{ color: '#ffffff' }}>₺{summary.rawTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-              </div>
-              {summary.totalDiscount > 0 && (
-                <div className="flex justify-between text-amber-300 font-bold" style={{ color: '#fcd34d' }}>
-                  <span>Toplam İskonto:</span>
-                  <span>-₺{summary.totalDiscount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </div>
-              )}
-              {summary.totalDiscount < 0 && (
-                <div className="flex justify-between text-rose-400 font-bold" style={{ color: '#fb7185' }}>
-                  <span>Toplam Artırım:</span>
-                  <span>+₺{Math.abs(summary.totalDiscount).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </div>
-              )}
+          {/* 2. DOKUNMATİK SAYISAL TUŞ TAKIMI (NUMPAD KONTROL PANELİ) */}
+          {(rightPanelViewMode === 'numpad' || rightPanelViewMode === 'combined') && (
+            <div className="w-full shrink-0 transition-all duration-200">
+              <PosNumpadControlPanel
+                cartItems={cartItems}
+                selectedItemId={selectedCartItemId}
+                grandTotal={summary.grandTotal}
+                onSetQuantity={handleSetQuantity}
+                onUpdateUnitPrice={handleUpdateUnitPrice}
+                onSetDiscountVal={(val) => setDiscountVal(val)}
+                onSetDiscountMode={(mode) => setDiscountMode(mode)}
+                onQuickCashSale={handleQuickCashSale}
+                onQuickPosSale={handleQuickPosSale}
+                onOpenSplitPayment={() => setIsSplitModalOpen(true)}
+                onParkSale={handleParkSale}
+                isProcessing={isProcessing}
+              />
             </div>
+          )}
 
-            {/* HIZLI AKSİYON ÖDEME BUTONLARI */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <button
-                disabled={cartItems.length === 0 || isProcessing}
-                onClick={handleQuickCashSale}
-                className="py-3 px-2 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-slate-950 font-black rounded-xl text-xs shadow-lg shadow-emerald-500/30 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 touch-manipulation border-2 border-emerald-300"
-              >
-                <DollarSign size={18} className="shrink-0" />
-                <span className="text-center font-black">NAKİT [F2]</span>
-              </button>
-
-              <button
-                disabled={cartItems.length === 0 || isProcessing}
-                onClick={handleQuickPosSale}
-                className="py-3 px-2 bg-blue-500 hover:bg-blue-400 disabled:opacity-40 text-slate-950 font-black rounded-xl text-xs shadow-lg shadow-blue-500/30 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 touch-manipulation border-2 border-blue-300"
-              >
-                <CreditCard size={18} className="shrink-0" />
-                <span className="text-center font-black">POS [F3]</span>
-              </button>
-
-              <button
-                disabled={cartItems.length === 0 || isProcessing}
-                onClick={() => setIsSplitModalOpen(true)}
-                className="py-3 px-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-black rounded-xl text-xs shadow-lg shadow-purple-600/30 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 touch-manipulation border-2 border-purple-400"
-              >
-                <Zap size={16} className="shrink-0" />
-                <span className="text-center font-black">PARÇALI [F4]</span>
-              </button>
-
-              <button
-                disabled={cartItems.length === 0 || isProcessing}
-                onClick={handleParkSale}
-                className="py-3 px-2 bg-amber-500 hover:bg-amber-400 disabled:opacity-40 text-slate-950 font-black rounded-xl text-xs shadow-lg shadow-amber-500/20 transition-all flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 touch-manipulation border-2 border-amber-300"
-              >
-                <Clock size={16} className="shrink-0" />
-                <span className="text-center font-black">ASKI [F8]</span>
-              </button>
-            </div>
-
+          {/* 3. ONLINE SİPARİŞ PLATFORMLARI & AYRINTILAR (SADECE SEPET MODUNDA DAHA FAZLA ALAN OLDUĞUNDA VEYA EN ALTTA) */}
+          <div className="p-3 bg-slate-900 rounded-2xl border-2 border-slate-700 shadow-xl space-y-3 shrink-0" style={{ backgroundColor: '#0f172a' }}>
+            
             {/* ONLINE SİPARİŞ PLATFORMLARI */}
             <div className="p-2.5 bg-slate-950/80 border-2 border-slate-700/80 rounded-xl shadow-md flex flex-col gap-2" style={{ backgroundColor: '#020617' }}>
               <div className="flex items-center justify-between border-b border-slate-800 pb-1">

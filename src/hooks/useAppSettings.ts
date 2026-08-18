@@ -13,8 +13,8 @@ export function useAppSettings(cloudSettings?: any) {
       if (cloudSettings.activeLogoTheme) setActiveLogoTheme(cloudSettings.activeLogoTheme);
       if (cloudSettings.appFontSize !== undefined) {
         const raw = cloudSettings.appFontSize;
-        const val = typeof raw === 'number' ? raw : (raw === 'xsmall' ? 12 : raw === 'small' ? 13 : raw === 'medium' ? 14 : raw === 'large' ? 16 : parseInt(raw, 10) || 14);
-        setAppFontSize(Math.min(18, Math.max(6, val)));
+        const val = typeof raw === 'number' ? raw : (raw === 'xsmall' ? 9 : raw === 'small' ? 10 : raw === 'medium' ? 12 : raw === 'large' ? 14 : parseInt(raw, 10) || 12);
+        setAppFontSize(Math.min(14, Math.max(9, val)));
       }
       if (cloudSettings.sidebarBg) setSidebarBg(cloudSettings.sidebarBg);
       if (cloudSettings.sidebarPattern) setSidebarPattern(cloudSettings.sidebarPattern);
@@ -70,14 +70,20 @@ export function useAppSettings(cloudSettings?: any) {
 
   const [appFontSize, setAppFontSize] = useState<number>(() => {
     const saved = localStorage.getItem('storm_muhasebe_font_size');
-    if (!saved) return 14;
-    if (saved === 'xsmall') return 12;
-    if (saved === 'small') return 13;
-    if (saved === 'medium') return 14;
-    if (saved === 'large') return 16;
+    if (!saved) return 12;
+    if (saved === 'xsmall') return 9;
+    if (saved === 'small') return 10;
+    if (saved === 'medium') return 12;
+    if (saved === 'large') return 14;
     const parsed = parseInt(saved, 10);
-    return isNaN(parsed) ? 14 : Math.min(18, Math.max(6, parsed));
+    return isNaN(parsed) ? 12 : Math.min(14, Math.max(9, parsed));
   });
+
+  useEffect(() => {
+    const size = Math.min(14, Math.max(9, typeof appFontSize === 'number' ? appFontSize : 12));
+    document.documentElement.style.setProperty('--app-font-size', `${size}px`);
+    document.documentElement.style.fontSize = `${size}px`;
+  }, [appFontSize]);
 
   const [sidebarBg, setSidebarBg] = useState<string>(() => {
     return localStorage.getItem('storm_muhasebe_sidebar_bg') || '#050505';

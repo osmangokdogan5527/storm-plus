@@ -1001,7 +1001,7 @@ ${friendlyError}`);
 
   return (
     <div data-design-style={designStyle} className={`min-h-screen relative ${(currentThemeData as any).bgClass || 'bg-[#050505]'} text-[#e0e0e0] flex flex-col md:flex-row font-sans overflow-x-hidden`}>
-      <GlobalStyles themeCssRules={themeCssRules} bodyPatternSvg={bodyPatternSvg} activePattern={activePatternObj} />
+      <GlobalStyles themeCssRules={themeCssRules} bodyPatternSvg={bodyPatternSvg} activePattern={activePatternObj} appFontSize={appFontSize} />
 
       {designStyle === 'fluid-mesh' && (
         <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 select-none">
