@@ -467,7 +467,7 @@ export const PosProductCatalog: React.FC<PosProductCatalogProps> = ({
                 </div>
 
                 {/* BÖLÜM GRİDİ */}
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7 gap-2 sm:gap-2.5">
+                <div className="grid grid-cols-2 min-[460px]:grid-cols-3 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 min-[1800px]:grid-cols-5 gap-2 sm:gap-2.5">
                   {catStocks.map((stock) => (
                     <ProductCard
                       key={stock.id}
@@ -483,7 +483,7 @@ export const PosProductCatalog: React.FC<PosProductCatalogProps> = ({
           </div>
         ) : (
           /* STANDART IZGARA GÖRÜNÜMÜ */
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7 gap-2 sm:gap-2.5">
+          <div className="grid grid-cols-2 min-[460px]:grid-cols-3 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 min-[1800px]:grid-cols-5 gap-2 sm:gap-2.5">
             {filteredStocks.map((stock) => (
               <ProductCard
                 key={stock.id}
@@ -701,7 +701,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     >
       <div className="w-full">
         {/* Görsel veya İkon */}
-        <div className="w-full h-20 sm:h-24 mb-2 rounded-lg bg-slate-950 border border-slate-700 overflow-hidden flex items-center justify-center relative">
+        <div className="w-full h-16 sm:h-20 mb-1.5 rounded-lg bg-slate-950 border border-slate-700 overflow-hidden flex items-center justify-center relative">
           {stock.imageUrl ? (
             <img
               src={stock.imageUrl}
@@ -710,14 +710,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
             />
           ) : (
             <Package
-              size={32}
+              size={26}
               className="text-slate-400 group-hover:text-teal-300 transition-colors"
             />
           )}
 
           {/* STOK ROZETİ */}
           <div
-            className={`absolute top-1.5 right-1.5 px-2 py-0.5 rounded-md text-[10px] font-black border shadow-sm ${
+            className={`absolute top-1 right-1 px-1.5 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black border shadow-sm ${
               isOutOfStock
                 ? 'bg-red-600 text-white border-red-400'
                 : isLowStock
@@ -729,13 +729,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </div>
 
           {/* BÖLÜM ROZETİ */}
-          <div className="absolute bottom-1.5 left-1.5 max-w-[85%]">
+          <div className="absolute bottom-1 left-1 max-w-[85%]">
             <span
               onClick={(e) => {
                 e.stopPropagation();
                 setIsCategorySelectorOpen(!isCategorySelectorOpen);
               }}
-              className="px-2 py-0.5 rounded-md bg-slate-900/90 hover:bg-slate-800 text-teal-300 border border-teal-500/50 text-[9px] sm:text-[10px] font-black truncate block cursor-pointer touch-manipulation"
+              className="px-1.5 py-0.5 rounded-md bg-slate-900/90 hover:bg-slate-800 text-teal-300 border border-teal-500/50 text-[9px] sm:text-[10px] font-black truncate block cursor-pointer touch-manipulation"
               title="Bölümü Değiştirmek İçin Tıklayın"
             >
               🏷️ {stock.category}
@@ -788,23 +788,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <h4 className="text-[11px] sm:text-xs font-black text-white line-clamp-2 leading-tight group-hover:text-teal-300 transition-colors min-h-[1.75rem]">
           {stock.name}
         </h4>
-        <span className="text-[9px] sm:text-[10px] font-mono font-bold text-slate-400 block mt-0.5">
+        <span className="text-[9px] sm:text-[10px] font-mono font-bold text-slate-400 block mt-0.5 truncate">
           {stock.code}
         </span>
       </div>
 
       {/* FİYAT & EKLEME BUTONU */}
-      <div className="mt-2 pt-2 border-t border-slate-700/80 flex items-center justify-between w-full">
-        <div>
-          <span className="text-xs sm:text-sm font-black text-teal-300 tracking-tight block font-mono">
+      <div className="mt-1.5 pt-1.5 border-t border-slate-700/80 flex items-center justify-between w-full">
+        <div className="min-w-0 flex-1">
+          <span className="text-xs sm:text-sm font-black text-teal-300 tracking-tight block font-mono truncate">
             ₺{stock.salesPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-          </span>
-          <span className="text-[9px] text-slate-400 block font-mono font-bold">
-            
           </span>
         </div>
 
-        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-teal-400 text-slate-950 flex items-center justify-center font-black text-lg shadow-md shadow-teal-500/30 group-hover:bg-teal-300 group-hover:scale-105 transition-all shrink-0">
+        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-teal-400 text-slate-950 flex items-center justify-center font-black text-base sm:text-lg shadow-md shadow-teal-500/30 group-hover:bg-teal-300 group-hover:scale-105 transition-all shrink-0 ml-1">
           +
         </div>
       </div>

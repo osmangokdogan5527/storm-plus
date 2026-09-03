@@ -120,12 +120,12 @@ export const PosCartTable: React.FC<PosCartTableProps> = ({
       </div>
 
       {/* SEPET LİSTESİ */}
-      <div className="w-full p-2 space-y-1.5 custom-scrollbar bg-slate-900" style={{ backgroundColor: '#0f172a' }}>
+      <div className="w-full p-1.5 sm:p-2 space-y-1.5 overflow-y-auto max-h-[190px] sm:max-h-[240px] xl:max-h-[300px] 2xl:max-h-[380px] custom-scrollbar bg-slate-900" style={{ backgroundColor: '#0f172a' }}>
         {safeItems.length === 0 ? (
-          <div className="flex flex-col items-center justify-center text-slate-400 py-6 space-y-1.5">
+          <div className="flex flex-col items-center justify-center text-slate-400 py-5 space-y-1">
             <span className="text-2xl">🛒</span>
             <p className="text-xs font-black text-white">Sepetiniz Boş</p>
-            <p className="text-[11px] text-slate-300 font-medium text-center">
+            <p className="text-[10px] sm:text-[11px] text-slate-300 font-medium text-center">
               Sol taraftan ürün seçebilir veya barkod okutabilirsiniz.
             </p>
           </div>
@@ -136,7 +136,7 @@ export const PosCartTable: React.FC<PosCartTableProps> = ({
             <div
               key={item.id}
               onClick={() => onSelectItem && onSelectItem(item.id)}
-              className={`p-2 sm:p-2.5 rounded-xl border transition-all shadow-md space-y-1.5 group cursor-pointer ${
+              className={`p-1.5 sm:p-2 rounded-xl border transition-all shadow-md space-y-1.5 group cursor-pointer ${
                 isSelected 
                   ? 'bg-slate-950 border-teal-400 ring-2 ring-teal-400/40 shadow-lg shadow-teal-500/10' 
                   : 'bg-slate-950/70 border-slate-700 hover:border-teal-400/80'
@@ -145,9 +145,9 @@ export const PosCartTable: React.FC<PosCartTableProps> = ({
             >
               {/* SATIR 1: Ürün İsmi, Kod & Silme Butonu */}
               <div className="flex items-center justify-between gap-2 border-b border-slate-800/80 pb-1.5">
-                <div className="flex items-center gap-1.5 min-w-0">
+                <div className="flex items-center gap-1.5 min-w-0 flex-1">
                   <span
-                    className="px-1.5 py-0.5 text-[10px] font-black font-mono border rounded shrink-0"
+                    className="px-1.5 py-0.5 text-[9px] sm:text-[10px] font-black font-mono border rounded shrink-0 max-w-[65px] truncate"
                     style={{ backgroundColor: 'rgba(20, 184, 166, 0.2)', color: '#2dd4bf', borderColor: 'rgba(45, 212, 191, 0.5)' }}
                   >
                     {item.stockCode || 'STK'}
@@ -158,25 +158,25 @@ export const PosCartTable: React.FC<PosCartTableProps> = ({
                 </div>
                 <button
                   onClick={() => handleDeleteClick(item.id)}
-                  className="w-7 h-7 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/20 transition-colors flex items-center justify-center shrink-0 cursor-pointer active:scale-90 touch-manipulation"
+                  className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/20 transition-colors flex items-center justify-center shrink-0 cursor-pointer active:scale-90 touch-manipulation"
                   title="Satırı Sil"
                 >
-                  <Trash2 size={15} />
+                  <Trash2 size={14} />
                 </button>
               </div>
 
               {/* SATIR 2: Birim Fiyat, Miktar (Adet) & Net Tutar */}
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center justify-between gap-1 sm:gap-2 flex-wrap sm:flex-nowrap">
                 {/* 1. Birim Fiyat */}
                 <div className="flex items-center gap-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-tight">
                     Fiyat:
                   </span>
-                  <div className="flex items-center bg-slate-900 px-2 py-1 rounded-lg border border-slate-700 h-8 focus-within:border-teal-400 transition-colors">
-                    <span className="text-xs font-black text-teal-400 font-mono mr-0.5" style={{ color: '#2dd4bf' }}>₺</span>
+                  <div className="flex items-center bg-slate-900 px-1.5 py-0.5 rounded-lg border border-slate-700 h-7 sm:h-8 focus-within:border-teal-400 transition-colors">
+                    <span className="text-[11px] sm:text-xs font-black text-teal-400 font-mono mr-0.5" style={{ color: '#2dd4bf' }}>₺</span>
                     <button
                       onClick={() => setNumpadState({ isOpen: true, type: 'unitPrice', itemId: item.id, initialValue: item.unitPrice })}
-                      className="pos-number-input min-w-[44px] text-left text-xs font-black font-mono text-white bg-transparent outline-none cursor-pointer hover:bg-slate-800 rounded px-1"
+                      className="pos-number-input min-w-[36px] sm:min-w-[44px] text-left text-[11px] sm:text-xs font-black font-mono text-white bg-transparent outline-none cursor-pointer hover:bg-slate-800 rounded px-0.5 sm:px-1"
                       title="Birim Fiyatı Değiştir"
                       style={{ color: '#ffffff' }}
                     >
@@ -186,17 +186,17 @@ export const PosCartTable: React.FC<PosCartTableProps> = ({
                 </div>
 
                 {/* 2. Miktar / Adet Stepper Kutusu */}
-                <div className="flex items-center bg-slate-900 rounded-lg border border-slate-700 overflow-hidden h-8">
+                <div className="flex items-center bg-slate-900 rounded-lg border border-slate-700 overflow-hidden h-7 sm:h-8">
                   <button
                     onClick={() => onUpdateQuantity(item.id, -1)}
-                    className="w-7 h-8 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition-colors font-black shrink-0 cursor-pointer active:bg-slate-700 touch-manipulation"
+                    className="w-6 sm:w-7 h-7 sm:h-8 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition-colors font-black shrink-0 cursor-pointer active:bg-slate-700 touch-manipulation"
                     title="1 Azalt"
                   >
-                    <Minus size={14} />
+                    <Minus size={12} />
                   </button>
                   <button
                     onClick={() => setNumpadState({ isOpen: true, type: 'quantity', itemId: item.id, initialValue: item.quantity })}
-                    className="pos-number-input w-9 text-center text-xs font-black font-mono text-white bg-transparent outline-none cursor-pointer hover:bg-slate-800 h-8"
+                    className="pos-number-input w-7 sm:w-9 text-center text-[11px] sm:text-xs font-black font-mono text-white bg-transparent outline-none cursor-pointer hover:bg-slate-800 h-7 sm:h-8"
                     title="Adet Gir"
                     style={{ color: '#ffffff' }}
                   >
@@ -204,16 +204,16 @@ export const PosCartTable: React.FC<PosCartTableProps> = ({
                   </button>
                   <button
                     onClick={() => onUpdateQuantity(item.id, 1)}
-                    className="w-7 h-8 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition-colors font-black shrink-0 cursor-pointer active:bg-slate-700 touch-manipulation"
+                    className="w-6 sm:w-7 h-7 sm:h-8 flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 transition-colors font-black shrink-0 cursor-pointer active:bg-slate-700 touch-manipulation"
                     title="1 Arttır"
                   >
-                    <Plus size={14} />
+                    <Plus size={12} />
                   </button>
                 </div>
 
                 {/* 3. Satır Toplam Tutar */}
                 <div className="flex items-center gap-1 text-right shrink-0">
-                  <span className="text-[10px] font-bold text-slate-400">
+                  <span className="text-[9px] sm:text-[10px] font-bold text-slate-400 hidden xs:inline">
                     Tutar:
                   </span>
                   <span className="text-xs sm:text-sm font-black text-teal-300 font-mono tracking-tight" style={{ color: '#2dd4bf' }}>

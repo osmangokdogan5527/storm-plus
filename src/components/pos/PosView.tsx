@@ -755,7 +755,7 @@ export const PosView: React.FC<PosViewProps> = ({
   );
 
   return (
-    <div className="pos-terminal-wrapper flex flex-col h-full min-h-[calc(100vh-5rem)] gap-3.5 animate-fade-in p-1.5 bg-slate-900 rounded-2xl pb-4" style={{ backgroundColor: '#0f172a' }}>
+    <div className="pos-terminal-wrapper flex flex-col h-full min-h-0 w-full gap-2.5 sm:gap-3.5 animate-fade-in p-1 sm:p-2 bg-slate-900 rounded-2xl pb-4" style={{ backgroundColor: '#0f172a' }}>
       
       {/* MOBİL İÇİN SABİT YAPIŞKAN FİYAT GÖSTERGESİ (SADECE MOBİLDE GÖRÜNÜR) */}
       <div className="md:hidden fixed bottom-20 left-4 right-4 z-50 bg-slate-900 border-2 border-teal-500/80 rounded-2xl p-3.5 shadow-[0_0_30px_rgba(45,212,191,0.5)] flex items-center justify-between pointer-events-none">
@@ -770,33 +770,33 @@ export const PosView: React.FC<PosViewProps> = ({
 )}</div>
       </div>
       {/* ÜST TERMİNAL BİLGİ & KISAYOL BAR */}
-      <div className="p-3.5 bg-slate-900 border-2 border-slate-700 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 shrink-0" style={{ backgroundColor: '#0f172a' }}>
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-teal-500/20 border border-teal-400 flex items-center justify-center text-teal-300 font-bold">
-            <ShoppingCart size={20} />
+      <div className="p-2.5 sm:p-3.5 bg-slate-900 border-2 border-slate-700 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 shrink-0" style={{ backgroundColor: '#0f172a' }}>
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-teal-500/20 border border-teal-400 flex items-center justify-center text-teal-300 font-bold shrink-0">
+            <ShoppingCart size={18} />
           </div>
           <div>
-            <h2 className="text-sm font-black text-white flex items-center gap-2">
+            <h2 className="text-xs sm:text-sm font-black text-white flex items-center gap-2">
               <span>HIZLI SATIŞ TERMİNALİ</span>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono bg-teal-600 text-white border border-teal-400 font-black shadow-sm">
+              <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-mono bg-teal-600 text-white border border-teal-400 font-black shadow-sm shrink-0">
                 1.4.4 POS Engine
               </span>
             </h2>
-            <p className="text-[11px] text-slate-300 font-medium">
+            <p className="text-[10px] sm:text-[11px] text-slate-300 font-medium hidden xs:block">
               Dokunmatik & Barkod Okuyucu Destekli Perakende Kasasız Satış
             </p>
           </div>
         </div>
 
         {/* DOKUNMATİK HIZLI SATIŞ VE İŞLEM BUTONLARI */}
-        <div className="flex items-center gap-2 overflow-x-auto text-xs font-bold custom-scrollbar py-0.5">
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto text-xs font-bold custom-scrollbar py-0.5 max-w-full flex-wrap sm:flex-nowrap">
           <button
             type="button"
             onClick={() => searchInputRef.current?.focus()}
-            className="px-3 py-2 rounded-xl font-black shadow-md flex items-center gap-1.5 border cursor-pointer active:scale-95 transition-all touch-manipulation hover:brightness-125 bg-slate-800 text-teal-300 border-slate-700"
+            className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl font-black shadow-md flex items-center gap-1.5 border cursor-pointer active:scale-95 transition-all touch-manipulation hover:brightness-125 bg-slate-800 text-teal-300 border-slate-700 text-[11px] sm:text-xs shrink-0 whitespace-nowrap"
             title="Barkod / Arama Kutusuna Odaklan"
           >
-            <Search size={16} className="text-teal-400" />
+            <Search size={15} className="text-teal-400 shrink-0" />
             <span>Barkod / Arama</span>
           </button>
 
@@ -804,10 +804,10 @@ export const PosView: React.FC<PosViewProps> = ({
             type="button"
             onClick={handleQuickCashSale}
             disabled={cartItems.length === 0 || isProcessing}
-            className="px-3 py-2 rounded-xl font-black shadow-md flex items-center gap-1.5 border cursor-pointer active:scale-95 transition-all touch-manipulation disabled:opacity-40 hover:brightness-125 bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400"
+            className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl font-black shadow-md flex items-center gap-1.5 border cursor-pointer active:scale-95 transition-all touch-manipulation disabled:opacity-40 hover:brightness-125 bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400 text-[11px] sm:text-xs shrink-0 whitespace-nowrap"
             title="Hızlı Nakit Satış Yap"
           >
-            <DollarSign size={16} />
+            <DollarSign size={15} className="shrink-0" />
             <span>Hızlı Nakit</span>
           </button>
 
@@ -815,10 +815,10 @@ export const PosView: React.FC<PosViewProps> = ({
             type="button"
             onClick={handleQuickPosSale}
             disabled={cartItems.length === 0 || isProcessing}
-            className="px-3 py-2 rounded-xl font-black shadow-md flex items-center gap-1.5 border cursor-pointer active:scale-95 transition-all touch-manipulation disabled:opacity-40 hover:brightness-125 bg-blue-600 hover:bg-blue-500 text-white border-blue-400"
+            className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl font-black shadow-md flex items-center gap-1.5 border cursor-pointer active:scale-95 transition-all touch-manipulation disabled:opacity-40 hover:brightness-125 bg-blue-600 hover:bg-blue-500 text-white border-blue-400 text-[11px] sm:text-xs shrink-0 whitespace-nowrap"
             title="Hızlı POS Kart Satışı Yap"
           >
-            <CreditCard size={16} />
+            <CreditCard size={15} className="shrink-0" />
             <span>Hızlı POS</span>
           </button>
 
@@ -826,20 +826,20 @@ export const PosView: React.FC<PosViewProps> = ({
             type="button"
             onClick={() => { if (cartItems.length > 0) setIsSplitModalOpen(true); }}
             disabled={cartItems.length === 0 || isProcessing}
-            className="px-3 py-2 rounded-xl font-black shadow-md flex items-center gap-1.5 border cursor-pointer active:scale-95 transition-all touch-manipulation disabled:opacity-40 hover:brightness-125 bg-purple-700 hover:bg-purple-600 text-white border-purple-400"
+            className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl font-black shadow-md flex items-center gap-1.5 border cursor-pointer active:scale-95 transition-all touch-manipulation disabled:opacity-40 hover:brightness-125 bg-purple-700 hover:bg-purple-600 text-white border-purple-400 text-[11px] sm:text-xs shrink-0 whitespace-nowrap"
             title="Parçalı Ödeme Ekranını Aç"
           >
-            <Zap size={15} />
+            <Zap size={14} className="shrink-0" />
             <span>Parçalı Ödeme</span>
           </button>
 
           <button
             type="button"
             onClick={() => setIsParkedModalOpen(true)}
-            className="px-3 py-2 rounded-xl font-black flex items-center gap-1.5 cursor-pointer transition-all shadow-md active:scale-95 border touch-manipulation hover:brightness-110 bg-amber-500 hover:bg-amber-400 text-slate-950 border-amber-300"
+            className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl font-black flex items-center gap-1.5 cursor-pointer transition-all shadow-md active:scale-95 border touch-manipulation hover:brightness-110 bg-amber-500 hover:bg-amber-400 text-slate-950 border-amber-300 text-[11px] sm:text-xs shrink-0 whitespace-nowrap"
             title="Askıdaki Satışları Görüntüle"
           >
-            <Clock size={16} className="text-slate-950" />
+            <Clock size={15} className="text-slate-950 shrink-0" />
             <span className="font-black">Askıdakiler ({(parkedSales || []).length})</span>
           </button>
 
@@ -847,10 +847,10 @@ export const PosView: React.FC<PosViewProps> = ({
           <button
             type="button"
             onClick={() => setIsTableModalOpen(true)}
-            className="px-3 py-2 rounded-xl font-black flex items-center gap-1.5 cursor-pointer transition-all shadow-md active:scale-95 border touch-manipulation hover:brightness-110 bg-emerald-700 hover:bg-emerald-600 text-white border-emerald-400"
+            className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl font-black flex items-center gap-1.5 cursor-pointer transition-all shadow-md active:scale-95 border touch-manipulation hover:brightness-110 bg-emerald-700 hover:bg-emerald-600 text-white border-emerald-400 text-[11px] sm:text-xs shrink-0 whitespace-nowrap"
             title="Restoran Masalarını ve Adisyon Planını Aç"
           >
-            <Utensils size={16} className="text-white" />
+            <Utensils size={15} className="text-white shrink-0" />
             <span className="font-black">
               Masa Planı ({(tables || []).filter((t) => t.status === 'occupied' || t.status === 'bill_printed').length})
             </span>
@@ -861,10 +861,10 @@ export const PosView: React.FC<PosViewProps> = ({
             <button
               type="button"
               onClick={() => setIsReceiptModalOpen(true)}
-              className="px-3 py-2 rounded-xl font-black flex items-center gap-1.5 cursor-pointer transition-all shadow-md active:scale-95 border touch-manipulation hover:brightness-110 bg-sky-700 hover:bg-sky-600 text-white border-sky-400"
+              className="px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl font-black flex items-center gap-1.5 cursor-pointer transition-all shadow-md active:scale-95 border touch-manipulation hover:brightness-110 bg-sky-700 hover:bg-sky-600 text-white border-sky-400 text-[11px] sm:text-xs shrink-0 whitespace-nowrap"
               title="Son Tamamlanan Satışın Fişini Yazdır / İncele"
             >
-              <Receipt size={16} className="text-white" />
+              <Receipt size={15} className="text-white shrink-0" />
               <span className="font-black">
                 Son Fiş (#{completedSaleSummary.receiptNo})
               </span>
@@ -875,7 +875,7 @@ export const PosView: React.FC<PosViewProps> = ({
           <button
             type="button"
             onClick={() => setAutoShowReceipt(!autoShowReceipt)}
-            className={`px-3 py-2 rounded-xl font-extrabold flex items-center gap-1.5 cursor-pointer transition-all border text-xs active:scale-95 touch-manipulation shrink-0 ${
+            className={`px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl font-extrabold flex items-center gap-1.5 cursor-pointer transition-all border text-[11px] sm:text-xs active:scale-95 touch-manipulation shrink-0 whitespace-nowrap ${
               autoShowReceipt
                 ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/50'
                 : 'bg-slate-900 text-slate-400 border-slate-700/80 hover:text-slate-200'
@@ -954,9 +954,9 @@ export const PosView: React.FC<PosViewProps> = ({
       )}
 
       {/* ANA EKRAN DÜZENİ: SOLDA ÜRÜN KATALOĞU (FLEX-GROW & H-FULL), SAĞDA SEPET VE ÖDEME ÖZETİ */}
-      <div className="flex-1 flex flex-col lg:flex-row gap-3.5 min-h-0 h-full">
+      <div className="flex-1 flex flex-col lg:flex-row gap-2.5 sm:gap-3 min-h-0 w-full">
         {/* SOL PANEL: ÜRÜN KATALOĞU (TÜM ALANI DOLDURUR - FLEX-GROW & H-FULL) */}
-        <div className="flex-1 flex flex-col min-h-0 h-full">
+        <div className="flex-1 flex flex-col min-h-0 min-w-0 w-full">
           <PosProductCatalog
             stocks={safeStocks}
             onAddToCart={handleAddToCart}
@@ -967,18 +967,18 @@ export const PosView: React.FC<PosViewProps> = ({
         </div>
 
         {/* SAĞ PANEL: SEPET & SAYISAL TUŞ TAKIMI & ÖDEME ÖZETİ */}
-        <div className="w-full lg:w-[440px] xl:w-[480px] 2xl:w-[520px] shrink-0 flex flex-col gap-2.5 min-h-0 h-full overflow-y-auto custom-scrollbar">
+        <div className="w-full lg:w-[360px] xl:w-[410px] 2xl:w-[460px] shrink-0 flex flex-col gap-2 min-h-0 overflow-y-auto custom-scrollbar">
           
           {/* SABİT ANA GENEL TOPLAM GÖSTERGESİ (SAĞ ÜST) */}
-          <div className="bg-slate-900 p-3.5 rounded-2xl border-2 border-teal-500/50 flex flex-col justify-center items-end shadow-xl shrink-0" style={{ backgroundColor: '#0f172a' }}>
-            <span className="text-xs font-black text-slate-400 uppercase tracking-widest">
+          <div className="bg-slate-900 p-2.5 sm:p-3.5 rounded-2xl border-2 border-teal-500/50 flex flex-col justify-center items-end shadow-xl shrink-0" style={{ backgroundColor: '#0f172a' }}>
+            <span className="text-[11px] sm:text-xs font-black text-slate-400 uppercase tracking-widest">
               ÖDENECEK TUTAR
             </span>
-            <span className="text-teal-300 font-black text-3xl sm:text-4xl font-mono tracking-tight leading-none mt-1" style={{ color: '#2dd4bf' }}>
+            <span className="text-teal-300 font-black text-2xl sm:text-3xl xl:text-4xl font-mono tracking-tight leading-none mt-1 truncate max-w-full" style={{ color: '#2dd4bf' }}>
               ₺{summary.grandTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
             {selectedCurrency !== 'TRY' && (
-              <div className="text-amber-300 font-mono text-base font-black pt-1.5 mt-1.5 border-t border-slate-800 w-full text-right" style={{ color: '#fcd34d' }}>
+              <div className="text-amber-300 font-mono text-xs sm:text-sm font-black pt-1.5 mt-1.5 border-t border-slate-800 w-full text-right truncate" style={{ color: '#fcd34d' }}>
                 {currencySymbol}{convertedTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {selectedCurrency}
               </div>
             )}
