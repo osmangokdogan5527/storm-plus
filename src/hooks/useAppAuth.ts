@@ -10,6 +10,7 @@ import {
   User as FirebaseUser,
   setActiveUser,
   isFirebaseConfigured,
+  firebaseConfigurationError,
 } from '../firebase';
 import { logUserActivity } from '../utils/userLogger';
 
@@ -74,7 +75,7 @@ export function useAppAuth(
 
   const ensureConfigured = () => {
     if (!isFirebaseConfigured) {
-      throw new Error('Firebase ayarları eksik. Yeni proje bilgilerini yerel .env dosyasına ekleyin.');
+      throw new Error(firebaseConfigurationError || 'Storm Plus Firebase ayarlarını kontrol edin.');
     }
   };
 

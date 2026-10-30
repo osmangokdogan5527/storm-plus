@@ -22,6 +22,7 @@ import {
   subscribeAccountTransactions,
   updateProfile,
   isFirebaseConfigured,
+  firebaseConfigurationError,
   getActiveWorkspace,
   saveBankAccount,
   createTransaction,
@@ -697,6 +698,7 @@ ${friendlyError}`);
         sidebarPatternOpacity={sidebarPatternOpacity}
         designStyle={designStyle}
         firebaseConfigured={isFirebaseConfigured}
+        firebaseConfigurationError={firebaseConfigurationError}
         authLoading={authLoading}
         handleSignIn={handleSignIn}
         handleSignUp={handleSignUp}

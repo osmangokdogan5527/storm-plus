@@ -38,26 +38,29 @@ import {
 import { Cari, Stock, Transaction, Expense, Employee, EmployeeTransaction, RecurringTransaction } from './types';
 import { OnlineMarketOrder, OnlineMarketPayout } from './types/onlineMarket';
 import { PosPlatformConfig } from './types/pos';
+import { getFirebaseConfigurationError } from './utils/firebaseProjectGuard.js';
 
 
 const firebaseEnvironment = import.meta.env;
-export const isFirebaseConfigured = Boolean(
-  firebaseEnvironment.VITE_FIREBASE_API_KEY &&
-  firebaseEnvironment.VITE_FIREBASE_AUTH_DOMAIN &&
-  firebaseEnvironment.VITE_FIREBASE_PROJECT_ID &&
-  firebaseEnvironment.VITE_FIREBASE_STORAGE_BUCKET &&
-  firebaseEnvironment.VITE_FIREBASE_MESSAGING_SENDER_ID &&
-  firebaseEnvironment.VITE_FIREBASE_APP_ID
-);
+export const firebaseConfigurationError = getFirebaseConfigurationError(firebaseEnvironment);
+export const isFirebaseConfigured = !firebaseConfigurationError;
 
-// Values are supplied locally through .env; placeholder options keep the app shell loadable until configured.
-const firebaseConfig = {
-  apiKey: firebaseEnvironment.VITE_FIREBASE_API_KEY || 'not-configured',
-  authDomain: firebaseEnvironment.VITE_FIREBASE_AUTH_DOMAIN || 'not-configured.invalid',
-  projectId: firebaseEnvironment.VITE_FIREBASE_PROJECT_ID || 'storm-plus-unconfigured',
-  storageBucket: firebaseEnvironment.VITE_FIREBASE_STORAGE_BUCKET || 'storm-plus-unconfigured.invalid',
-  messagingSenderId: firebaseEnvironment.VITE_FIREBASE_MESSAGING_SENDER_ID || '0',
-  appId: firebaseEnvironment.VITE_FIREBASE_APP_ID || '1:0:web:unconfigured'
+// Never initialize against partial, stale, or shared project settings. This
+// also prevents a cached auth session from connecting to the other app's project.
+const firebaseConfig = isFirebaseConfigured ? {
+  apiKey: firebaseEnvironment.VITE_FIREBASE_API_KEY,
+  authDomain: firebaseEnvironment.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: firebaseEnvironment.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: firebaseEnvironment.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: firebaseEnvironment.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: firebaseEnvironment.VITE_FIREBASE_APP_ID,
+} : {
+  apiKey: 'not-configured',
+  authDomain: 'not-configured.invalid',
+  projectId: 'storm-plus-unconfigured',
+  storageBucket: 'storm-plus-unconfigured.invalid',
+  messagingSenderId: '0',
+  appId: '1:0:web:unconfigured',
 };
 
 const app = initializeApp(firebaseConfig);

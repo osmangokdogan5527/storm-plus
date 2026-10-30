@@ -11,6 +11,7 @@ interface AuthScreenProps {
   sidebarPatternOpacity: number;
   designStyle: string;
   firebaseConfigured: boolean;
+  firebaseConfigurationError: string | null;
   authLoading: boolean;
   handleSignIn: (email: string, password: string) => Promise<void>;
   handleSignUp: (email: string, password: string, displayName: string) => Promise<void>;
@@ -39,6 +40,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   sidebarPatternOpacity,
   designStyle,
   firebaseConfigured,
+  firebaseConfigurationError,
   authLoading,
   handleSignIn,
   handleSignUp,
@@ -277,7 +279,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
             {!firebaseConfigured && (
               <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-200">
-                Firebase bağlantısı henüz ayarlanmamış. Yeni proje ayarlarını yerel `.env` dosyasına ekleyin.
+                {firebaseConfigurationError || 'Firebase bağlantısı henüz ayarlanmamış. Storm Plus için mevcut ayrı Firebase ayarlarını ekleyin.'}
               </div>
             )}
 
