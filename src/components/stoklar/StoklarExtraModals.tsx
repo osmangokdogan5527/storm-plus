@@ -309,7 +309,7 @@ export function StoklarExtraModals({ isQrModalOpen, qrStock, setIsQrModalOpen, q
                   setPinError('');
                   
                   if (val.length === 4) {
-                    if (val === escalationPin || ['1923', '1234', '9999'].includes(val)) {
+                    if (escalationPin && val === escalationPin) {
                       setIsPinModalOpen(false);
                       if (pinVerificationAction) {
                         pinVerificationAction();

@@ -17,6 +17,7 @@ import { PosNumpadControlPanel } from './PosNumpadControlPanel';
 import { findStockByBarcodeOrSearch, calculateLineTotal, calculateCartSummary, generateReceiptNo } from '../../utils/posUtils';
 import { ShoppingCart, Zap, DollarSign, CreditCard, User, Clock, CheckCircle2, RotateCcw, Search, Plus, Sparkles, HelpCircle, Percent, Settings, ShoppingBag, Utensils, Receipt, ArrowLeftRight, Calculator, List } from 'lucide-react';
 import { reportErrorToTelegram } from '../../utils/telegramLogger';
+import { validatePaymentSplit } from '../../utils/paymentSplitUtils.js';
 
 interface PosViewProps {
   stocks: Stock[];
@@ -553,6 +554,13 @@ export const PosView: React.FC<PosViewProps> = ({
   const executeSale = async (paymentSplit: PosPaymentSplit) => {
     try {
       setIsProcessing(true);
+      if (!paymentSplit.platformName) {
+        const validationError = validatePaymentSplit(summary.grandTotal, paymentSplit);
+        if (validationError) {
+          alert(validationError);
+          return;
+        }
+      }
       const receiptNo = generateReceiptNo();
       const now = new Date();
       const date = getBusinessDateStr();
@@ -566,7 +574,7 @@ export const PosView: React.FC<PosViewProps> = ({
       const cariId = selectedCari ? selectedCari.id : defaultPlatCariId;
       const cariName = selectedCari ? selectedCari.name : defaultPlatCariName;
 
-      const finalSaleGrandTotal = paymentSplit.cashAmount + paymentSplit.posAmount + paymentSplit.openAccountAmount;
+      const finalSaleGrandTotal = summary.grandTotal;
       const finalSaleDiscount = Math.max(0, summary.subtotalAfterLineDiscounts - finalSaleGrandTotal);
 
       const success = await onCompletePosSale({

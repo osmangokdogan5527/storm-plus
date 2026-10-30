@@ -57,7 +57,7 @@ function StoklarView({
   cariler: _cariler = [],
       userRole = 'employee',
   actionPermissions = { delete_sale: false, delete_payment: false, delete_stock: false, decrease_stock: false, edit_sale: false, edit_payment: false, edit_stock: false },
-  escalationPin = '1923',
+  escalationPin = '',
   isSecurityActive = false,
   pendingAddStock,
   onStockAdded,

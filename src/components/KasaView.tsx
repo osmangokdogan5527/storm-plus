@@ -204,6 +204,13 @@ export default function KasaView({ islemler, expenses, employeeTransactions = []
     islemler.forEach(islem => {
       // HOTFIX: Eski online sipariş satışlarının (POS olarak kaydedilenlerin) kasada görünmesini engelle
       if (islem.type === 'sale' && islem.cariId && islem.cariId.startsWith('plat_cari_')) return;
+      if (islem.type === 'sale' && islem.paymentBreakdown) {
+        const cashTargetId = 'merkez_kasa';
+        const posTargetId = islem.paymentBreakdown.posAccountId || 'merkez_pos';
+        if (map[cashTargetId] !== undefined) map[cashTargetId] += Number(islem.paymentBreakdown.cashAmount) || 0;
+        if (map[posTargetId] !== undefined) map[posTargetId] += Number(islem.paymentBreakdown.posAmount) || 0;
+        return;
+      }
       const targetId = islem.bankAccountId || (islem.account === 'cash' ? 'merkez_kasa' : islem.account === 'bank' ? 'merkez_banka' : islem.account === 'pos' ? 'merkez_pos' : '');
       if (map[targetId] !== undefined) {
         if (islem.type === 'collection' || islem.type === 'sale' || islem.type === 'purchase_return') {
@@ -262,6 +269,40 @@ export default function KasaView({ islemler, expenses, employeeTransactions = []
     islemler.forEach(islem => {
       // HOTFIX: Eski online sipariş satışlarının (POS olarak kaydedilenlerin) kasada görünmesini engelle
       if (islem.type === 'sale' && islem.cariId && islem.cariId.startsWith('plat_cari_')) return;
+      if (islem.type === 'sale' && islem.paymentBreakdown) {
+        const breakdown = islem.paymentBreakdown;
+        const movementBase = {
+          date: islem.date,
+          title: islem.cariName || 'Bilinmeyen Cari',
+          description: islem.description || '',
+          category: 'Mal/Hizmet Satışı',
+          type: 'in',
+          currency: islem.currency || 'TRY',
+          rawType: islem.type,
+        };
+        const cashAmount = Number(breakdown.cashAmount) || 0;
+        if (cashAmount > 0) {
+          list.push({
+            ...movementBase,
+            id: `islem-${islem.id}-cash`,
+            account: 'cash',
+            accountId: getAccountId(undefined, 'cash'),
+            amount: cashAmount,
+          });
+        }
+        const posAmount = Number(breakdown.posAmount) || 0;
+        if (posAmount > 0) {
+          const posAccount = bankAccounts.find((account) => account.id === breakdown.posAccountId);
+          list.push({
+            ...movementBase,
+            id: `islem-${islem.id}-pos`,
+            account: posAccount?.type === 'banka' ? 'bank' : 'pos',
+            accountId: getAccountId(breakdown.posAccountId, 'pos'),
+            amount: posAmount,
+          });
+        }
+        return;
+      }
       const acc = islem.account;
       if (acc !== 'cash' && acc !== 'bank' && acc !== 'pos') return;
       const isIncoming = islem.type === 'sale' || islem.type === 'collection' || islem.type === 'purchase_return';

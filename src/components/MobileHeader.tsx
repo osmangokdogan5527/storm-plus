@@ -3,35 +3,9 @@ import { ChevronLeft } from 'lucide-react';
 import { TAB_DEFS } from '../constants';
 
 interface MobileHeaderProps {
-  sidebarBg: string;
-  activeLogoTheme: string;
-  activeTheme: string;
-  sidebarPattern: string;
-  sidebarPatternOpacity: number;
-  designStyle: string;
   isOnline: boolean;
-  mobileMenuOpen: boolean;
-  setMobileMenuOpen: (open: boolean) => void;
-  isLightSidebar: boolean;
-  sidebarPatternStyle: React.CSSProperties;
-  tabOrder: string[];
-  hiddenTabs: string[];
   activeTab: string;
   handleNavigate: (tab: any) => void;
-  isIslemlerSubMenuOpen: boolean;
-  setIsIslemlerSubMenuOpen: (open: boolean) => void;
-  userRole: string;
-  sensitiveTabs: string[];
-  handleSignOut: () => void;
-  setAdminPinError: (error: string | null) => void;
-  setAdminPinInput: (pin: string) => void;
-  setIsAdminPinModalOpen: (open: boolean) => void;
-  setUserRole: (role: any) => void;
-  user: any;
-  setPendingIslemModal: (modal: any) => void;
-  showToast: (msg: string, type: string) => void;
-  setActiveTab: (tab: any) => void;
-  isSecurityActive: boolean;
 }
 
 export const MobileHeader: React.FC<MobileHeaderProps> = ({

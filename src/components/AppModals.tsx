@@ -24,12 +24,6 @@ interface AppModalsProps {
   handleCloseChangelog: () => void;
   isAdminPinModalOpen: boolean;
   setIsAdminPinModalOpen: (open: boolean) => void;
-  adminPinInput: string;
-  setAdminPinInput: (pin: string) => void;
-  adminPinError: string | null;
-  setAdminPinError: (error: string | null) => void;
-  escalationPin: string;
-  setUserRole: (role: any) => void;
   showToast: (msg: string, type: string) => void;
   toastMessage: { text: string; type: "success" | "error" | "info" } | null;
   setToastMessage: (msg: any) => void;
@@ -52,17 +46,9 @@ interface AppModalsProps {
   user: any;
   zoomImage: string | null;
   setZoomImage: (img: string | null) => void;
-  geminiApiKey: string;
-  isAiEnabled?: boolean;
   setActiveTab: (tab: any) => void;
-  setAiPrefilledData,
   setFeedbackList: (data: any) => void;
   financialData?: any;
-  userRole: 'admin' | 'employee';
-  isSecurityActive: boolean;
-  sensitiveTabs: string[];
-  actionPermissions: any;
-  handleNavigate: (tabId: string) => void;
 }
 
 export const AppModals: React.FC<AppModalsProps> = ({
@@ -87,12 +73,6 @@ export const AppModals: React.FC<AppModalsProps> = ({
   handleCloseChangelog,
   isAdminPinModalOpen,
   setIsAdminPinModalOpen,
-  adminPinInput,
-  setAdminPinInput,
-  adminPinError,
-  setAdminPinError,
-  escalationPin,
-  setUserRole,
   showToast,
   toastMessage,
   setToastMessage,
@@ -115,17 +95,9 @@ export const AppModals: React.FC<AppModalsProps> = ({
   user,
   zoomImage,
   setZoomImage,
-  geminiApiKey,
-  isAiEnabled,
   setActiveTab,
-  setAiPrefilledData,
   setFeedbackList,
   financialData,
-  userRole,
-  isSecurityActive,
-  sensitiveTabs,
-  actionPermissions,
-  handleNavigate
 }) => {
   return (
     <>
@@ -599,82 +571,22 @@ export const AppModals: React.FC<AppModalsProps> = ({
       {/* ADMIN PRIVILEGE ESCALATION MODAL */}
       {isAdminPinModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
-          <div className="bg-[#0b0f19] rounded-3xl max-w-sm w-full border border-teal-500/20 shadow-[0_20px_50px_rgba(45,212,191,0.15)] p-6 overflow-hidden relative">
-            {/* Background glowing sphere */}
-            <div className="absolute -top-12 -left-12 w-24 h-24 bg-teal-500/10 rounded-full blur-2xl"></div>
-            
-            <div className="flex flex-col items-center text-center relative z-10">
-              <div className="w-12 h-12 rounded-2xl bg-teal-500/10 text-teal-400 flex items-center justify-center mb-4 border border-teal-500/20">
-                <ShieldCheck size={24} />
-              </div>
-              <h3 className="text-base font-extrabold text-white tracking-wider uppercase">Yönetici Yetkilendirmesi</h3>
-              <p className="text-[11px] text-zinc-400 mt-1 max-w-[240px]">Hassas sekmelere erişim sağlamak için lütfen 4 haneli Yönetici PIN kodunu giriniz</p>
-              
-              <div className="my-6 w-full space-y-4">
-                <input
-                  type="password"
-                  maxLength={4}
-                  value={adminPinInput}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/[^0-9]/g, '');
-                    setAdminPinInput(val);
-                    setAdminPinError(null);
-                    
-                    if (val.length === 4) {
-                      // Validate admin PIN - we can accept '1234', '1923', or '9999' as valid management PINs
-                      if (val === escalationPin || ['1234', '1923', '9999'].includes(val)) {
-                        setUserRole('admin');
-                        setIsAdminPinModalOpen(false);
-                        setAdminPinInput('');
-                        showToast('Yönetici modu başarıyla aktif edildi. Tüm yetkiler açıldı!', 'success');
-                      } else {
-                        setAdminPinError('Hatalı Yönetici PIN kodu! Lütfen tekrar deneyiniz.');
-                        setAdminPinInput('');
-                      }
-                    }
-                  }}
-                  placeholder="••••"
-                  className="w-full bg-white/5 border border-white/10 focus:border-teal-500/50 rounded-xl px-4 py-3.5 text-center text-3xl tracking-[1.5em] text-teal-400 placeholder-zinc-600 transition outline-none font-mono"
-                  autoFocus
-                />
-                
-                {/* Visual PIN dots indicator */}
-                <div className="flex justify-center gap-3">
-                  {[0, 1, 2, 3].map((idx) => (
-                    <div 
-                      key={idx} 
-                      className={`w-3.5 h-3.5 rounded-full border transition-all duration-200 ${
-                        idx < adminPinInput.length 
-                          ? 'bg-teal-400 border-teal-400 scale-110 shadow-[0_0_8px_rgba(45,212,191,0.5)]' 
-                          : 'bg-white/5 border-white/10'
-                      }`}
-                    ></div>
-                  ))}
-                </div>
-
-                {adminPinError && (
-                  <p className="text-rose-400 text-xs text-center font-bold">{adminPinError}</p>
-                )}
-              </div>
-
-              <div className="flex gap-3 w-full">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsAdminPinModalOpen(false);
-                    setAdminPinInput('');
-                    setAdminPinError(null);
-                  }}
-                  className="flex-1 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-zinc-400 hover:text-white transition cursor-pointer text-xs font-bold uppercase tracking-wider"
-                >
-                  İptal Et
-                </button>
-              </div>
+          <div className="bg-[#0b0f19] rounded-3xl max-w-sm w-full border border-teal-500/20 shadow-[0_20px_50px_rgba(45,212,191,0.15)] p-6 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-teal-500/10 text-teal-400 flex items-center justify-center mx-auto mb-4 border border-teal-500/20">
+              <ShieldCheck size={24} />
             </div>
+            <h3 className="text-base font-extrabold text-white tracking-wider uppercase">Yönetici Yetkisi Gerekli</h3>
+            <p className="text-xs text-zinc-400 mt-2">Bu alanlara yalnızca Firebase yöneticisi yetkisine sahip bir hesap erişebilir. Yönetici hesabıyla giriş yapın.</p>
+            <button
+              type="button"
+              onClick={() => setIsAdminPinModalOpen(false)}
+              className="mt-6 w-full py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs uppercase tracking-wider transition cursor-pointer"
+            >
+              Tamam
+            </button>
           </div>
         </div>
       )}
-
       {/* TOAST NOTIFICATION SYSTEM */}
       {toastMessage && (
         <div className="fixed bottom-20 md:bottom-6 right-6 z-[120] max-w-sm w-full">

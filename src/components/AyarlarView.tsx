@@ -100,7 +100,6 @@ export interface AyarlarViewProps {
   isSecurityActive: boolean;
   setIsSecurityActive: (active: boolean) => void;
   userRole: 'admin' | 'employee';
-  setUserRole: (role: 'admin' | 'employee') => void;
   escalationPin: string;
   setEscalationPin: (pin: string) => void;
   showToast: (text: string, type?: 'success' | 'error' | 'info') => void;
@@ -183,7 +182,6 @@ export default function AyarlarView({
   isSecurityActive,
   setIsSecurityActive,
   userRole,
-  setUserRole,
   escalationPin,
   setEscalationPin,
   showToast,
@@ -229,7 +227,6 @@ export default function AyarlarView({
         localStorage.setItem('storm_muhasebe_security_active', 'false');
         setIsSecurityActive(false);
         setConfirmDeactivate(false);
-        setUserRole('admin'); // Keep as admin for owner experience
         showToast('Yönetici yetki ve güvenlik sistemi devre dışı bırakıldı.', 'info');
       }
     } catch (err: any) {
@@ -248,8 +245,7 @@ export default function AyarlarView({
         return;
       }
 
-      // Verify current PIN matches (saved custom pin or defaults)
-      const isCurrentValid = currentAdminPinInput === escalationPin || ['1923', '1234', '9999'].includes(currentAdminPinInput);
+      const isCurrentValid = Boolean(escalationPin) && currentAdminPinInput === escalationPin;
       if (!isCurrentValid) {
         setAdminPinChangeError('Mevcut Yönetici PIN kodu hatalı!');
         return;
@@ -265,7 +261,7 @@ export default function AyarlarView({
         return;
       }
 
-      if (['1234', '0000', '1111'].includes(newAdminPinInput)) {
+      if (['1234', '0000', '1111', '1923', '9999'].includes(newAdminPinInput)) {
         setAdminPinChangeError('Güvenlik nedeniyle çok basit PIN kombinasyonları seçilemez.');
         return;
       }
@@ -301,7 +297,7 @@ export default function AyarlarView({
         setSetupError('Yönetici PIN kodu tam olarak 4 haneli bir sayı olmalıdır.');
         return;
       }
-      if (['0000', '1111', '1234', '9999'].includes(initialPinInput)) {
+      if (['0000', '1111', '1234', '9999', '1923'].includes(initialPinInput)) {
         setSetupError('Güvenlik nedeniyle çok basit PIN kombinasyonları seçilemez.');
         return;
       }
@@ -311,7 +307,6 @@ export default function AyarlarView({
       
       setEscalationPin(initialPinInput);
       setIsSecurityActive(true);
-      setUserRole('admin');
       setInitialPinInput('');
       setSetupError(null);
       showToast('Yönetici yetki ve güvenlik sistemi başarıyla aktifleştirildi!', 'success');

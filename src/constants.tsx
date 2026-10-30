@@ -443,8 +443,8 @@ export const CHANGELOG = {
 };
 
 export const PREDEFINED_USERS = [
-  { id: 'admin', name: 'OSES KARTALTEPE', pin: '111111' },
-  { id: 'user_2', name: 'Kullanıcı 2', pin: '222222' },
+  { id: 'admin', name: 'OSES KARTALTEPE' },
+  { id: 'user_2', name: 'Kullanıcı 2' },
 ];
 
 export const COLOR_PRESETS = [
@@ -682,11 +682,6 @@ export const SIDEBAR_PATTERNS = [
   { id: 'crystal', name: 'Kristal', svg: `url("data:image/svg+xml,%3Csvg width='120' height='104' viewBox='0 0 120 104' xmlns='http://www.w3.org/2000/svg'%3E%3Cg opacity='OPACITY'%3E%3Cpolygon points='0,0 60,0 30,52' fill='PATTERNCOLOR' fill-opacity='0.3' stroke='PATTERNCOLOR' stroke-opacity='0.15' stroke-width='1'/%3E%3Cpolygon points='60,0 120,0 90,52' fill='PATTERNCOLOR' fill-opacity='0.6' stroke='PATTERNCOLOR' stroke-opacity='0.15' stroke-width='1'/%3E%3Cpolygon points='30,52 90,52 60,0' fill='PATTERNCOLOR' fill-opacity='0.4' stroke='PATTERNCOLOR' stroke-opacity='0.15' stroke-width='1'/%3E%3Cpolygon points='0,0 30,52 0,52' fill='PATTERNCOLOR' fill-opacity='0.15' stroke='PATTERNCOLOR' stroke-opacity='0.15' stroke-width='1'/%3E%3Cpolygon points='120,0 90,52 120,52' fill='PATTERNCOLOR' fill-opacity='0.15' stroke='PATTERNCOLOR' stroke-opacity='0.15' stroke-width='1'/%3E%3Cpolygon points='0,52 60,52 30,104' fill='PATTERNCOLOR' fill-opacity='0.35' stroke='PATTERNCOLOR' stroke-opacity='0.15' stroke-width='1'/%3E%3Cpolygon points='60,52 120,52 90,104' fill='PATTERNCOLOR' fill-opacity='0.65' stroke='PATTERNCOLOR' stroke-opacity='0.15' stroke-width='1'/%3E%3Cpolygon points='30,104 90,104 60,52' fill='PATTERNCOLOR' fill-opacity='0.5' stroke='PATTERNCOLOR' stroke-opacity='0.15' stroke-width='1'/%3E%3Cpolygon points='0,52 30,104 0,104' fill='PATTERNCOLOR' fill-opacity='0.2' stroke='PATTERNCOLOR' stroke-opacity='0.15' stroke-width='1'/%3E%3Cpolygon points='120,52 90,104 120,104' fill='PATTERNCOLOR' fill-opacity='0.2' stroke='PATTERNCOLOR' stroke-opacity='0.15' stroke-width='1'/%3E%3C/g%3E%3C/svg%3E")`, size: '120px 104px' },
   { id: 'chain', name: 'Akışkan', svg: `url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg stroke='none' fill='PATTERNCOLOR' opacity='OPACITY'%3E%3Cpath d='M 0,0 L 30,0 C 30,20 15,20 15,40 L 15,80 C 15,100 30,100 30,120 L 0,120 Z' fill-opacity='0.35'/%3E%3Cpath d='M 70,0 L 100,0 C 100,20 115,30 115,50 L 115,70 C 115,90 70,95 70,110 L 70,120 L 120,120 L 120,0 Z' fill-opacity='0.35'/%3E%3Cpath d='M 45,0 L 57,0 L 57,35 C 57,42 45,42 45,35 Z' fill-opacity='0.5'/%3E%3Cpath d='M 45,120 L 57,120 L 57,85 C 57,78 45,78 45,85 Z' fill-opacity='0.5'/%3E%3Crect x='38' y='47' width='12' height='30' rx='6' fill-opacity='0.2'/%3E%3Crect x='98' y='15' width='12' height='40' rx='6' fill-opacity='0.2'/%3E%3Crect x='98' y='65' width='12' height='45' rx='6' fill-opacity='0.2'/%3E%3Crect x='15' y='-10' width='12' height='25' rx='6' fill-opacity='0.2'/%3E%3Crect x='15' y='110' width='12' height='25' rx='6' fill-opacity='0.2'/%3E%3Ccircle cx='28' cy='55' r='5' fill-opacity='0.25'/%3E%3Ccircle cx='85' cy='35' r='5' fill-opacity='0.25'/%3E%3Ccircle cx='85' cy='85' r='5' fill-opacity='0.25'/%3E%3C/g%3E%3C/svg%3E")`, size: '120px 120px' },
   { id: 'topography', name: 'Topografya', svg: `url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 50 Q 50 100 100 50 T 200 50 M0 70 Q 50 120 100 70 T 200 70 M0 90 Q 50 140 100 90 T 200 90 M0 110 Q 50 160 100 110 T 200 110 M0 130 Q 50 180 100 130 T 200 130 M0 150 Q 50 200 100 150 T 200 150' fill='none' stroke='PATTERNCOLOR' stroke-width='1' stroke-opacity='OPACITY'/%3E%3Cpath d='M0 30 Q 50 80 100 30 T 200 30 M0 10 Q 50 60 100 10 T 200 10 M0 -10 Q 50 40 100 -10 T 200 -10' fill='none' stroke='PATTERNCOLOR' stroke-width='1' stroke-opacity='OPACITY'/%3E%3Cpath d='M0 170 Q 50 220 100 170 T 200 170 M0 190 Q 50 240 100 190 T 200 190 M0 210 Q 50 260 100 210 T 200 210' fill='none' stroke='PATTERNCOLOR' stroke-width='1' stroke-opacity='OPACITY'/%3E%3C/svg%3E")`, size: '200px 200px' },
-];
-
-export const PIN_ACCOUNTS = [
-  { name: 'OSES KARTALTEPE', pin: '111111', email: 'admin@storm.com', password: 'storm_admin_pass' },
-  { name: 'Kullanıcı 2', pin: '222222', email: 'user2@storm.com', password: 'storm_user2_pass' },
 ];
 
 export const changelogData = [

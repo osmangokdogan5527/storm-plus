@@ -4,6 +4,7 @@ import { BankAccount, Cari } from '../../types';
 import { PosNumpadModal } from './PosNumpadModal';
 import { DollarSign, CreditCard, User, AlertCircle, CheckCircle2, X } from 'lucide-react';
 import { reportErrorToTelegram } from '../../utils/telegramLogger';
+import { validatePaymentSplit } from '../../utils/paymentSplitUtils.js';
 
 interface PosSplitPaymentModalProps {
   isOpen: boolean;
@@ -22,8 +23,6 @@ export const PosSplitPaymentModal: React.FC<PosSplitPaymentModalProps> = ({
   selectedCari,
   onConfirmPayment,
 }) => {
-  if (!isOpen) return null;
-
   const safeBankAccounts = Array.isArray(bankAccounts) ? bankAccounts : [];
   const [cashAmount, setCashAmount] = useState<number>(0);
   const [cashReceived, setCashReceived] = useState<number>(0);
@@ -36,6 +35,7 @@ export const PosSplitPaymentModal: React.FC<PosSplitPaymentModalProps> = ({
   const posAccounts = safeBankAccounts.filter(a => a && (a.type === 'pos' || a.type === 'banka'));
 
   useEffect(() => {
+    if (!isOpen) return;
     try {
       // Varsayılan olarak Nakit tutarını tam toplamla başlat
       setCashAmount(grandTotal);
@@ -49,6 +49,8 @@ export const PosSplitPaymentModal: React.FC<PosSplitPaymentModalProps> = ({
       reportErrorToTelegram(err, 'PosSplitPaymentModal:useEffect');
     }
   }, [grandTotal, isOpen]);
+
+  if (!isOpen) return null;
 
   // Toplam ödenen tutar
   const totalAllocated = Number((cashAmount + posAmount + openAccountAmount).toFixed(2));
@@ -77,23 +79,27 @@ export const PosSplitPaymentModal: React.FC<PosSplitPaymentModalProps> = ({
 
   const handleConfirm = () => {
     try {
-      if (remainingToAllocate > 0.01) {
-        alert(`Lütfen kalan ₺${remainingToAllocate.toFixed(2)} tutarı ödeme türlerine tam olarak dağıtın.`);
+      const normalizedSplit = {
+        cashAmount: Number(cashAmount.toFixed(2)),
+        posAmount: Number(posAmount.toFixed(2)),
+        openAccountAmount: Number(openAccountAmount.toFixed(2)),
+      };
+      const validationError = validatePaymentSplit(grandTotal, normalizedSplit);
+      if (validationError) {
+        alert(validationError);
         return;
       }
 
-      if (openAccountAmount > 0 && !selectedCari) {
+      if (normalizedSplit.openAccountAmount > 0 && !selectedCari) {
         alert('Açık Hesap (Veresiye) kalemi için lütfen müşteri (cari) seçiniz!');
         return;
       }
 
       onConfirmPayment({
-        cashAmount,
-        cashReceived: Math.max(cashAmount, cashReceived),
-        changeGiven,
-        posAmount,
+        ...normalizedSplit,
+        cashReceived: Number(Math.max(normalizedSplit.cashAmount, cashReceived).toFixed(2)),
+        changeGiven: Math.max(0, Number((cashReceived - normalizedSplit.cashAmount).toFixed(2))),
         posAccountId,
-        openAccountAmount,
       });
     } catch (err: any) {
       reportErrorToTelegram(err, 'PosSplitPaymentModal:handleConfirm');

@@ -20,13 +20,9 @@ import {
   subscribeEmployeeTransactions,
   subscribeBankAccounts,
   subscribeAccountTransactions,
-  auth,
-  signOut,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
   updateProfile,
-  User as FirebaseUser,
-  setActiveUser,
+  isFirebaseConfigured,
+  firebaseConfigurationError,
   getActiveWorkspace,
   saveBankAccount,
   createTransaction,
@@ -61,7 +57,7 @@ import { LoadingScreen } from "./components/LoadingScreen";
 import { AppModals } from "./components/AppModals";
 import { compressImage } from './utils/imageCompressor';
 
-import { StormLogo, APP_VERSION, CHANGELOG, PREDEFINED_USERS, COLOR_PRESETS, TAB_DEFS, SIDEBAR_PATTERNS, PIN_ACCOUNTS, changelogData, DEFAULT_SHORTCUTS } from "./constants";
+import { StormLogo, APP_VERSION, CHANGELOG, PREDEFINED_USERS, COLOR_PRESETS, TAB_DEFS, SIDEBAR_PATTERNS, changelogData, DEFAULT_SHORTCUTS } from "./constants";
 export default function App() {
   const [isBackupWizardOpen, setIsBackupWizardOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<string>(() => {
@@ -69,8 +65,6 @@ export default function App() {
   });
   const [userRole, setUserRole] = useState<'admin' | 'employee'>('employee');
   const [isAdminPinModalOpen, setIsAdminPinModalOpen] = useState(false);
-  const [adminPinInput, setAdminPinInput] = useState('');
-  const [adminPinError, setAdminPinError] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   const showToast = useCallback((text: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -129,11 +123,14 @@ export default function App() {
 
   // 1. Auth State
   const {
-    user, setUser,
-    authLoading, setAuthLoading,
-    authError, setAuthError,
-    enteredPin, setEnteredPin,
-    handlePinLogin, handleSignOut
+    user,
+    authLoading,
+    authError,
+    setAuthError,
+    handleSignIn,
+    handleSignUp,
+    handlePasswordReset,
+    handleSignOut,
   } = useAppAuth(showToast, setUserRole, setActiveTab);
   
   // 2. Data State (Depends on user)
@@ -201,9 +198,7 @@ export default function App() {
 
   
   // Admin Dashboard State
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminPin, setAdminPin] = useState('');
-  const [adminAuthError, setAdminAuthError] = useState<string | null>(null);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [errorLogs, setErrorLogs] = useState<any[]>([]);
   const [feedbackList, setFeedbackList] = useState<any[]>([]);
@@ -230,12 +225,9 @@ export default function App() {
           if (savedUser) {
             const legacyNames = ['XSTORM', 'Yönetici', 'Muhasebe Departmanı', 'Kullanıcı 1', 'Kullanıcı 2', 'Kullanıcı 3', 'Kullanıcı 4', 'Kullanıcı 5', 'OSES KARTALTEPE'];
             const isNameCustomized = savedUser.name && !legacyNames.includes(savedUser.name) && savedUser.name !== defaultUser.name;
-            const isPinCustomized = savedUser.pin && savedUser.pin !== '270212' && savedUser.pin !== defaultUser.pin;
-            
             return {
               ...defaultUser,
               name: isNameCustomized ? savedUser.name : defaultUser.name,
-              pin: isPinCustomized ? savedUser.pin : defaultUser.pin,
               photoURL: savedUser.photoURL || ''
             };
           }
@@ -249,7 +241,6 @@ export default function App() {
     return initialList;
   });
 
-  const [selectedPinAccount, setSelectedPinAccount] = useState<typeof PREDEFINED_USERS[0] | null>(null);
 
   // Settings password variables
   const [settingsPasswordSuccess, setSettingsPasswordSuccess] = useState<string | null>(null);
@@ -274,7 +265,8 @@ export default function App() {
   });
 
   const [escalationPin, setEscalationPin] = useState<string>(() => {
-    return localStorage.getItem('storm_muhasebe_admin_pin') || '1923';
+    const storedPin = localStorage.getItem('storm_muhasebe_admin_pin') || '';
+    return ['1923', '1234', '9999', '0000', '1111', '270212'].includes(storedPin) ? '' : storedPin;
   });
 
   const [isSecurityActive, setIsSecurityActive] = useState<boolean>(() => {
@@ -318,7 +310,11 @@ const isSecurityLoaded = React.useRef(false);
       isSecurityLoaded.current = true;
       if (securitySettings.usersList) setUsersList(securitySettings.usersList);
       if (securitySettings.sensitiveTabs) setSensitiveTabs(securitySettings.sensitiveTabs);
-      if (securitySettings.adminPin) setAdminPin(securitySettings.adminPin);
+      if (securitySettings.adminPin && !['1923', '1234', '9999', '0000', '1111', '270212'].includes(securitySettings.adminPin)) {
+        setAdminPin(securitySettings.adminPin);
+      } else {
+        setAdminPin('');
+      }
       if (securitySettings.isSecurityActive !== undefined) setIsSecurityActive(securitySettings.isSecurityActive);
       if (securitySettings.actionPermissions) setActionPermissions(securitySettings.actionPermissions);
     }
@@ -410,8 +406,6 @@ const isSecurityLoaded = React.useRef(false);
 
   const handleNavigate = useCallback((tabId: string) => {
     if (isSecurityActive && userRole === 'employee' && sensitiveTabs.includes(tabId)) {
-      setAdminPinError(null);
-      setAdminPinInput('');
       setIsAdminPinModalOpen(true);
       return;
     }
@@ -632,7 +626,6 @@ ${friendlyError}`);
                               isSecurityActive={isSecurityActive}
       setIsSecurityActive={setIsSecurityActive}
       userRole={userRole}
-      setUserRole={setUserRole}
       escalationPin={escalationPin}
       setEscalationPin={setEscalationPin}
       showToast={showToast}
@@ -704,23 +697,14 @@ ${friendlyError}`);
         sidebarPattern={sidebarPattern}
         sidebarPatternOpacity={sidebarPatternOpacity}
         designStyle={designStyle}
-        selectedPinAccount={selectedPinAccount}
-        setSelectedPinAccount={setSelectedPinAccount}
-        usersList={usersList}
-        enteredPin={enteredPin}
-        setEnteredPin={setEnteredPin}
+        firebaseConfigured={isFirebaseConfigured}
+        firebaseConfigurationError={firebaseConfigurationError}
+        authLoading={authLoading}
+        handleSignIn={handleSignIn}
+        handleSignUp={handleSignUp}
+        handlePasswordReset={handlePasswordReset}
         authError={authError}
         setAuthError={setAuthError}
-        setUserRole={setUserRole}
-        setActiveTab={setActiveTab}
-        setActiveUser={setActiveUser}
-        setUser={setUser}
-        showAdminLogin={showAdminLogin}
-        setShowAdminLogin={setShowAdminLogin}
-        adminPin={adminPin}
-        setAdminPin={setAdminPin}
-        adminAuthError={adminAuthError}
-        setAdminAuthError={setAdminAuthError}
         showAdminDashboard={showAdminDashboard}
         setShowAdminDashboard={setShowAdminDashboard}
         errorLogs={errorLogs}
@@ -796,23 +780,36 @@ ${friendlyError}`);
         ? saleData.paymentSplit.platformNetAmount
         : saleData.grandTotal;
 
+      const nowIso = new Date().toISOString();
+      const paymentSummary = isPlatformSale ? '' : [
+        saleData.paymentSplit.cashAmount > 0 ? `Nakit ₺${saleData.paymentSplit.cashAmount.toFixed(2)}` : '',
+        saleData.paymentSplit.posAmount > 0 ? `POS ₺${saleData.paymentSplit.posAmount.toFixed(2)}` : '',
+        saleData.paymentSplit.openAccountAmount > 0 ? `Açık hesap ₺${saleData.paymentSplit.openAccountAmount.toFixed(2)}` : '',
+      ].filter(Boolean).join(' / ');
       const mainTransaction: Omit<Transaction, 'id'> = {
         invoiceNo: saleData.receiptNo,
         type: 'sale',
         cariId: finalCariId,
         cariName: finalCariName,
         date: saleData.date,
-        amount: netAmountForTransaction,
-        account: isPlatformSale ? '' : (saleData.paymentSplit.cashAmount > 0
-          ? 'cash'
-          : saleData.paymentSplit.posAmount > 0
-          ? 'pos'
-          : ''),
-        bankAccountId: isPlatformSale ? undefined : saleData.paymentSplit.posAccountId,
-        description: `POS Hızlı Satış Fişi No: ${saleData.receiptNo}${isPlatformSale ? ` (${saleData.paymentSplit.platformName})` : ''}`,
+        amount: isPlatformSale ? netAmountForTransaction : saleData.grandTotal,
+        account: '',
+        description: `POS Hızlı Satış Fişi No: ${saleData.receiptNo}${isPlatformSale ? ` (${saleData.paymentSplit.platformName})` : paymentSummary ? ` (${paymentSummary})` : ''}`,
         items,
-        createdAt: new Date().toISOString(),
+        createdAt: nowIso,
         currency: 'TRY',
+        ...(!isPlatformSale ? {
+          paymentBreakdown: {
+            cashAmount: saleData.paymentSplit.cashAmount,
+            posAmount: saleData.paymentSplit.posAmount,
+            openAccountAmount: saleData.paymentSplit.openAccountAmount,
+            posAccountId: saleData.paymentSplit.posAccountId || undefined,
+          },
+        } : {
+          platformGrossAmount: saleData.grandTotal,
+          platformCommissionRate: saleData.paymentSplit.platformCommissionRate || 0,
+          platformCommissionAmount: saleData.paymentSplit.platformCommissionAmount || 0,
+        }),
       };
 
       await createTransaction(mainTransaction);
@@ -937,6 +934,9 @@ ${friendlyError}`);
         date: saleData.date,
         amount: saleData.netAmount,
         account: '', // Henüz kasaya nakit girmedi, pazaryerinde hakediş alacağında bekliyor
+        platformGrossAmount: saleData.grossTotal,
+        platformCommissionRate: saleData.commissionRate,
+        platformCommissionAmount: saleData.commissionAmount,
         description: `Online Sipariş (${saleData.platformName}${saleData.customerName ? ` - Müşteri: ${saleData.customerName}` : ''}) - Net Alacak: ₺${saleData.netAmount.toFixed(2)} (Komisyon: %${saleData.commissionRate})`,
         items: items.length > 0 ? items : [{
           stockId: `plat_srv_${saleData.platformId}`,
@@ -1034,7 +1034,6 @@ ${friendlyError}`);
         setIsIslemlerSubMenuOpen={setIsIslemlerSubMenuOpen}
         userRole={userRole}
         sensitiveTabs={sensitiveTabs}
-        showToast={showToast as any}
         setPendingIslemModal={setPendingIslemModal}
         setActiveTab={setActiveTab}
         isSecurityActive={isSecurityActive}
@@ -1042,42 +1041,12 @@ ${friendlyError}`);
         user={user}
         handleSignOut={handleSignOut}
         setShowFeedbackModal={setShowFeedbackModal}
-        setAdminPinError={setAdminPinError}
-        setAdminPinInput={setAdminPinInput}
         setIsAdminPinModalOpen={setIsAdminPinModalOpen}
-        setUserRole={setUserRole}
       />
       <MobileHeader
-        sidebarBg={sidebarBg}
-        activeLogoTheme={activeLogoTheme}
-        activeTheme={activeTheme}
-        sidebarPattern={sidebarPattern}
-        sidebarPatternOpacity={sidebarPatternOpacity}
-        designStyle={designStyle}
         isOnline={isOnline}
-        mobileMenuOpen={mobileMenuOpen}
-        setMobileMenuOpen={setMobileMenuOpen}
-        isLightSidebar={isLightSidebar}
-        sidebarPatternStyle={sidebarPatternStyle}
-        tabOrder={tabOrder}
-        hiddenTabs={hiddenTabs}
         activeTab={activeTab}
         handleNavigate={handleNavigate}
-        isIslemlerSubMenuOpen={isIslemlerSubMenuOpen}
-        setIsIslemlerSubMenuOpen={setIsIslemlerSubMenuOpen}
-        userRole={userRole}
-        sensitiveTabs={sensitiveTabs}
-        handleSignOut={handleSignOut}
-        setShowFeedbackModal={setShowFeedbackModal}
-        setAdminPinError={setAdminPinError}
-        setAdminPinInput={setAdminPinInput}
-        setIsAdminPinModalOpen={setIsAdminPinModalOpen}
-        setUserRole={setUserRole}
-        user={user}
-        setPendingIslemModal={setPendingIslemModal}
-        showToast={showToast as any}
-        setActiveTab={setActiveTab}
-        isSecurityActive={isSecurityActive}
       />
 {/* 3. MAIN WORKSPACE CONTENT */}
       <main className="relative z-10 flex-1 p-4 sm:p-6 overflow-y-auto max-w-[1600px] mx-auto w-full pb-20 md:pb-6">
@@ -1092,13 +1061,10 @@ ${friendlyError}`);
             userRole={userRole}
             sensitiveTabs={sensitiveTabs}
             handleSignOut={handleSignOut}
-            setAdminPinError={setAdminPinError}
-            setAdminPinInput={setAdminPinInput}
             setIsAdminPinModalOpen={setIsAdminPinModalOpen}
             setUserRole={setUserRole}
             user={user}
             setPendingIslemModal={setPendingIslemModal}
-            showToast={showToast as any}
             setActiveTab={setActiveTab}
             isSecurityActive={isSecurityActive}
           />
@@ -1238,12 +1204,6 @@ ${friendlyError}`);
         handleCloseChangelog={handleCloseChangelog}
         isAdminPinModalOpen={isAdminPinModalOpen}
         setIsAdminPinModalOpen={setIsAdminPinModalOpen}
-        adminPinInput={adminPinInput}
-        setAdminPinInput={setAdminPinInput}
-        adminPinError={adminPinError}
-        setAdminPinError={setAdminPinError}
-        escalationPin={escalationPin}
-        setUserRole={setUserRole}
         showToast={showToast as any}
         toastMessage={toastMessage}
         setToastMessage={setToastMessage}
@@ -1269,11 +1229,6 @@ ${friendlyError}`);
                         setActiveTab={setActiveTab}
         setFeedbackList={setFeedbackList}
         financialData={{ cariler, stoklar, islemler, expenses, bankAccounts }}
-        userRole={userRole}
-        isSecurityActive={isSecurityActive}
-        sensitiveTabs={sensitiveTabs}
-        actionPermissions={actionPermissions}
-        handleNavigate={handleNavigate}
       />
       <BackupWizardModal
         isOpen={isBackupWizardOpen}

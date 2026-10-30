@@ -95,7 +95,7 @@
         },
         "type": {
           "type": "string",
-          "enum": ["sale", "purchase", "collection", "payment"]
+          "enum": ["sale", "purchase", "collection", "payment", "sale_return", "purchase_return"]
         },
         "cariId": {
           "type": "string"
@@ -111,8 +111,20 @@
         },
         "account": {
           "type": "string",
-          "enum": ["cash", "bank", ""]
+          "enum": ["cash", "bank", "pos", ""]
         },
+        "paymentBreakdown": {
+          "type": "object",
+          "properties": {
+            "cashAmount": { "type": "number" },
+            "posAmount": { "type": "number" },
+            "openAccountAmount": { "type": "number" },
+            "posAccountId": { "type": "string" }
+          }
+        },
+        "platformGrossAmount": { "type": "number" },
+        "platformCommissionRate": { "type": "number" },
+        "platformCommissionAmount": { "type": "number" },
         "description": {
           "type": "string"
         },
@@ -308,31 +320,31 @@
     }
   },
   "firestore": {
-    "/users/{userId}/cariler/{cariId}": {
+    "/storm_plus_users/{userId}/cariler/{cariId}": {
       "schema": "Cari",
       "description": "Kullanıcıya özel cari hesaplar koleksiyonu"
     },
-    "/users/{userId}/stoklar/{stockId}": {
+    "/storm_plus_users/{userId}/stoklar/{stockId}": {
       "schema": "Stock",
       "description": "Kullanıcıya özel stok ve hizmet kartları koleksiyonu"
     },
-    "/users/{userId}/islemler/{transactionId}": {
+    "/storm_plus_users/{userId}/islemler/{transactionId}": {
       "schema": "Transaction",
       "description": "Kullanıcıya özel faturalar ve kasa/banka hareketleri koleksiyonu"
     },
-    "/users/{userId}/ceksenet/{ceksenetId}": {
+    "/storm_plus_users/{userId}/ceksenet/{ceksenetId}": {
       "schema": "CekSenet",
       "description": "Kullanıcıya özel çek ve senet takibi koleksiyonu"
     },
-    "/users/{userId}/giderler/{expenseId}": {
+    "/storm_plus_users/{userId}/giderler/{expenseId}": {
       "schema": "Expense",
       "description": "Kullanıcıya özel masraflar ve giderler koleksiyonu"
     },
-    "/users/{userId}/calisanlar/{employeeId}": {
+    "/storm_plus_users/{userId}/calisanlar/{employeeId}": {
       "schema": "Employee",
       "description": "Kullanıcıya özel çalışan listesi"
     },
-    "/users/{userId}/calisanIslemler/{transactionId}": {
+    "/storm_plus_users/{userId}/calisanIslemler/{transactionId}": {
       "schema": "EmployeeTransaction",
       "description": "Kullanıcıya özel çalışan cari hareketleri"
     }
