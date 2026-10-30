@@ -3,7 +3,7 @@
   "appId": "",
   "apiKey": "",
   "authDomain": "",
-  "firestoreDatabaseId": "(default)",
+  "firestoreDatabaseId": "",
   "storageBucket": "",
   "messagingSenderId": "",
   "measurementId": ""

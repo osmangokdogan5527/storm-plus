@@ -74,7 +74,7 @@ export const db = initializeFirestore(app, {
     tabManager: persistentMultipleTabManager(),
     cacheSizeBytes: CACHE_SIZE_UNLIMITED
   })
-}, firebaseEnvironment.VITE_FIREBASE_DATABASE_ID || '(default)');
+}, isFirebaseConfigured ? firebaseEnvironment.VITE_FIREBASE_DATABASE_ID : '(default)');
 export const auth = getAuth();
 
 export {
