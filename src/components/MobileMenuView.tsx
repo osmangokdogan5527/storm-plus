@@ -1,5 +1,5 @@
 import React from 'react';
-import { Lock, LogOut, ShieldCheck, ChevronDown } from 'lucide-react';
+import { LogOut, ShieldCheck, ChevronDown } from 'lucide-react';
 import { TAB_DEFS } from '../constants';
 
 interface MobileMenuViewProps {
@@ -12,13 +12,9 @@ interface MobileMenuViewProps {
   userRole: string;
   sensitiveTabs: string[];
   handleSignOut: () => void;
-  setAdminPinError: (error: string | null) => void;
-  setAdminPinInput: (pin: string) => void;
   setIsAdminPinModalOpen: (open: boolean) => void;
-  setUserRole: (role: any) => void;
   user: any;
   setPendingIslemModal: (modal: any) => void;
-  showToast: (msg: string, type: string) => void;
   setActiveTab: (tab: any) => void;
   isSecurityActive: boolean;
 }
@@ -33,13 +29,9 @@ export const MobileMenuView: React.FC<MobileMenuViewProps> = ({
   userRole,
   sensitiveTabs,
   handleSignOut,
-  setAdminPinError,
-  setAdminPinInput,
   setIsAdminPinModalOpen,
-  setUserRole,
   user,
   setPendingIslemModal,
-  showToast,
   setActiveTab,
   isSecurityActive
 }) => {
@@ -199,11 +191,9 @@ export const MobileMenuView: React.FC<MobileMenuViewProps> = ({
           </button>
         </div>
 
-        {isSecurityActive && (userRole === 'employee' ? (
+        {isSecurityActive && userRole === 'employee' && (
           <button
             onClick={() => {
-              setAdminPinError(null);
-              setAdminPinInput('');
               setIsAdminPinModalOpen(true);
             }}
             className="w-full mt-2 flex items-center justify-center gap-2 p-2 rounded-xl border border-teal-500/20 text-teal-400 hover:text-teal-300 transition cursor-pointer font-bold"
@@ -212,23 +202,7 @@ export const MobileMenuView: React.FC<MobileMenuViewProps> = ({
             <ShieldCheck size={12} />
             <span className="text-[10px] uppercase tracking-widest">Yönetici Girişi</span>
           </button>
-        ) : (
-          <button
-            onClick={() => {
-              setUserRole('employee');
-              showToast('Yönetici yetkilerinden çıkış yapıldı. Personel moduna dönüldü.', 'info');
-              const sensitiveTabs = ['dashboard', 'kasa', 'masraflar', 'calisanlar', 'raporlar', 'ayarlar'];
-              if (sensitiveTabs.includes(activeTab)) {
-                setActiveTab('cariler');
-              }
-            }}
-            className="w-full mt-2 flex items-center justify-center gap-2 p-2 rounded-xl border border-red-500/20 text-red-400 hover:text-red-300 transition cursor-pointer font-bold animate-pulse"
-            style={{ backgroundColor: 'rgba(239, 68, 68, 0.08)' }}
-          >
-            <Lock size={12} />
-            <span className="text-[10px] uppercase tracking-widest">Yönetici Çıkışı</span>
-          </button>
-        ))}
+        )}
       </div>
     </div>
   );

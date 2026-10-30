@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LogOut, Lock, ChevronDown, MessageSquare, ShieldCheck, Pin, PanelLeft } from 'lucide-react';
+import { LogOut, ChevronDown, MessageSquare, ShieldCheck, Pin, PanelLeft } from 'lucide-react';
 import { StormLogo, StormIconWrapper, TAB_DEFS, SIDEBAR_BG_PRESETS, APP_VERSION } from '../constants';
 
 interface DesktopSidebarProps {
@@ -19,17 +19,13 @@ interface DesktopSidebarProps {
   setIsIslemlerSubMenuOpen: (open: boolean) => void;
   userRole: string;
   sensitiveTabs: string[];
-  showToast: (msg: string, type: string) => void;
   setPendingIslemModal: (modal: any) => void;
   isSecurityActive: boolean;
   isOnline: boolean;
   user: any;
   handleSignOut: () => void;
   setShowFeedbackModal: (show: boolean) => void;
-  setAdminPinError: (error: string | null) => void;
-  setAdminPinInput: (pin: string) => void;
   setIsAdminPinModalOpen: (open: boolean) => void;
-  setUserRole: (role: any) => void;
   setActiveTab: (tab: any) => void;
 }
 
@@ -50,17 +46,13 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
   setIsIslemlerSubMenuOpen,
   userRole,
   sensitiveTabs,
-  showToast,
   setPendingIslemModal,
   isSecurityActive,
   isOnline,
   user,
   handleSignOut,
   setShowFeedbackModal,
-  setAdminPinError,
-  setAdminPinInput,
   setIsAdminPinModalOpen,
-  setUserRole,
   setActiveTab,
 }) => {
   const isProSolid = designStyle === 'pro-solid';
@@ -288,11 +280,9 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
                   <span className="text-[10px] font-bold uppercase tracking-widest">Hata / İstek Bildir</span>
                 </button>
 
-                {isSecurityActive && (userRole === 'employee' ? (
+                {isSecurityActive && userRole === 'employee' && (
                   <button
                     onClick={() => {
-                      setAdminPinError(null);
-                      setAdminPinInput('');
                       setIsAdminPinModalOpen(true);
                     }}
                     className="w-full mt-2 flex items-center justify-center gap-2 p-2 rounded-xl border border-teal-500/20 text-teal-400 hover:text-teal-300 transition cursor-pointer font-bold"
@@ -301,23 +291,7 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({
                     <ShieldCheck size={12} />
                     <span className="text-[10px] uppercase tracking-widest">Yönetici Girişi</span>
                   </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setUserRole('employee');
-                      showToast('Yönetici yetkilerinden çıkış yapıldı. Personel moduna dönüldü.', 'info');
-                      const sensitiveTabs = ['dashboard', 'kasa', 'ceksenet', 'masraflar', 'calisanlar', 'krediler', 'raporlar', 'ayarlar'];
-                      if (sensitiveTabs.includes(activeTab)) {
-                        setActiveTab('cariler');
-                      }
-                    }}
-                    className="w-full mt-2 flex items-center justify-center gap-2 p-2 rounded-xl border border-red-500/20 text-red-400 hover:text-red-300 transition cursor-pointer font-bold animate-pulse"
-                    style={{ backgroundColor: 'rgba(239, 68, 68, 0.08)' }}
-                  >
-                    <Lock size={12} />
-                    <span className="text-[10px] uppercase tracking-widest">Yönetici Çıkışı</span>
-                  </button>
-                ))}
+                )}
                 <div className="pt-1 text-center">
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 shadow-sm">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />

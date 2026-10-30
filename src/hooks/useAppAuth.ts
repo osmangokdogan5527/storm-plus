@@ -1,8 +1,36 @@
-import { useState, useEffect } from 'react';
-import { auth, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, User as FirebaseUser, setActiveUser } from '../firebase';
-import { PIN_ACCOUNTS } from '../constants';
+import { useEffect, useState } from 'react';
+import {
+  auth,
+  signOut,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+  sendPasswordResetEmail,
+  onAuthStateChanged,
+  User as FirebaseUser,
+  setActiveUser,
+  isFirebaseConfigured,
+} from '../firebase';
 import { logUserActivity } from '../utils/userLogger';
-import { reportErrorToTelegram } from '../utils/telegramLogger';
+
+function toAuthMessage(error: any) {
+  switch (error?.code) {
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+    case 'auth/user-not-found':
+      return 'E-posta veya şifre hatalı.';
+    case 'auth/email-already-in-use':
+      return 'Bu e-posta adresiyle zaten bir hesap var.';
+    case 'auth/weak-password':
+      return 'Şifreniz en az 6 karakter olmalıdır.';
+    case 'auth/invalid-email':
+      return 'Geçerli bir e-posta adresi girin.';
+    case 'auth/too-many-requests':
+      return 'Çok fazla deneme yapıldı. Bir süre sonra tekrar deneyin.';
+    default:
+      return error?.message || 'Firebase bağlantısı kurulamadı.';
+  }
+}
 
 export function useAppAuth(
   showToast: (text: string | null, type?: 'success' | 'error' | 'info') => void,
@@ -12,110 +40,95 @@ export function useAppAuth(
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [enteredPin, setEnteredPin] = useState('');
 
-  // Initialize Authentication state from localStorage
   useEffect(() => {
-    const storedUser = localStorage.getItem('storm_muhasebe_active_user');
-    if (storedUser) {
-      try {
-        JSON.parse(storedUser);
-        // Do NOT auto-login, require PIN entry every time.
-        setActiveUser(null);
-        setUser(null); 
-      } catch (e: any) {
-        reportErrorToTelegram(e instanceof Error ? e : new Error(String(e)), 'useAppAuth_ParseLocalUser');
-        localStorage.removeItem('storm_muhasebe_active_user');
-        setActiveUser(null);
+    localStorage.removeItem('storm_muhasebe_active_user');
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+      setActiveUser(firebaseUser?.uid || null);
+      if (!firebaseUser) {
+        setUserRole('employee');
+        setAuthLoading(false);
+        return;
       }
-    } else {
-      setActiveUser(null);
-    }
-    setAuthLoading(false);
-  }, []);
 
-  const handlePinLogin = async (pin: string) => {
-    if (pin.length !== 6) {
-      showToast('Lütfen 6 haneli giriş kodunuzu tam olarak girin.', 'error');
-      return;
-    }
-    const account = PIN_ACCOUNTS.find(acc => acc.pin === pin);
-    if (!account) {
-      showToast('Geçersiz giriş kodu! Lütfen sistemde tanımlı olan 5 koddan birini kullanın.', 'error');
-      return;
-    }
-    showToast(null, 'info');
-    try {
-      await signInWithEmailAndPassword(auth, account.email, account.password);
-    } catch (err: any) {
-      console.warn("Otomatik giriş başarısız oldu, kullanıcı kaydı kontrol ediliyor...", err);
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
-        try {
-          const userCredential = await createUserWithEmailAndPassword(auth, account.email, account.password);
-          await updateProfile(userCredential.user, { displayName: account.name });
-        } catch (createErr: any) {
-          console.error("Otomatik hesap kaydı başarısız oldu:", createErr);
-          reportErrorToTelegram(createErr instanceof Error ? createErr : new Error(String(createErr)), 'useAppAuth_CreateAccount');
-          showToast(`Kullanıcı kaydı oluşturulamadı: ${createErr.message || createErr}`, 'error');
-        }
-      } else {
-        reportErrorToTelegram(err instanceof Error ? err : new Error(String(err)), 'useAppAuth_SignIn');
-        showToast(`Giriş hatası: ${err.message || err}`, 'error');
+      try {
+        const token = await firebaseUser.getIdTokenResult();
+        setUserRole(token.claims.admin === true ? 'admin' : 'employee');
+        logUserActivity(firebaseUser.uid, firebaseUser.displayName || firebaseUser.email || 'Kullanıcı', 'login');
+        setActiveTab(window.innerWidth < 768 ? 'menu' : 'dashboard');
+      } catch {
+        setUserRole('employee');
+      } finally {
+        setAuthLoading(false);
       }
+    }, () => {
+      setUser(null);
+      setActiveUser(null);
+      setUserRole('employee');
+      setAuthLoading(false);
+    });
+
+    return unsubscribe;
+  }, [setActiveTab, setUserRole]);
+
+  const ensureConfigured = () => {
+    if (!isFirebaseConfigured) {
+      throw new Error('Firebase ayarları eksik. Yeni proje bilgilerini yerel .env dosyasına ekleyin.');
+    }
+  };
+
+  const handleSignIn = async (email: string, password: string) => {
+    ensureConfigured();
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      setAuthError(null);
+    } catch (error: any) {
+      throw new Error(toAuthMessage(error));
+    }
+  };
+
+  const handleSignUp = async (email: string, password: string, displayName: string) => {
+    ensureConfigured();
+    try {
+      const credential = await createUserWithEmailAndPassword(auth, email, password);
+      if (displayName) await updateProfile(credential.user, { displayName });
+      setAuthError(null);
+    } catch (error: any) {
+      throw new Error(toAuthMessage(error));
+    }
+  };
+
+  const handlePasswordReset = async (email: string) => {
+    ensureConfigured();
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error: any) {
+      throw new Error(toAuthMessage(error));
     }
   };
 
   const handleSignOut = async () => {
     if (user) {
-      try {
-        logUserActivity(user.uid, user.displayName || 'Bilinmeyen Kullanıcı', 'logout');
-      } catch (e: any) {
-        reportErrorToTelegram(e instanceof Error ? e : new Error(String(e)), 'useAppAuth_LogActivity');
-      }
+      logUserActivity(user.uid, user.displayName || user.email || 'Kullanıcı', 'logout');
     }
     try {
       await signOut(auth);
-      localStorage.removeItem('storm_muhasebe_active_user');
-      setUser(null);
-      setUserRole('employee');
       setActiveTab('dashboard');
-    } catch (e: any) {
-      reportErrorToTelegram(e instanceof Error ? e : new Error(String(e)), 'useAppAuth_SignOut');
-      showToast("Çıkış yapılırken bir hata oluştu.", "error");
+    } catch {
+      showToast('Çıkış yapılırken bir hata oluştu.', 'error');
     }
   };
 
-  useEffect(() => {
-    if (user) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
-
-      if (e.key >= '0' && e.key <= '9') {
-        setEnteredPin(prev => {
-          if (prev.length < 6) {
-            const next = prev + e.key;
-            if (next.length === 6) {
-              handlePinLogin(next);
-            }
-            return next;
-          }
-          return prev;
-        });
-      } else if (e.key === 'Backspace') {
-        setEnteredPin(prev => prev.slice(0, -1));
-      } else if (e.key === 'Escape') {
-        setEnteredPin('');
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [user]);
-
   return {
-    user, setUser,
-    authLoading, setAuthLoading,
-    authError, setAuthError,
-    enteredPin, setEnteredPin,
-    handlePinLogin, handleSignOut
+    user,
+    authLoading,
+    setAuthLoading,
+    authError,
+    setAuthError,
+    handleSignIn,
+    handleSignUp,
+    handlePasswordReset,
+    handleSignOut,
   };
 }

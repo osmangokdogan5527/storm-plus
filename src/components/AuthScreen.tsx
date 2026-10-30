@@ -1,5 +1,4 @@
 import React from 'react';
-import { logUserActivity } from '../utils/userLogger';
 import { User, Users, Lock, ChevronDown, Shield, X, CloudLightning, RotateCcw, Download, Trash2, AlertTriangle, Check, ChevronUp, MessageSquare, Building2, Sparkles } from 'lucide-react';
 import { StormLogo, APP_VERSION } from '../constants';
 
@@ -11,23 +10,13 @@ interface AuthScreenProps {
   sidebarPattern: string;
   sidebarPatternOpacity: number;
   designStyle: string;
-  selectedPinAccount: any;
-  setSelectedPinAccount: (acc: any) => void;
-  usersList: any[];
-  enteredPin: string;
-  setEnteredPin: (pin: string) => void;
+  firebaseConfigured: boolean;
+  authLoading: boolean;
+  handleSignIn: (email: string, password: string) => Promise<void>;
+  handleSignUp: (email: string, password: string, displayName: string) => Promise<void>;
+  handlePasswordReset: (email: string) => Promise<void>;
   authError: string | null;
   setAuthError: (err: string | null) => void;
-  setUserRole: (role: any) => void;
-  setActiveTab: (tab: string) => void;
-  setActiveUser: (user: string) => void;
-  setUser: (user: any) => void;
-  showAdminLogin: boolean;
-  setShowAdminLogin: (show: boolean) => void;
-  adminPin: string;
-  setAdminPin: (pin: string) => void;
-  adminAuthError: string | null;
-  setAdminAuthError: (err: string | null) => void;
   showAdminDashboard: boolean;
   setShowAdminDashboard: (show: boolean) => void;
   errorLogs: any[];
@@ -37,7 +26,8 @@ interface AuthScreenProps {
   updateStatus: string;
   setUpdateStatus: (status: string) => void;
   updatePercent: number;
-  changelogData, setZoomImage: any[];
+  changelogData: any[];
+  setZoomImage: (image: string | null) => void;
 }
 
 export const AuthScreen: React.FC<AuthScreenProps> = ({
@@ -48,23 +38,13 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   sidebarPattern,
   sidebarPatternOpacity,
   designStyle,
-  selectedPinAccount,
-  setSelectedPinAccount,
-  usersList,
-  enteredPin,
-  setEnteredPin,
+  firebaseConfigured,
+  authLoading,
+  handleSignIn,
+  handleSignUp,
+  handlePasswordReset,
   authError,
   setAuthError,
-  setUserRole,
-  setActiveTab,
-  setActiveUser,
-  setUser,
-  showAdminLogin,
-  setShowAdminLogin,
-  adminPin,
-  setAdminPin,
-  adminAuthError,
-  setAdminAuthError,
   showAdminDashboard,
   setShowAdminDashboard,
   errorLogs,
@@ -77,6 +57,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   changelogData, setZoomImage
 }) => {
 
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [displayName, setDisplayName] = React.useState('');
+  const [isCreatingAccount, setIsCreatingAccount] = React.useState(false);
+  const [isAuthSubmitting, setIsAuthSubmitting] = React.useState(false);
+  const [authNotice, setAuthNotice] = React.useState<string | null>(null);
   const [adminTab, setAdminTab] = React.useState<'errors' | 'feedback' | 'userLogs'>('userLogs');
   const [userLogs, setUserLogs] = React.useState<any[]>([]);
   React.useEffect(() => {
@@ -278,255 +264,132 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
             <p className={`text-xs uppercase tracking-widest font-mono ${textTertiary}`}>Güvenli Yönetim Paneli</p>
           </div>
 
-          {!selectedPinAccount ? (
-            <div className="space-y-3 animate-fade-in">
-              <h2 className={`text-xs font-bold uppercase tracking-widest mb-6 text-center ${textSecondary}`}>Hesabınızı Seçin</h2>
-              {(usersList || []).map((u) => (
-                <button
-                  key={u.id}
-                  onClick={() => setSelectedPinAccount(u)}
-                  className={`w-full flex items-center justify-between p-4 rounded-xl transition group cursor-pointer ${buttonBgClass}`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition ${userIconBg}`}>
-                      <User size={20} />
-                    </div>
-                    <span className={`font-bold tracking-wide ${textPrimary}`}>{u.name}</span>
-                  </div>
-                  <ChevronDown className={`${textMuted} group-hover:text-teal-500 -rotate-90 transition`} size={18} />
-                </button>
-              ))}
+          <div className={`${cardBgClass} rounded-2xl p-6 sm:p-8 animate-fade-in`}>
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 rounded-xl bg-teal-500/10 text-teal-500 flex items-center justify-center mx-auto mb-3">
+                <User size={24} />
+              </div>
+              <h2 className={`text-lg font-bold tracking-wider ${textPrimary}`}>
+                {isCreatingAccount ? 'Hesap Oluştur' : 'Hesabınıza Giriş Yapın'}
+              </h2>
+              <p className={`text-xs mt-1 ${textTertiary}`}>E-posta ve şifrenizle güvenli oturum açın.</p>
             </div>
-          ) : (
-            <div className={`${cardBgClass} rounded-2xl p-6 sm:p-8 animate-fade-in`}>
-              <button 
-                onClick={() => {
-                  setSelectedPinAccount(null);
-                  setEnteredPin('');
-                  setAuthError(null);
-                }}
-                className={`flex items-center gap-2 text-xs uppercase tracking-widest font-bold mb-6 transition cursor-pointer ${textTertiary} hover:text-teal-500`}
-              >
-                <ChevronDown className="rotate-90" size={14} />
-                Geri Dön
-              </button>
-              
-              <div className="text-center mb-6">
-                <div className="w-12 h-12 rounded-xl bg-teal-500/10 text-teal-500 flex items-center justify-center mx-auto mb-3">
-                  <User size={24} />
-                </div>
-                <h3 className={`text-lg font-bold tracking-wider ${textPrimary}`}>{selectedPinAccount?.name}</h3>
-                <p className={`text-xs mt-1 ${textTertiary}`}>Lütfen 6 haneli erişim şifrenizi girin</p>
+
+            {!firebaseConfigured && (
+              <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-200">
+                Firebase bağlantısı henüz ayarlanmamış. Yeni proje ayarlarını yerel `.env` dosyasına ekleyin.
               </div>
+            )}
 
-              <div className="space-y-4">
-                <div>
-                  <input
-                    type="password"
-                    maxLength={6}
-                    value={enteredPin || ''}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/[^0-9]/g, '');
-                      setEnteredPin(val);
-                      if (authError) setAuthError(null);
-                      
-                      if (val.length === 6) {
-                        if (val === selectedPinAccount?.pin) {
-                          const userData = {
-                            uid: selectedPinAccount.id,
-                            displayName: selectedPinAccount.name,
-                            email: `${selectedPinAccount.id}@storm.com`
-                          };
-                          localStorage.setItem('storm_muhasebe_active_user', JSON.stringify(userData));
-                          setUserRole('employee');
-                          const defaultTab = window.innerWidth < 768 ? 'menu' : 'cariler';
-                          setActiveTab(defaultTab);
-                          setActiveUser(selectedPinAccount.id);
-                          logUserActivity(selectedPinAccount.id, selectedPinAccount.name, 'login');
-                          setUser(userData as any);
-                        } else {
-                          setAuthError('Hatalı şifre girdiniz.');
-                          setTimeout(() => setEnteredPin(''), 400);
-                        }
-                      }
-                    }}
-                    placeholder="••••••"
-                    className={`w-full text-center text-3xl tracking-[0.8em] placeholder-slate-400 transition outline-none font-mono px-4 py-3.5 rounded-xl focus:border-teal-500/50 ${inputStyleClass}`}
-                    autoFocus
-                  />
-                  {authError && (
-                    <p className="text-rose-500 text-xs text-center mt-2 font-bold">{authError}</p>
-                  )}
-
-                  {/* Dokunmatik Rakam Tuş Takımı */}
-                  <div className="grid grid-cols-3 gap-2.5 mt-5">
-                    {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
-                      <button
-                        key={digit}
-                        type="button"
-                        onClick={() => {
-                          const currentPin = enteredPin || '';
-                          if (currentPin.length < 6) {
-                            const val = currentPin + digit;
-                            setEnteredPin(val);
-                            if (authError) setAuthError(null);
-                            if (val.length === 6) {
-                              if (val === selectedPinAccount?.pin) {
-                                const userData = {
-                                  uid: selectedPinAccount.id,
-                                  displayName: selectedPinAccount.name,
-                                  email: `${selectedPinAccount.id}@storm.com`
-                                };
-                                localStorage.setItem('storm_muhasebe_active_user', JSON.stringify(userData));
-                                setUserRole('employee');
-                                const defaultTab = window.innerWidth < 768 ? 'menu' : 'cariler';
-                                setActiveTab(defaultTab);
-                                setActiveUser(selectedPinAccount.id);
-                                logUserActivity(selectedPinAccount.id, selectedPinAccount.name, 'login');
-                          setUser(userData as any);
-                              } else {
-                                setAuthError('Hatalı şifre girdiniz.');
-                                setTimeout(() => setEnteredPin(''), 400);
-                              }
-                            }
-                          }
-                        }}
-                        className="py-3.5 rounded-xl font-bold text-2xl transition active:scale-95 flex items-center justify-center bg-white/10 hover:bg-white/20 active:bg-teal-500/30 text-white shadow-sm cursor-pointer select-none border border-white/10"
-                      >
-                        {digit}
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEnteredPin('');
-                        if (authError) setAuthError(null);
-                      }}
-                      className="py-3.5 rounded-xl font-bold text-xs uppercase tracking-wider text-amber-400 hover:text-amber-300 bg-white/5 hover:bg-white/10 active:scale-95 flex items-center justify-center cursor-pointer select-none border border-white/10"
-                    >
-                      C
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const currentPin = enteredPin || '';
-                        if (currentPin.length < 6) {
-                          const val = currentPin + '0';
-                          setEnteredPin(val);
-                          if (authError) setAuthError(null);
-                          if (val.length === 6) {
-                            if (val === selectedPinAccount?.pin) {
-                              const userData = {
-                                uid: selectedPinAccount.id,
-                                displayName: selectedPinAccount.name,
-                                email: `${selectedPinAccount.id}@storm.com`
-                              };
-                              localStorage.setItem('storm_muhasebe_active_user', JSON.stringify(userData));
-                              setUserRole('employee');
-                              const defaultTab = window.innerWidth < 768 ? 'menu' : 'cariler';
-                              setActiveTab(defaultTab);
-                              setActiveUser(selectedPinAccount.id);
-                              logUserActivity(selectedPinAccount.id, selectedPinAccount.name, 'login');
-                          setUser(userData as any);
-                            } else {
-                              setAuthError('Hatalı şifre girdiniz.');
-                              setTimeout(() => setEnteredPin(''), 400);
-                            }
-                          }
-                        }
-                      }}
-                      className="py-3.5 rounded-xl font-bold text-2xl transition active:scale-95 flex items-center justify-center bg-white/10 hover:bg-white/20 active:bg-teal-500/30 text-white shadow-sm cursor-pointer select-none border border-white/10"
-                    >
-                      0
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const currentPin = enteredPin || '';
-                        if (currentPin.length > 0) {
-                          setEnteredPin(currentPin.slice(0, -1));
-                          if (authError) setAuthError(null);
-                        }
-                      }}
-                      className="py-3.5 rounded-xl font-bold text-base text-rose-400 hover:text-rose-300 bg-white/5 hover:bg-white/10 active:scale-95 flex items-center justify-center cursor-pointer select-none border border-white/10"
-                      title="Sil"
-                    >
-                      ⌫
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-        </div>
-
-        {/* Admin Login Section */}
-        <div className="hidden md:block absolute top-8 left-8 w-[360px]">
-          {!showAdminLogin ? (
-            <button 
-              onClick={() => setShowAdminLogin(true)}
-              className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-xs font-bold uppercase tracking-widest shadow-lg transition-all cursor-pointer ${adminBtnClass}`}
-            >
-              <Shield size={16} />
-              Yönetici Paneli
-            </button>
-          ) : (
-            <div className={`rounded-2xl p-6 animate-fade-in ${adminBoxClass}`}>
-              <div className="flex justify-between items-center mb-6">
-                <h3 className={`text-xs font-bold uppercase tracking-widest flex items-center gap-2 ${textPrimary}`}>
-                  <Shield size={16} className="text-red-500 shrink-0" />
-                  Yönetici Girişi
-                </h3>
-                <button onClick={() => { setShowAdminLogin(false); setAdminPin(''); setAdminAuthError(null); }} className={`transition ${textTertiary} hover:${textPrimary}`}>
-                  <X size={16} />
-                </button>
-              </div>
-              <p className={`text-xs mb-4 font-mono uppercase tracking-widest ${textTertiary}`}>Sistem Loglarına Erişim</p>
-              <input
-                type="password"
-                maxLength={6}
-                value={adminPin}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9]/g, '');
-                  setAdminPin(val);
-                  if (adminAuthError) setAdminAuthError(null);
-                  
-                  if (val.length >= 4) {
-                    if (val === '270212' || val === '000000') { 
-                      setShowAdminDashboard(true);
-                      setShowAdminLogin(false);
-                      setAdminPin('');
-                      const logsStr = localStorage.getItem('storm_error_logs');
-                      if (logsStr) {
-                        try {
-                          setErrorLogs(JSON.parse(logsStr));
-                        } catch(e) {}
-                      }
-                      
-                      const fLogsStr = localStorage.getItem('storm_feedback_logs');
-                      if (fLogsStr) {
-                        try {
-                          setFeedbackList(JSON.parse(fLogsStr));
-                        } catch(e) {}
-                      }
-                    } else if (val.length === 6) {
-                      setAdminAuthError('Hatalı yönetici şifresi.');
-                      setAdminPin('');
-                    }
+            <form
+              className="space-y-4"
+              onSubmit={async (event) => {
+                event.preventDefault();
+                setAuthError(null);
+                setAuthNotice(null);
+                setIsAuthSubmitting(true);
+                try {
+                  if (isCreatingAccount) {
+                    await handleSignUp(email.trim(), password, displayName.trim());
+                  } else {
+                    await handleSignIn(email.trim(), password);
                   }
-                }}
-                placeholder="••••••"
-                className={`w-full text-center text-2xl tracking-[0.5em] placeholder-slate-500 transition outline-none font-mono px-4 py-3 rounded-xl focus:border-red-500/50 ${inputStyleClass}`}
-                autoFocus
-              />
-              {adminAuthError && (
-                <p className="text-red-500 text-xs text-center mt-3 font-bold">{adminAuthError}</p>
+                } catch (error: any) {
+                  setAuthError(error?.message || 'Oturum açılırken bir hata oluştu.');
+                } finally {
+                  setIsAuthSubmitting(false);
+                }
+              }}
+            >
+              {isCreatingAccount && (
+                <label className="block">
+                  <span className={`block mb-1.5 text-xs font-bold ${textSecondary}`}>Ad Soyad</span>
+                  <input
+                    type="text"
+                    autoComplete="name"
+                    value={displayName}
+                    onChange={(event) => setDisplayName(event.target.value)}
+                    required
+                    className={`w-full outline-none px-4 py-3 rounded-xl ${inputStyleClass}`}
+                    placeholder="Adınız Soyadınız"
+                  />
+                </label>
               )}
-            </div>
-          )}
-        </div>
+              <label className="block">
+                <span className={`block mb-1.5 text-xs font-bold ${textSecondary}`}>E-posta</span>
+                <input
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required
+                  className={`w-full outline-none px-4 py-3 rounded-xl ${inputStyleClass}`}
+                  placeholder="ornek@firma.com"
+                />
+              </label>
+              <label className="block">
+                <span className={`block mb-1.5 text-xs font-bold ${textSecondary}`}>Şifre</span>
+                <input
+                  type="password"
+                  autoComplete={isCreatingAccount ? 'new-password' : 'current-password'}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  minLength={6}
+                  required
+                  className={`w-full outline-none px-4 py-3 rounded-xl ${inputStyleClass}`}
+                  placeholder="En az 6 karakter"
+                />
+              </label>
 
+              {authError && <p className="text-rose-500 text-xs font-bold" role="alert">{authError}</p>}
+              {authNotice && <p className="text-emerald-500 text-xs font-bold" role="status">{authNotice}</p>}
+
+              <button
+                type="submit"
+                disabled={isAuthSubmitting || authLoading}
+                className="w-full py-3.5 rounded-xl bg-teal-500 hover:bg-teal-400 disabled:opacity-60 text-slate-950 font-extrabold text-sm transition cursor-pointer"
+              >
+                {isAuthSubmitting || authLoading ? 'Bağlanıyor…' : isCreatingAccount ? 'Hesap Oluştur' : 'Giriş Yap'}
+              </button>
+            </form>
+
+            <div className="flex flex-col items-center gap-3 mt-5 text-xs">
+              {!isCreatingAccount && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setAuthError(null);
+                    setAuthNotice(null);
+                    if (!email.trim()) {
+                      setAuthError('Şifre sıfırlama bağlantısı için e-posta adresinizi girin.');
+                      return;
+                    }
+                    try {
+                      await handlePasswordReset(email.trim());
+                      setAuthNotice('Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.');
+                    } catch (error: any) {
+                      setAuthError(error?.message || 'Şifre sıfırlama isteği gönderilemedi.');
+                    }
+                  }}
+                  className={`font-semibold ${textTertiary} hover:text-teal-500 transition cursor-pointer`}
+                >
+                  Şifremi unuttum
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCreatingAccount((value) => !value);
+                  setAuthError(null);
+                  setAuthNotice(null);
+                }}
+                className="font-bold text-teal-500 hover:text-teal-400 transition cursor-pointer"
+              >
+                {isCreatingAccount ? 'Zaten hesabınız var mı? Giriş yapın' : 'Yeni hesap oluştur'}
+              </button>
+            </div>
+          </div>
+        </div>
         {/* Changelog Section */}
         <div className={`hidden md:block absolute top-8 right-8 w-[360px] rounded-2xl p-6 shadow-2xl animate-fade-in max-h-[calc(100vh-4rem)] overflow-y-auto custom-scrollbar ${changelogBoxClass}`}>
           <h3 className={`text-xs font-bold uppercase tracking-widest mb-6 flex items-center gap-2 ${textPrimary}`}>

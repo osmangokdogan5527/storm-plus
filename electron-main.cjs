@@ -8,10 +8,10 @@ const { autoUpdater } = require('electron-updater');
 let autoBackupEnabled = true;
 
 function sendTelegramAlert(errorMessage, stackTrace) {
-  const TELEGRAM_BOT_TOKEN = process.env.VITE_TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN || "8661867798:AAHVgj4cyEw3D_NS19jjiSBqkJe7nvIFfy0";
-  const TELEGRAM_CHAT_ID = process.env.VITE_TELEGRAM_CHAT_ID || process.env.TELEGRAM_CHAT_ID || "-5266920189";
+  const TELEGRAM_BOT_TOKEN = process.env.VITE_TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
+  const TELEGRAM_CHAT_ID = process.env.VITE_TELEGRAM_CHAT_ID || process.env.TELEGRAM_CHAT_ID;
 
-  if (!TELEGRAM_BOT_TOKEN) return;
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
 
   const osVersion = `${os.type()} ${os.release()}`;
   const appVersion = app.getVersion();

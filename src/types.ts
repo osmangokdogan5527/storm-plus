@@ -74,6 +74,15 @@ export interface Transaction {
   currency?: "TRY";
   exchangeRate?: number; // Manual exchange rate for multi-currency transactions
   convertedAmount?: number; // Amount after applying exchange rate to modify Cari's native balance
+  paymentBreakdown?: {
+    cashAmount: number;
+    posAmount: number;
+    openAccountAmount: number;
+    posAccountId?: string;
+  };
+  platformGrossAmount?: number;
+  platformCommissionRate?: number;
+  platformCommissionAmount?: number;
 }
 
 export interface DashboardStats {

@@ -507,7 +507,7 @@ export function IslemModal({
         item.unit = selectedStock.unit;
         // set default price: sale invoice uses salesPrice, purchase invoice uses purchasePrice
         item.price =
-          modalType === "sale"
+          modalType === "sale" || modalType === "sale_return"
             ? selectedStock.salesPrice
             : selectedStock.purchasePrice;
         
@@ -576,7 +576,7 @@ export function IslemModal({
       } else {
         // Add new line item
         const price =
-          modalType === "sale"
+          modalType === "sale" || modalType === "sale_return"
             ? scannedStock.salesPrice
             : scannedStock.purchasePrice;
 

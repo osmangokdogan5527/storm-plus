@@ -64,7 +64,7 @@ function IslemlerView({
   onClearPendingIslemModal,
       userRole = 'employee',
   actionPermissions = { delete_sale: false, delete_payment: false, delete_stock: false, decrease_stock: false, edit_sale: false, edit_payment: false, edit_stock: false },
-  escalationPin = '1923',
+  escalationPin = '',
   isSecurityActive = false,
   onViewCariDetails
 }: IslemlerViewProps) {
@@ -266,7 +266,7 @@ function IslemlerView({
           {islem.invoiceNo || '-'}
         </td>
         <td className="p-4 text-xs text-white/50 font-sans">
-          {islem.account === 'cash' ? '💵 Kasa' :
+          {islem.paymentBreakdown ? '🧾 Parçalı Ödeme' : islem.account === 'cash' ? '💵 Kasa' :
            islem.account === 'bank' ? '🏦 Banka' : 
            islem.account === 'pos' ? '💳 POS' : '⏳ Vadeli'}
         </td>
@@ -615,7 +615,7 @@ function IslemlerView({
 
                     <div className="text-xs text-white/60 space-y-1 bg-white/[0.02] p-2.5 rounded border border-white/5 font-mono">
                       {islem.invoiceNo && <div>Belge No: <strong>{islem.invoiceNo}</strong></div>}
-                      <div>Hesap: <strong>{islem.account === 'cash' ? 'Kasa' : islem.account === 'bank' ? 'Banka' : islem.account === 'pos' ? 'POS' : 'Açık Hesap'}</strong></div>
+                      <div>Hesap: <strong>{islem.paymentBreakdown ? 'Parçalı Ödeme' : islem.account === 'cash' ? 'Kasa' : islem.account === 'bank' ? 'Banka' : islem.account === 'pos' ? 'POS' : 'Açık Hesap'}</strong></div>
                       {islem.description && <div className="line-clamp-2 text-white/40 italic mt-0.5">"{islem.description}"</div>}
                     </div>
 
@@ -810,7 +810,7 @@ function IslemlerView({
                   setPinError('');
                   
                   if (val.length === 4) {
-                    if (val === escalationPin || ['1923', '1234', '9999'].includes(val)) {
+                    if (escalationPin && val === escalationPin) {
                       setIsPinModalOpen(false);
                       if (pinVerificationAction) {
                         pinVerificationAction();

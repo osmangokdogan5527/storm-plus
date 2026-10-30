@@ -349,9 +349,12 @@ export const GunlukSatisRaporuView: React.FC<GunlukSatisRaporuViewProps> = ({
             else if (cariNameLower.includes('trendyol') || cariNameLower.includes('uber') || descLower.includes('trendyol') || descLower.includes('uber')) chKey = 'uber_trendyol';
             else if (cariNameLower.includes('migros') || descLower.includes('migros')) chKey = 'migros';
 
-            const gross = Number(islem.amount) || 0;
-            // Varsayılan %38 komisyon
-            const comm = (gross * 38) / 100;
+            const commRate = Number(islem.platformCommissionRate ?? 38);
+            const storedNet = Number(islem.amount) || 0;
+            const gross = islem.platformGrossAmount !== undefined
+              ? Number(islem.platformGrossAmount) || 0
+              : commRate < 100 ? storedNet / (1 - commRate / 100) : storedNet;
+            const comm = Number(islem.platformCommissionAmount ?? Math.max(0, gross - storedNet));
             const net = gross - comm;
 
             channelsMap[chKey].orderCount += 1;
@@ -361,21 +364,37 @@ export const GunlukSatisRaporuView: React.FC<GunlukSatisRaporuViewProps> = ({
           }
         } else {
           // Standart İşletme İçi Satışlar (Nakit, POS, Banka, Veresiye)
-          const gross = Number(islem.amount) || 0;
-          if (islem.account === 'cash') {
+          const breakdown = islem.paymentBreakdown;
+          if (breakdown) {
+            const channels = [
+              { channel: channelsMap.cash, amount: Number(breakdown.cashAmount) || 0 },
+              { channel: channelsMap.pos, amount: Number(breakdown.posAmount) || 0 },
+              { channel: channelsMap.veresiye, amount: Number(breakdown.openAccountAmount) || 0 },
+            ];
+            channels.forEach(({ channel, amount }) => {
+              if (amount <= 0) return;
+              channel.orderCount += 1;
+              channel.grossAmount += amount;
+              channel.netAmount += amount;
+            });
+          } else if (islem.account === 'cash') {
+            const gross = Number(islem.amount) || 0;
             channelsMap.cash.orderCount += 1;
             channelsMap.cash.grossAmount += gross;
             channelsMap.cash.netAmount += gross;
           } else if (islem.account === 'pos' && !(islem.cariId && islem.cariId.startsWith('plat_cari_'))) {
+            const gross = Number(islem.amount) || 0;
             channelsMap.pos.orderCount += 1;
             channelsMap.pos.grossAmount += gross;
             channelsMap.pos.netAmount += gross;
           } else if (islem.account === 'bank') {
+            const gross = Number(islem.amount) || 0;
             channelsMap.bank.orderCount += 1;
             channelsMap.bank.grossAmount += gross;
             channelsMap.bank.netAmount += gross;
           } else {
             // Veresiye / Açık hesap
+            const gross = Number(islem.amount) || 0;
             channelsMap.veresiye.orderCount += 1;
             channelsMap.veresiye.grossAmount += gross;
             channelsMap.veresiye.netAmount += gross;
@@ -479,6 +498,9 @@ export const GunlukSatisRaporuView: React.FC<GunlukSatisRaporuViewProps> = ({
           if (islem.cariId?.startsWith('plat_cari_')) {
             chName = islem.cariName || 'Online Satış';
             chKey = 'platform';
+          } else if (islem.paymentBreakdown) {
+            chName = 'Nakit / POS / Açık Hesap';
+            chKey = 'split';
           } else if (islem.account === 'pos') {
             chName = 'POS / Kredi Kartı';
             chKey = 'pos';
@@ -490,9 +512,18 @@ export const GunlukSatisRaporuView: React.FC<GunlukSatisRaporuViewProps> = ({
             chKey = 'veresiye';
           }
 
-          const gross = Number(islem.amount) || 0;
-          const comm = islem.cariId?.startsWith('plat_cari_') ? (gross * 38) / 100 : 0;
-          const net = gross - comm;
+          const isPlatform = islem.cariId?.startsWith('plat_cari_');
+          const commissionRate = isPlatform ? Number(islem.platformCommissionRate ?? 38) : 0;
+          const storedAmount = Number(islem.amount) || 0;
+          const gross = isPlatform
+            ? islem.platformGrossAmount !== undefined
+              ? Number(islem.platformGrossAmount) || 0
+              : commissionRate < 100 ? storedAmount / (1 - commissionRate / 100) : storedAmount
+            : storedAmount;
+          const comm = isPlatform
+            ? Number(islem.platformCommissionAmount ?? Math.max(0, gross - storedAmount))
+            : 0;
+          const net = isPlatform && islem.platformGrossAmount === undefined ? storedAmount : gross - comm;
 
           allDetailedSales.push({
             id: islem.id,
@@ -503,7 +534,7 @@ export const GunlukSatisRaporuView: React.FC<GunlukSatisRaporuViewProps> = ({
             channelName: chName,
             channelKey: chKey,
             grossAmount: gross,
-            commissionRate: comm > 0 ? 38 : 0,
+            commissionRate,
             commissionAmount: comm,
             netAmount: net,
             itemsCount: islem.items ? islem.items.length : 1,

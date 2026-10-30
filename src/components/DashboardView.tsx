@@ -304,9 +304,17 @@ export default function DashboardView({
             monthlyCostOfSales += islemAmount * 0.7;
           }
         }
-        if (accType === "cash") cashBalance += islemAmount;
-        if (accType === "bank") bankBalance += islemAmount;
-        if (accType === "pos") posBalance += islemAmount;
+        if (islem.paymentBreakdown) {
+          cashBalance += Number(islem.paymentBreakdown.cashAmount) || 0;
+          const splitPosAmount = Number(islem.paymentBreakdown.posAmount) || 0;
+          const splitPosAccount = safeBankAccounts.find((account) => account.id === islem.paymentBreakdown?.posAccountId);
+          if (splitPosAccount?.type === 'banka') bankBalance += splitPosAmount;
+          else posBalance += splitPosAmount;
+        } else {
+          if (accType === "cash") cashBalance += islemAmount;
+          if (accType === "bank") bankBalance += islemAmount;
+          if (accType === "pos") posBalance += islemAmount;
+        }
       } else if (islem.type === "purchase") {
         totalPurchases += islemAmount;
         if (isCurrentMonth) monthlyPurchases += islemAmount;
@@ -533,7 +541,9 @@ export default function DashboardView({
         amount: islem.amount,
         currency: islem.currency || "TRY",
         account:
-          islem.account === "cash"
+          islem.paymentBreakdown
+            ? "Parçalı Ödeme"
+            : islem.account === "cash"
             ? "Kasa"
             : islem.account === "bank"
               ? "Banka"

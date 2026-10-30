@@ -14,6 +14,7 @@ import {
   query,
   orderBy,
   runTransaction,
+  increment,
   getDocs,
   setLogLevel,
   getDoc,
@@ -39,14 +40,24 @@ import { OnlineMarketOrder, OnlineMarketPayout } from './types/onlineMarket';
 import { PosPlatformConfig } from './types/pos';
 
 
-// Read config from the provisioned project
+const firebaseEnvironment = import.meta.env;
+export const isFirebaseConfigured = Boolean(
+  firebaseEnvironment.VITE_FIREBASE_API_KEY &&
+  firebaseEnvironment.VITE_FIREBASE_AUTH_DOMAIN &&
+  firebaseEnvironment.VITE_FIREBASE_PROJECT_ID &&
+  firebaseEnvironment.VITE_FIREBASE_STORAGE_BUCKET &&
+  firebaseEnvironment.VITE_FIREBASE_MESSAGING_SENDER_ID &&
+  firebaseEnvironment.VITE_FIREBASE_APP_ID
+);
+
+// Values are supplied locally through .env; placeholder options keep the app shell loadable until configured.
 const firebaseConfig = {
-  apiKey: "AIzaSyCcoCQMZBX4TD07jaP4-LOjlDlBWxbnXWo",
-  authDomain: "aesthetic-light-cw2h4.firebaseapp.com",
-  projectId: "aesthetic-light-cw2h4",
-  storageBucket: "aesthetic-light-cw2h4.firebasestorage.app",
-  messagingSenderId: "191044825350",
-  appId: "1:191044825350:web:7471a7c7c855960490ee87"
+  apiKey: firebaseEnvironment.VITE_FIREBASE_API_KEY || 'not-configured',
+  authDomain: firebaseEnvironment.VITE_FIREBASE_AUTH_DOMAIN || 'not-configured.invalid',
+  projectId: firebaseEnvironment.VITE_FIREBASE_PROJECT_ID || 'storm-plus-unconfigured',
+  storageBucket: firebaseEnvironment.VITE_FIREBASE_STORAGE_BUCKET || 'storm-plus-unconfigured.invalid',
+  messagingSenderId: firebaseEnvironment.VITE_FIREBASE_MESSAGING_SENDER_ID || '0',
+  appId: firebaseEnvironment.VITE_FIREBASE_APP_ID || '1:0:web:unconfigured'
 };
 
 const app = initializeApp(firebaseConfig);
@@ -60,7 +71,7 @@ export const db = initializeFirestore(app, {
     tabManager: persistentMultipleTabManager(),
     cacheSizeBytes: CACHE_SIZE_UNLIMITED
   })
-}, "ai-studio-59bd0d02-f537-4d2e-bf76-4d16ab336635");
+}, firebaseEnvironment.VITE_FIREBASE_DATABASE_ID || '(default)');
 export const auth = getAuth();
 
 export {
@@ -343,142 +354,140 @@ export async function updateBulkStockPrices(
   }
 }
 
-// ATOMIC TRANSACTION LOGIC: Save Transaction, Update Stock levels, and Update Cari balances
-export async function createTransaction(islemData: Omit<Transaction, 'id'>) {
+// Keep related ledger, stock and balance writes in one offline-capable batch.
+// Firestore increments avoid lost updates when concurrent transactions touch the same records.
+export async function createTransactionsAtomically(islemDataList: Omit<Transaction, 'id'>[]) {
   try {
-    const islemRef = doc(collection(db, getPath(ISLEMLER_COLL)));
-    const islemId = islemRef.id;
-    const islem: Transaction = cleanUndefined({
-      id: islemId,
-      ...islemData
+    if (islemDataList.length === 0) return [];
+    const collPath = getPath(ISLEMLER_COLL);
+    const transactions = islemDataList.map((data) => {
+      const ref = doc(collection(db, collPath));
+      return { ref, data: cleanUndefined({ id: ref.id, ...data }) as Transaction };
     });
 
-    // 1. Cari reference & read (if cariId specified)
-    let cariRef = null;
-    let currentCariBalance = 0;
-    let cariExists = false;
-    if (islem.cariId && typeof islem.cariId === 'string' && islem.cariId.trim() !== '') {
-      cariRef = doc(db, getPath(CARILER_COLL), islem.cariId.trim());
-      const cariSnap = await getDoc(cariRef);
-      if (cariSnap.exists()) {
-        cariExists = true;
-        const data = cariSnap.data() as any;
-        currentCariBalance = data.balance || 0;
+    const cariDeltas = new Map<string, number>();
+    const cariNames = new Map<string, string>();
+    const cariRefs = new Map<string, any>();
+    const stockDeltas = new Map<string, number>();
+    const stockRefs = new Map<string, any>();
 
-        // Platform Cari kartı önceden 'Perakende Müşteri' veya eski bir isimle oluşmuşsa temiz ada güncelle
-        if (
-          islem.cariId.trim().startsWith('plat_cari_') &&
-          islem.cariName &&
-          (data.name === 'Perakende Müşteri' || data.name.includes('Müşterisi') || data.code?.startsWith('PRK-'))
-        ) {
-          const suffix = islem.cariId.trim().replace('plat_cari_', '').toUpperCase();
-          const cleanCode = `PLT-${suffix}`;
-          await updateDoc(cariRef, {
-            name: islem.cariName,
-            code: cleanCode,
-          });
-        }
-      } else if (
-        islem.cariId.trim() === 'perakende_musteri' ||
-        islem.cariId.trim().startsWith('perakende') ||
-        islem.cariId.trim().startsWith('plat_cari_') ||
-        islem.cariId.trim().includes('musteri') ||
-        islem.cariId.trim().includes('platform')
-      ) {
-        // Otomatik Perakende veya Platform Özel Cari Kartı Oluştur (veritabanında bulunamazsa)
-        let cleanCode = 'PRK-001';
-        if (islem.cariId.trim().startsWith('plat_cari_')) {
-          const suffix = islem.cariId.trim().replace('plat_cari_', '').toUpperCase();
-          cleanCode = `PLT-${suffix}`;
-        } else if (islem.cariName) {
-          const suffix = islem.cariName.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
-          cleanCode = `PRK-${suffix || '001'}`;
-        }
+    for (const { data: islem } of transactions) {
+      const cariId = typeof islem.cariId === 'string' ? islem.cariId.trim() : '';
+      if (cariId) {
+        cariNames.set(cariId, islem.cariName || 'Perakende Müşteri');
+        cariRefs.set(cariId, doc(db, getPath(CARILER_COLL), cariId));
+        const effectAmount = islem.type === 'sale' && islem.paymentBreakdown
+          ? (islem.paymentBreakdown.openAccountAmount || 0)
+          : islem.convertedAmount !== undefined && islem.convertedAmount !== 0
+          ? islem.convertedAmount
+          : (islem.amount || 0);
+        const direction = ['sale', 'payment', 'purchase_return'].includes(islem.type)
+          ? 1
+          : ['purchase', 'collection', 'sale_return'].includes(islem.type)
+          ? -1
+          : 0;
+        cariDeltas.set(cariId, (cariDeltas.get(cariId) || 0) + direction * effectAmount);
+      }
 
-        const newPerakendeCari: Omit<Cari, 'id'> = {
-          name: islem.cariName || 'Perakende Müşteri',
-          code: cleanCode,
+      for (const item of islem.items || []) {
+        const stockId = typeof item?.stockId === 'string' ? item.stockId.trim() : '';
+        if (!stockId) continue;
+        const direction = ['sale', 'purchase_return'].includes(islem.type)
+          ? -1
+          : ['purchase', 'sale_return'].includes(islem.type)
+          ? 1
+          : 0;
+        if (!direction) continue;
+        stockRefs.set(stockId, doc(db, getPath(STOKLAR_COLL), stockId));
+        stockDeltas.set(stockId, (stockDeltas.get(stockId) || 0) + direction * (item.quantity || 0));
+      }
+    }
+
+    const [cariSnapshots, stockSnapshots] = await Promise.all([
+      Promise.all([...cariRefs.values()].map((ref) => getDoc(ref))),
+      Promise.all([...stockRefs.values()].map((ref) => getDoc(ref))),
+    ]);
+    const cariStates = new Map<string, { exists: boolean; data?: any }>();
+    [...cariRefs.keys()].forEach((id, index) => {
+      const snap = cariSnapshots[index];
+      cariStates.set(id, { exists: snap.exists(), data: snap.exists() ? snap.data() : undefined });
+    });
+    const stockExists = new Set<string>();
+    [...stockRefs.keys()].forEach((id, index) => {
+      if (stockSnapshots[index].exists()) stockExists.add(id);
+    });
+
+    for (const id of cariRefs.keys()) {
+      if (cariStates.get(id)?.exists) continue;
+      const isAutoCari = id === 'perakende_musteri' || id.startsWith('perakende') || id.startsWith('plat_cari_') || id.includes('musteri') || id.includes('platform');
+      if (!isAutoCari) throw new Error(`Cari (ID: ${id}) bulunamadı. Silinmiş olabilir.`);
+    }
+
+    for (const id of stockRefs.keys()) {
+      if (stockExists.has(id)) continue;
+      const isServiceItem = id.startsWith('plat_srv_') || id.startsWith('srv_') || id.startsWith('custom_') ||
+        transactions.some(({ data }) => (data.items || []).some((item: any) => item.stockId === id && item.stockCode === 'ONLINE-SIP'));
+      if (!isServiceItem) throw new Error(`Stok (ID: ${id}) bulunamadı. Silinmiş olabilir.`);
+    }
+
+    const batch = writeBatch(db);
+    for (const { ref, data } of transactions) batch.set(ref, data);
+
+    for (const [id, ref] of cariRefs) {
+      const delta = cariDeltas.get(id) || 0;
+      const state = cariStates.get(id)!;
+      if (!state.exists) {
+        let code = 'PRK-001';
+        if (id.startsWith('plat_cari_')) code = `PLT-${id.replace('plat_cari_', '').toUpperCase()}`;
+        else {
+          const suffix = (cariNames.get(id) || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+          code = `PRK-${suffix || '001'}`;
+        }
+        const newCari: Omit<Cari, 'id'> = {
+          name: cariNames.get(id) || 'Perakende Müşteri',
+          code,
           type: 'customer',
-          balance: 0,
+          balance: delta,
           openingBalance: 0,
           phone: '',
           email: '',
-          address: islem.cariId.trim().startsWith('plat_cari_') ? 'Online Sipariş Platformu' : 'Hızlı Satış Kasası',
+          address: id.startsWith('plat_cari_') ? 'Online Sipariş Platformu' : 'Hızlı Satış Kasası',
           createdAt: new Date().toISOString(),
         };
-        await setDoc(cariRef, cleanUndefined(newPerakendeCari));
-        cariExists = true;
-        currentCariBalance = 0;
-      } else {
-        throw new Error(`Cari (ID: ${islem.cariId}) bulunamadı. Silinmiş olabilir.`);
+        // A merge plus increment also preserves concurrent first writes when this
+        // automatically-created retail/platform account does not exist yet.
+        batch.set(ref, { ...newCari, balance: increment(delta) }, { merge: true });
+        continue;
       }
-    }
 
-    // 2. Read stock levels if transaction has items (sale/purchase)
-    const stockUpdates: { ref: any; newQty: number }[] = [];
-    if (islem.items && Array.isArray(islem.items) && islem.items.length > 0) {
-      for (const item of islem.items) {
-        if (item && item.stockId && typeof item.stockId === 'string' && item.stockId.trim() !== '') {
-          const stockRef = doc(db, getPath(STOKLAR_COLL), item.stockId.trim());
-          const stockSnap = await getDoc(stockRef);
-          if (stockSnap.exists()) {
-            const data = stockSnap.data() as any;
-            const currentQty = data.quantity || 0;
-            let newQty = currentQty;
-            if (islem.type === 'sale' || islem.type === 'purchase_return') {
-              newQty = currentQty - (item.quantity || 0);
-            } else if (islem.type === 'purchase' || islem.type === 'sale_return') {
-              newQty = currentQty + (item.quantity || 0);
-            }
-            stockUpdates.push({ ref: stockRef, newQty });
-          } else {
-            // Fiziksel stok takibi gerektirmeyen serbest tutarlı / online platform hizmet kalemleri
-            if (
-              item.stockId.startsWith('plat_srv_') ||
-              item.stockId.startsWith('srv_') ||
-              item.stockId.startsWith('custom_') ||
-              (item as any).stockCode === 'ONLINE-SIP'
-            ) {
-              continue;
-            } else {
-              throw new Error(`Stok (ID: ${item.stockId}) bulunamadı. Silinmiş olabilir.`);
-            }
-          }
-        }
+      const updates: Record<string, any> = {};
+      if (delta !== 0) updates.balance = increment(delta);
+      const existingName = state.data?.name || '';
+      if (id.startsWith('plat_cari_') && cariNames.get(id) &&
+        (existingName === 'Perakende Müşteri' || existingName.includes('Müşterisi') || state.data?.code?.startsWith('PRK-'))) {
+        updates.name = cariNames.get(id);
+        updates.code = `PLT-${id.replace('plat_cari_', '').toUpperCase()}`;
       }
+      if (Object.keys(updates).length > 0) batch.update(ref, updates);
     }
 
-    // 3. Calculate new Cari balance
-    let newCariBalance = currentCariBalance;
-    if (cariRef && cariExists) {
-      const effectAmount = islem.convertedAmount !== undefined && islem.convertedAmount !== 0 ? islem.convertedAmount : (islem.amount || 0);
-      if (islem.type === 'sale' || islem.type === 'payment' || islem.type === 'purchase_return') {
-        newCariBalance += effectAmount;
-      } else if (islem.type === 'purchase' || islem.type === 'collection' || islem.type === 'sale_return') {
-        newCariBalance -= effectAmount;
-      }
-    }
-
-    // 4. Perform writes inside a batch for offline safety and robustness
-    const batch = writeBatch(db);
-    batch.set(islemRef, islem);
-
-    if (cariRef && cariExists) {
-      batch.update(cariRef, { balance: newCariBalance });
-    }
-
-    for (const update of stockUpdates) {
-      batch.update(update.ref, { quantity: update.newQty });
+    for (const [id, ref] of stockRefs) {
+      const delta = stockDeltas.get(id) || 0;
+      if (stockExists.has(id) && delta !== 0) batch.update(ref, { quantity: increment(delta) });
     }
 
     await batch.commit();
-    return islemId;
+    return transactions.map(({ ref }) => ref.id);
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, getPath(ISLEMLER_COLL));
-  throw error;
+    throw error;
   }
 }
 
+export async function createTransaction(islemData: Omit<Transaction, 'id'>) {
+  const [id] = await createTransactionsAtomically([islemData]);
+  return id;
+}
 export async function removeTransaction(islem: Transaction) {
   if (!islem || !islem.id) {
     throw new Error("Geçersiz işlem verisi.");
@@ -495,7 +504,6 @@ export async function removeTransaction(islem: Transaction) {
 
     // 2. Cari reference & read to reverse balance
     let cariRef = null;
-    let currentCariBalance = 0;
     let cariExists = false;
     if (islem.cariId && typeof islem.cariId === 'string' && islem.cariId.trim() !== '') {
       try {
@@ -503,8 +511,6 @@ export async function removeTransaction(islem: Transaction) {
         const cariSnap = await getDoc(cariRef);
         if (cariSnap.exists()) {
           cariExists = true;
-          const data = cariSnap.data() as any;
-          currentCariBalance = data.balance || 0;
         }
       } catch (cariErr) {
         console.warn("Cari bakiye geri alınırken hata oluştu (cari silinmiş olabilir):", cariErr);
@@ -512,7 +518,7 @@ export async function removeTransaction(islem: Transaction) {
     }
 
     // 3. Read stock levels to reverse quantities
-    const stockUpdates: { ref: any, newQty: number }[] = [];
+    const stockUpdates = new Map<string, { ref: any; delta: number }>();
     if (islem.items && Array.isArray(islem.items) && islem.items.length > 0) {
       for (const item of islem.items) {
         if (item && item.stockId && typeof item.stockId === 'string' && item.stockId.trim() !== '') {
@@ -520,16 +526,17 @@ export async function removeTransaction(islem: Transaction) {
             const stockRef = doc(db, getPath(STOKLAR_COLL), item.stockId.trim());
             const stockSnap = await getDoc(stockRef);
             if (stockSnap.exists()) {
-              const data = stockSnap.data() as any;
-              const currentQty = data.quantity || 0;
-              let newQty = currentQty;
-              // Reverse: sale drops stock, so deleting sale increases stock
-              if (islem.type === 'sale' || islem.type === 'purchase_return') {
-                newQty = currentQty + (item.quantity || 0);
-              } else if (islem.type === 'purchase' || islem.type === 'sale_return') {
-                newQty = currentQty - (item.quantity || 0);
-              }
-              stockUpdates.push({ ref: stockRef, newQty });
+            const direction = islem.type === 'sale' || islem.type === 'purchase_return'
+              ? 1
+              : islem.type === 'purchase' || islem.type === 'sale_return'
+              ? -1
+              : 0;
+            const stockId = item.stockId.trim();
+            const previous = stockUpdates.get(stockId);
+            stockUpdates.set(stockId, {
+              ref: stockRef,
+              delta: (previous?.delta || 0) + direction * (item.quantity || 0),
+            });
             }
           } catch (stockErr) {
             console.warn(`Stok miktarı geri alınırken hata oluştu (stok ${item.stockId} silinmiş olabilir):`, stockErr);
@@ -539,13 +546,17 @@ export async function removeTransaction(islem: Transaction) {
     }
 
     // 4. Calculate reversed Cari balance
-    let newCariBalance = currentCariBalance;
+    let cariReversalDelta = 0;
     if (cariRef && cariExists) {
-      const effectAmount = islem.convertedAmount !== undefined && islem.convertedAmount !== 0 ? islem.convertedAmount : (islem.amount || 0);
+      const effectAmount = islem.type === 'sale' && islem.paymentBreakdown
+        ? (islem.paymentBreakdown.openAccountAmount || 0)
+        : islem.convertedAmount !== undefined && islem.convertedAmount !== 0
+        ? islem.convertedAmount
+        : (islem.amount || 0);
       if (islem.type === 'sale' || islem.type === 'payment' || islem.type === 'purchase_return') {
-        newCariBalance -= effectAmount;
+        cariReversalDelta -= effectAmount;
       } else if (islem.type === 'purchase' || islem.type === 'collection' || islem.type === 'sale_return') {
-        newCariBalance += effectAmount;
+        cariReversalDelta += effectAmount;
       }
     }
 
@@ -554,11 +565,11 @@ export async function removeTransaction(islem: Transaction) {
     batch.delete(islemRef);
 
     if (cariRef && cariExists) {
-      batch.update(cariRef, { balance: newCariBalance });
+      if (cariReversalDelta !== 0) batch.update(cariRef, { balance: increment(cariReversalDelta) });
     }
 
-    for (const update of stockUpdates) {
-      batch.update(update.ref, { quantity: update.newQty });
+    for (const update of stockUpdates.values()) {
+      if (update.delta !== 0) batch.update(update.ref, { quantity: increment(update.delta) });
     }
 
     await batch.commit();
